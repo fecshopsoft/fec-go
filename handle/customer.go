@@ -11,6 +11,8 @@ import(
     _ "github.com/go-sql-driver/mysql"
     "github.com/go-xorm/xorm"
     "github.com/fecshopsoft/fec-go/security"
+    "github.com/fecshopsoft/fec-go/util"
+    "github.com/fecshopsoft/fec-go/db/mysqldb"
     //"fmt"
 )
 
@@ -22,85 +24,120 @@ type Customer struct {
     UpdatedAt int64
 }
 
+var engine *(xorm.Engine)
+
+func init(){
+    engine = mysqldb.GetEngine()
+}
 /**
  * 通过id查询customer
  */
-func CustomerOneById(c *gin.Context, engine *xorm.Engine){
+func CustomerOneById(c *gin.Context){
+    engine := mysqldb.GetEngine()
     customerId, err := strconv.Atoi(c.Param("id"))
     if err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return
     }
     var customer Customer
-    if customerId != 0 {
-        has, err := engine.Where("id = ?", customerId).Get(&customer)
-        if err == nil && has == true {
-            c.JSON(http.StatusOK, gin.H{"result":customer})
-        }
+    if customerId == 0 {
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("customer id is empty"))
+        return
     }
+    has, err := engine.Where("id = ?", customerId).Get(&customer)
+    if err != nil {
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+        return
+    }
+    if has != true {
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("customer is not exist"))
+        return
+    }
+    result := util.BuildSuccessResult(gin.H{
+        "customer":customer,
+    })
+    c.JSON(http.StatusOK, result)
 }
 /**
  * 通过username查询customer
  */
-func CustomerOneByUsername(c *gin.Context, engine *xorm.Engine){
+func CustomerOneByUsername(c *gin.Context){
     username := c.Param("username")
     var customer Customer
-    if username != "" {
-        has, err := engine.Where("username = ?", username).Get(&customer)
-        if err == nil && has == true {
-            c.JSON(http.StatusOK, gin.H{"result":customer})
-        }
+    if username == "" {
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("username is empty"))
+        return
     }
+    has, err := engine.Where("username = ?", username).Get(&customer)
+    if err != nil {
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+        return
+    }
+    if has != true {
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("customer is not exist"))
+        return
+    }
+    result := util.BuildSuccessResult(gin.H{
+        "customer": customer,
+    })
+    c.JSON(http.StatusOK, result)
 }
 
 /**
  * 列表查询
  */
-func CustomerList(c *gin.Context, engine *xorm.Engine){
+func CustomerList(c *gin.Context){
     var customers []Customer
      _ = engine.Find(&customers)
-    c.JSON(http.StatusOK, gin.H{"result":customers})
+    result := util.BuildSuccessResult(gin.H{
+        "customers": customers,
+    })
+    c.JSON(http.StatusOK, result)
 }
 
 /**
  * 增加一条记录
  */
-func CustomerAdd(c *gin.Context, engine *xorm.Engine){
+func CustomerAdd(c *gin.Context){
     var customer Customer
-    if err := c.ShouldBindJSON(&customer); err == nil {
-        affected, err := engine.Insert(&customer)
-        if err != nil {
-            c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-        } else {
-            c.JSON(http.StatusOK, gin.H{
-                "affected":affected,
-                "customer":customer,
-            })
-        }
-    }else {
-        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+    err := c.ShouldBindJSON(&customer);
+    if err != nil {
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+        return
     }
+    affected, err := engine.Insert(&customer)
+    if err != nil {
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+        return
+    } 
+    result := util.BuildSuccessResult(gin.H{
+        "affected":affected,
+        "customer":customer,
+    })
+    c.JSON(http.StatusOK, result)
 }
 
 
 /**
  * 更新一条记录
  */
-func CustomerUpdateById(c *gin.Context, engine *xorm.Engine){
+func CustomerUpdateById(c *gin.Context){
     var customer Customer
-    if err := c.ShouldBindJSON(&customer); err == nil {
-        affected, err := engine.Update(&customer, &Customer{Id:customer.Id})
-        if err != nil {
-            c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-        } else {
-            c.JSON(http.StatusOK, gin.H{
-                "affected":affected,
-                "customer":customer,
-            })
-        }
-    }else {
-        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+    err := c.ShouldBindJSON(&customer);
+    if err != nil {
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+        return
     }
+    affected, err := engine.Update(&customer, &Customer{Id:customer.Id})
+    if err != nil {
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+        return
+    } 
+    result := util.BuildSuccessResult(gin.H{
+        "affected":affected,
+        "customer":customer,
+    })
+    c.JSON(http.StatusOK, result)
 }
 
 
@@ -108,40 +145,42 @@ func CustomerUpdateById(c *gin.Context, engine *xorm.Engine){
 /**
  * 删除一条记录
  */
-func CustomerDeleteById(c *gin.Context, engine *xorm.Engine){
+func CustomerDeleteById(c *gin.Context){
     var customer Customer
     customerId, err := strconv.Atoi(c.Param("id"))
     if err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return
     }
     
     affected, err := engine.Where("id = ?",customerId).Delete(&customer)
     if err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return
     } 
-    c.JSON(http.StatusOK, gin.H{
+    result := util.BuildSuccessResult(gin.H{
         "affected":affected,
         "id":customerId,
     })
+    c.JSON(http.StatusOK, result)
 }
 
 
 /**
  * 删除一条记录
  */
-func CustomerCount(c *gin.Context, engine *xorm.Engine){
+func CustomerCount(c *gin.Context){
     var customer Customer
     
     counts, err := engine.Count(&customer)
     if err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return
     } 
-    c.JSON(http.StatusOK, gin.H{
+    result := util.BuildSuccessResult(gin.H{
         "counts":counts,
     })
+    c.JSON(http.StatusOK, result)
 }
 
 
@@ -149,25 +188,34 @@ func CustomerCount(c *gin.Context, engine *xorm.Engine){
 /**
  * 用户注册
  */
-func CustomerAccountRegister(c *gin.Context, engine *xorm.Engine){
+func CustomerAccountRegister(c *gin.Context){
     var customer Customer
-    if err := c.ShouldBindJSON(&customer); err == nil {
-        encryptionPass, err := encryptionPass(customer.Password)
-        if err != nil {
-            c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-        }
-        customer.Password = encryptionPass
-        customer.CreatedAt = time.Now().Unix();
-        customer.UpdatedAt  = time.Now().Unix();
-        affected, err := engine.Insert(&customer)
-        if err != nil {
-            c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-        } else if affected > 0 {
-            c.JSON(http.StatusOK, gin.H{"status": "success"})
-        }
-    } else {
-        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+    err := c.ShouldBindJSON(&customer);
+    if err != nil {
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+        return  
     }
+    encryptionPass, err := encryptionPass(customer.Password)
+    if err != nil {
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+        return
+    }
+    customer.Password = encryptionPass
+    customer.CreatedAt = time.Now().Unix();
+    customer.UpdatedAt  = time.Now().Unix();
+    affected, err := engine.Insert(&customer)
+    if err != nil {
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+        return
+    }
+    if affected < 1 {
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("注册用户插入数据失败"))
+        return
+    }
+    result := util.BuildSuccessResult(gin.H{
+        "status": "success",
+    })
+    c.JSON(http.StatusOK, result)
 }
 
 
@@ -181,48 +229,57 @@ type CustomerLogin struct {
 /**
  * 用户登录
  */
-func CustomerAccountLogin(c *gin.Context, engine *xorm.Engine){
+func CustomerAccountLogin(c *gin.Context){
     var customer Customer
     var customerLogin CustomerLogin
-    if err := c.ShouldBindJSON(&customerLogin); err == nil {
-        encryptionPassStr, err := encryptionPass(customerLogin.Password)
-        if err != nil {
-            c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-        }
-        //has, err := engine.Where(" password = ? ", encryptionPassStr).And(" username = ?", customer.Username).Get(&customer)
-        has, err := engine.Where("username = ? and password = ?", customerLogin.Username, encryptionPassStr).Get(&customer)
-        if err == nil && has == true {
-            accesToken, err := security.JwtSignToken(customer)
-            // 通过token，得到保存的值。
-            data, expired, err := security.JwtParse(accesToken);
-            if err != nil{
-                c.JSON(http.StatusOK, gin.H{
-                    "loginStatus":"fail",
-                    "error": err.Error(),
-                    
-                })
-            } else {
-                c.JSON(http.StatusOK, gin.H{
-                    "loginStatus": "success",
-                    "accesToken": accesToken,
-                    "data":data,
-                    "expired":expired,
-                })
-            }
-        } else if err != nil{
-            c.JSON(http.StatusOK, gin.H{
-                "loginStatus":"fail",
-                "error": err.Error(),
-            })
-        } else {
-            c.JSON(http.StatusOK, gin.H{
-                "loginStatus":"fail",
-                "error": "customer account is not exist",
-            })
-        }
-    } else {
-        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+    err := c.ShouldBindJSON(&customerLogin)
+    if err != nil {
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+        return  
     }
+    encryptionPassStr, err := encryptionPass(customerLogin.Password)
+    if err != nil {
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+        return
+    }
+    //has, err := engine.Where(" password = ? ", encryptionPassStr).And(" username = ?", customer.Username).Get(&customer)
+    has, err := engine.Where("username = ? and password = ?", customerLogin.Username, encryptionPassStr).Get(&customer)
+    
+    if err != nil{
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+        return  
+    }
+    if has != true{
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("该账户不存在或密码错误"))
+        return  
+    }
+    customer.Password = ""
+    accesToken, err := security.JwtSignToken(customer)
+    // 通过token，得到保存的值。
+    /*
+    data, expired, err := security.JwtParse(accesToken);
+    if err != nil{
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+        return
+    }
+    "data":data,
+    "expired":expired,
+    */
+    result := util.BuildSuccessResult(gin.H{
+        "accesToken": accesToken,
+    })
+    c.JSON(http.StatusOK, result)
+}
+
+
+func CustomerAccountIndex(c *gin.Context){
+    
+    result := util.BuildSuccessResult(gin.H{
+        "status": "success",
+        "currentCustomer": currentCustomer,
+    })
+    c.JSON(http.StatusOK, result)
+
 }
 
 /**
