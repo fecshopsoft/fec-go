@@ -5,19 +5,19 @@ import (
 )
 
 const (
-	ResultStatusNeedPermission = 3
-	ResultStatusNeedLogin      = 2
-	ResultStatusSuccess        = 1
-	ResultStatusFail           = 0
+	ResultStatusNeedPermission = 40000
+	ResultStatusNeedLogin      = 30000
+	ResultStatusSuccess        = 20000
+	ResultStatusFail           = 10000
 )
 
 var ErrNeedMiLogin = errors.New("请先登录再进行下一步操作")
 var ErrNeedMiPermission = errors.New("没有足够权限进行下一步操作")
 
 type ResultVO struct {
-	Status int         `form:"status" json:"status"`
+	Code int         `form:"code" json:"code"`
 	Msg    string      `form:"msg" json:"msg"`
-	Result interface{} `form:"result" json:"result"`
+	Data interface{} `form:"data" json:"data"`
 }
 
 type PageVO struct {

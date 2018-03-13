@@ -7,6 +7,7 @@ import(
     "crypto/md5"
     "errors"
     "time"
+    "unicode/utf8"
     "encoding/hex"
     _ "github.com/go-sql-driver/mysql"
     "github.com/go-xorm/xorm"
@@ -17,11 +18,14 @@ import(
 )
 
 type Customer struct {
-    Id int64
+    Id int64 `form:"id" json:"id"`
     Username string `form:"username" json:"username" binding:"required"`
+    Email string `form:"email" json:"email"`
+    Sex string `form:"sex" json:"sex"`
+    Age string `form:"age" json:"age"`
     Password string `xorm:"varchar(200)" form:"password" json:"password" binding:"required"`
-    CreatedAt int64
-    UpdatedAt int64
+    CreatedAt int64 `form:"created_at" json:"created_at"`
+    UpdatedAt int64 `form:"updated_at" json:"updated_at"`
 }
 
 var engine *(xorm.Engine)
@@ -83,17 +87,7 @@ func CustomerOneByUsername(c *gin.Context){
     c.JSON(http.StatusOK, result)
 }
 
-/**
- * 列表查询
- */
-func CustomerList(c *gin.Context){
-    var customers []Customer
-     _ = engine.Find(&customers)
-    result := util.BuildSuccessResult(gin.H{
-        "customers": customers,
-    })
-    c.JSON(http.StatusOK, result)
-}
+
 
 /**
  * 增加一条记录
@@ -182,9 +176,6 @@ func CustomerCount(c *gin.Context){
     })
     c.JSON(http.StatusOK, result)
 }
-
-
-
 /**
  * 用户注册
  */
@@ -217,7 +208,6 @@ func CustomerAccountRegister(c *gin.Context){
     })
     c.JSON(http.StatusOK, result)
 }
-
 
 
 type CustomerLogin struct {
@@ -254,32 +244,29 @@ func CustomerAccountLogin(c *gin.Context){
         return  
     }
     customer.Password = ""
-    accesToken, err := security.JwtSignToken(customer)
-    // 通过token，得到保存的值。
-    /*
-    data, expired, err := security.JwtParse(accesToken);
-    if err != nil{
-        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
-        return
-    }
-    "data":data,
-    "expired":expired,
-    */
+    token, err := security.JwtSignToken(customer)
     result := util.BuildSuccessResult(gin.H{
-        "accesToken": accesToken,
+        "token": token,
     })
-    c.JSON(http.StatusOK, result)
+    c.JSON(http.StatusOK, result)    
+    
 }
 
-
+/**
+ * 账户中心
+ */
 func CustomerAccountIndex(c *gin.Context){
-    
+    var roles []string
+    roles = append(roles, "admin")
+    //roles = append(roles, "editor")
+    cCustomer := currentCustomer.(map[string]interface{})
     result := util.BuildSuccessResult(gin.H{
-        "status": "success",
-        "currentCustomer": currentCustomer,
+        "name": cCustomer["username"],
+        "avatar": "https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif",
+        "roles": roles,
     })
     c.JSON(http.StatusOK, result)
-
+    
 }
 
 /**
@@ -295,6 +282,66 @@ func encryptionPass(password string) (string, error){
     return hex.EncodeToString(cipherStr), nil
 }
 
+/**
+ * 列表查询
+ */
+func CustomerList(c *gin.Context){
+    // params := c.Request.URL.Query()
+    // 获取参数并处理
+    var sortD string
+    var sortColumns string
+    page, _  := strconv.Atoi(c.DefaultQuery("page", "1"))
+    limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
+    id, _    := strconv.Atoi(c.DefaultQuery("id", ""))
+    sex, _   := strconv.Atoi(c.DefaultQuery("sex", ""))
+    username := c.DefaultQuery("username", "")
+    sort     := c.DefaultQuery("sort", "")
+    created_at_begin := c.DefaultQuery("created_begin_timestamps", "")
+    created_at_end   := c.DefaultQuery("created_end_timestamps", "")
+    if utf8.RuneCountInString(sort) >= 2 {
+        sortD = string([]byte(sort)[:1])
+        sortColumns = string([]byte(sort)[1:])
+    } 
+    whereParam := make(mysqldb.XOrmWhereParam)
+    whereParam["id"] = id
+    whereParam["sex"] = sex
+    whereParam["username"] = []string{"like", username}
+    //whereParam["age"] = []string{"scope","2","20"}
+    whereParam["created_at"] = []string{"scope", created_at_begin, created_at_end}
+    whereStr, whereVal := mysqldb.GetXOrmWhere(whereParam)
+    // 进行查询
+    query := engine.Limit(limit, (page-1)*limit)
+    if whereStr != "" {
+        query = query.Where(whereStr, whereVal...)
+    }
+    // 排序
+    if sortD == "+" && sortColumns != "" {
+        query = query.Asc(sortColumns)
+    } else if sortD == "-" && sortColumns != "" {
+        query = query.Desc(sortColumns)
+    }
+    // 得到查询count数
+    var customer Customer
+    counts, err := engine.Where(whereStr, whereVal...).Count(&customer)
+    if err != nil{
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+        return  
+    }
+    // 得到结果数据
+    var customers []Customer
+    err = query.Find(&customers) 
+    if err != nil{
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+        return  
+    }
+    // 生成返回结果
+    result := util.BuildSuccessResult(gin.H{
+        "items": customers,
+        "total":counts,
+    })
+    // 返回json
+    c.JSON(http.StatusOK, result)
+}
 
 
 
