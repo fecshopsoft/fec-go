@@ -21,11 +21,17 @@ type Customer struct {
     Id int64 `form:"id" json:"id"`
     Username string `form:"username" json:"username" binding:"required"`
     Email string `form:"email" json:"email"`
-    Sex string `form:"sex" json:"sex"`
-    Age string `form:"age" json:"age"`
+    Sex int `form:"sex" json:"sex"`
+    Name string `form:"name" json:"name"`
+    Telephone string `form:"telephone" json:"telephone"`
+    Remark string `form:"remark" json:"remark"`
+    Status int `form:"status" json:"status"`
+    Age int `form:"age" json:"age"`
     Password string `xorm:"varchar(200)" form:"password" json:"password" binding:"required"`
     CreatedAt int64 `form:"created_at" json:"created_at"`
     UpdatedAt int64 `form:"updated_at" json:"updated_at"`
+    BirthDate  time.Time `form:"birth_date" json:"birth_date" time_format:"2006-01-02"`
+    
 }
 
 var engine *(xorm.Engine)
