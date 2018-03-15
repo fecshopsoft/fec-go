@@ -17,9 +17,6 @@ func getHeader(c *gin.Context, key string) string{
 	}
 	return ""
 }
-
-
-
 /**
  * 通过id查询customer
  */
@@ -35,7 +32,6 @@ func PermissionAdmin(c *gin.Context){
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return
     }
-    
     /*
     c.AbortWithStatusJSON(http.StatusOK,gin.H{
         "data":data,
@@ -43,8 +39,7 @@ func PermissionAdmin(c *gin.Context){
         "expired":expired,
     })
     */
-    now := time.Now().Unix() 
-   
+    now := time.Now().Unix()
     if logined != 1 {
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("用户未登录，请先登录"))
         return
@@ -56,20 +51,16 @@ func PermissionAdmin(c *gin.Context){
     currentCustomer = data
 }
 
-
 func CORSMiddleware() gin.HandlerFunc {
     return func(c *gin.Context) {
         c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
         c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
         c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-Token, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
-        c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT")
-        
-
+        c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE")
         if c.Request.Method == "OPTIONS" {
             c.AbortWithStatus(204)
             return
         }
-
         c.Next()
     }
 }

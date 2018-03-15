@@ -30,7 +30,7 @@ type Customer struct {
     Password string `xorm:"varchar(200)" form:"password" json:"password" binding:"required"`
     CreatedAt int64 `form:"created_at" json:"created_at"`
     UpdatedAt int64 `form:"updated_at" json:"updated_at"`
-    BirthDate  time.Time `form:"birth_date" json:"birth_date" time_format:"2006-01-02"`
+    BirthDate  int64 `form:"birth_date" json:"birth_date"`
     
 }
 
