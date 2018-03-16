@@ -46,7 +46,13 @@ func Listen(listenIp string) {
         
         v1.GET("/customer/list", handle.CustomerList)
         
+        
+        v1.POST("/customer/addone", handle.CustomerAdd)
+        v1.PATCH("/customer/updateone", handle.CustomerUpdateById)
+        
         v1.DELETE("/customers/id/:id", handle.CustomerDeleteById)
+        v1.DELETE("/customer/batch", handle.CustomerDeleteByIds)
+        
         /*
         v1.GET("/customer/list", func(c *gin.Context) {
             item := []gin.H{}
@@ -85,7 +91,7 @@ func Listen(listenIp string) {
         
         v1.GET("/customers", handle.CustomerList)
         
-        v1.POST("/customers", handle.CustomerAdd)
+        
         
         
         v1.PATCH("/customers", handle.CustomerUpdateById)

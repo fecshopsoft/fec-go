@@ -17,6 +17,11 @@ import(
     //"fmt"
 )
 
+ 
+type DeleteIds struct{
+    Ids []int `form:"ids" json:"ids"`
+}
+
 type Customer struct {
     Id int64 `form:"id" json:"id"`
     Username string `form:"username" json:"username" binding:"required"`
@@ -27,7 +32,7 @@ type Customer struct {
     Remark string `form:"remark" json:"remark"`
     Status int `form:"status" json:"status"`
     Age int `form:"age" json:"age"`
-    Password string `xorm:"varchar(200)" form:"password" json:"password" binding:"required"`
+    Password string `xorm:"varchar(200)" form:"password" json:"password"`
     CreatedAt int64 `form:"created_at" json:"created_at"`
     UpdatedAt int64 `form:"updated_at" json:"updated_at"`
     BirthDate  int64 `form:"birth_date" json:"birth_date"`
@@ -65,6 +70,28 @@ func CustomerOneById(c *gin.Context){
     }
     result := util.BuildSuccessResult(gin.H{
         "customer":customer,
+    })
+    c.JSON(http.StatusOK, result)
+}
+
+
+/**
+ * 通过ids查询customer
+ */
+func CustomerDeleteByIds(c *gin.Context){
+    engine := mysqldb.GetEngine()
+    var customer Customer
+    var ids DeleteIds
+    err := c.ShouldBindJSON(&ids);
+    //c.JSON(http.StatusOK, ids)
+    affected, err := engine.In("id", ids.Ids).Delete(&customer)
+    if err != nil {
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+        return
+    } 
+    result := util.BuildSuccessResult(gin.H{
+        "affected": affected,
+        "ids": ids.Ids,
     })
     c.JSON(http.StatusOK, result)
 }
