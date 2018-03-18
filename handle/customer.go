@@ -6,7 +6,7 @@ import(
     "strconv"
     "crypto/md5"
     "errors"
-    "time"
+    // "time"
     "unicode/utf8"
     "encoding/hex"
     _ "github.com/go-sql-driver/mysql"
@@ -17,7 +17,6 @@ import(
     //"fmt"
 )
 
- 
 type DeleteIds struct{
     Ids []int `form:"ids" json:"ids"`
 }
@@ -32,18 +31,74 @@ type Customer struct {
     Remark string `form:"remark" json:"remark"`
     Status int `form:"status" json:"status"`
     Age int `form:"age" json:"age"`
-    Password string `xorm:"varchar(200)" form:"password" json:"password"`
-    CreatedAt int64 `form:"created_at" json:"created_at"`
-    UpdatedAt int64 `form:"updated_at" json:"updated_at"`
+    CreatedAt int64 `xorm:"created" form:"created_at" json:"created_at"`
+    UpdatedAt int64 `xorm:"updated" form:"updated_at" json:"updated_at"`
     BirthDate  int64 `form:"birth_date" json:"birth_date"`
-    
+}
+
+type CustomerPassword struct {
+    Password string `form:"password" json:"password" binding:"required"`
+    NewPassword string `form:"new_password" json:"new_password" binding:"required"`
+    ConfirmPassword string `form:"confirm_password" json:"confirm_password" binding:"required"`
+}
+
+type CustomerLogin struct {
+    Username string `form:"username" json:"username" binding:"required"`
+    Password string `xorm:"varchar(200)" form:"password" json:"password" binding:"required"`
+}
+
+type CustomerAdd struct {
+    Id int64 `form:"id" json:"id"`
+    Username string `form:"username" json:"username" binding:"required"`
+    Email string `form:"email" json:"email"`
+    Sex int `form:"sex" json:"sex"`
+    Name string `form:"name" json:"name"`
+    Telephone string `form:"telephone" json:"telephone"`
+    Remark string `form:"remark" json:"remark"`
+    Status int `form:"status" json:"status"`
+    Age int `form:"age" json:"age"`
+    CreatedAt int64 `xorm:"created" form:"created_at" json:"created_at"`
+    UpdatedAt int64 `xorm:"updated" form:"updated_at" json:"updated_at"`
+    BirthDate  int64 `form:"birth_date" json:"birth_date"`
+    Password string `xorm:"varchar(200)" form:"password" json:"password" binding:"required"`
+}
+
+type CustomerUpdate struct {
+    Id int64 `form:"id" json:"id"`
+    Username string `form:"username" json:"username" binding:"required"`
+    Email string `form:"email" json:"email"`
+    Sex int `form:"sex" json:"sex"`
+    Name string `form:"name" json:"name"`
+    Telephone string `form:"telephone" json:"telephone"`
+    Remark string `form:"remark" json:"remark"`
+    Status int `form:"status" json:"status"`
+    Age int `form:"age" json:"age"`
+    CreatedAt int64 `xorm:"created" form:"created_at" json:"created_at"`
+    UpdatedAt int64 `xorm:"updated" form:"updated_at" json:"updated_at"`
+    BirthDate  int64 `form:"birth_date" json:"birth_date"`
+    Password string `xorm:"varchar(200)" form:"password" json:"password"`
 }
 
 var engine *(xorm.Engine)
+var statusEnable int = 1
 
 func init(){
     engine = mysqldb.GetEngine()
 }
+
+func (customerUpdate CustomerUpdate) TableName() string {
+    return "customer"
+}
+
+func (customerAdd CustomerAdd) TableName() string {
+    return "customer"
+}
+
+func (customerLogin CustomerLogin) TableName() string {
+    return "customer"
+}
+
+
 /**
  * 通过id查询customer
  */
@@ -73,8 +128,6 @@ func CustomerOneById(c *gin.Context){
     })
     c.JSON(http.StatusOK, result)
 }
-
-
 /**
  * 通过ids查询customer
  */
@@ -119,19 +172,24 @@ func CustomerOneByUsername(c *gin.Context){
     })
     c.JSON(http.StatusOK, result)
 }
-
-
-
 /**
  * 增加一条记录
  */
-func CustomerAdd(c *gin.Context){
-    var customer Customer
+func CustomerAddOne(c *gin.Context){
+    var customer CustomerAdd
     err := c.ShouldBindJSON(&customer);
     if err != nil {
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return
     }
+    // 处理密码
+    passwordEncry, err := getCustomerPassword(customer.Password)
+    if err != nil {
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+        return
+    } 
+    customer.Password = passwordEncry
+    // 插入
     affected, err := engine.Insert(&customer)
     if err != nil {
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
@@ -143,18 +201,22 @@ func CustomerAdd(c *gin.Context){
     })
     c.JSON(http.StatusOK, result)
 }
-
-
 /**
  * 更新一条记录
  */
 func CustomerUpdateById(c *gin.Context){
-    var customer Customer
+    var customer CustomerUpdate
     err := c.ShouldBindJSON(&customer);
     if err != nil {
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return
     }
+    passwordEncry, err := getCustomerPassword(customer.Password)
+    if err != nil {
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+        return
+    } 
+    customer.Password = passwordEncry
     affected, err := engine.Update(&customer, &Customer{Id:customer.Id})
     if err != nil {
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
@@ -167,8 +229,81 @@ func CustomerUpdateById(c *gin.Context){
     c.JSON(http.StatusOK, result)
 }
 
+var PasswordMinLen int = 6
 
+func CheckPassFormat(customer CustomerPassword) (bool, error){
+    if utf8.RuneCountInString(customer.NewPassword) < PasswordMinLen {
+        return false, errors.New("new password length must >= " + strconv.Itoa(PasswordMinLen))
+    }
+    if customer.ConfirmPassword != customer.NewPassword {
+        return false, errors.New("New Password and confirmation password must be the same")
+    }
+    return true, nil
+}
 
+/**
+ * 更新密码
+ */
+func CustomerUpdatePassword(c *gin.Context){
+    var customer CustomerPassword
+    err := c.ShouldBindJSON(&customer);
+    if err != nil {
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+        return
+    }
+    // 格式检查
+    _, err = CheckPassFormat(customer)
+    if err != nil {
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+        return
+    }
+    // 更新密码
+    encryptionPassStr, err := encryptionPass(customer.Password)
+    if err != nil {
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+        return
+    }
+    
+    newEncryptionPassStr, err := encryptionPass(customer.NewPassword)
+    if err != nil {
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+        return
+    }
+    cCustomer, ok := currentCustomer.(map[string]interface{})
+    if ok == false {
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("you must relogin your account"))
+        return
+    }
+    username := cCustomer["username"].(string)
+    var customerLogin CustomerLogin
+    customerLogin.Username = username
+    customerLogin.Password = newEncryptionPassStr
+    affected, err := engine.Update(&customerLogin, &CustomerLogin{Username:username,Password:encryptionPassStr})
+    if err != nil {
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+        return
+    } 
+    result := util.BuildSuccessResult(gin.H{
+        "affected":affected,
+        "username":username,
+    })
+    c.JSON(http.StatusOK, result)
+}
+
+// 对密码进行判断和处理。
+func getCustomerPassword(password string) (string, error){
+    if password == "" {
+        return "", nil
+    }
+    if utf8.RuneCountInString(password) < PasswordMinLen {
+        return "", errors.New("password length must >= " + strconv.Itoa(PasswordMinLen) )
+    }
+    encryptionPassStr, err := encryptionPass(password)
+    if err != nil {
+        return "", err
+    }
+    return encryptionPassStr, nil
+}
 /**
  * 删除一条记录
  */
@@ -191,10 +326,8 @@ func CustomerDeleteById(c *gin.Context){
     })
     c.JSON(http.StatusOK, result)
 }
-
-
 /**
- * 删除一条记录
+ * 得到用户数
  */
 func CustomerCount(c *gin.Context){
     var customer Customer
@@ -212,8 +345,9 @@ func CustomerCount(c *gin.Context){
 /**
  * 用户注册
  */
+/* 
 func CustomerAccountRegister(c *gin.Context){
-    var customer Customer
+    var customer CustomerSave
     err := c.ShouldBindJSON(&customer);
     if err != nil {
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
@@ -241,12 +375,9 @@ func CustomerAccountRegister(c *gin.Context){
     })
     c.JSON(http.StatusOK, result)
 }
+*/
 
 
-type CustomerLogin struct {
-    Username string `form:"username" json:"username" binding:"required"`
-    Password string `xorm:"varchar(200)" form:"password" json:"password" binding:"required"`
-}
 
 
 /**
@@ -266,7 +397,7 @@ func CustomerAccountLogin(c *gin.Context){
         return
     }
     //has, err := engine.Where(" password = ? ", encryptionPassStr).And(" username = ?", customer.Username).Get(&customer)
-    has, err := engine.Where("username = ? and password = ?", customerLogin.Username, encryptionPassStr).Get(&customer)
+    has, err := engine.Where("username = ? and password = ? and status = ? ", customerLogin.Username, encryptionPassStr, statusEnable).Get(&customer)
     
     if err != nil{
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
@@ -276,7 +407,6 @@ func CustomerAccountLogin(c *gin.Context){
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("该账户不存在或密码错误"))
         return  
     }
-    customer.Password = ""
     token, err := security.JwtSignToken(customer)
     result := util.BuildSuccessResult(gin.H{
         "token": token,
@@ -295,6 +425,7 @@ func CustomerAccountIndex(c *gin.Context){
     cCustomer := currentCustomer.(map[string]interface{})
     result := util.BuildSuccessResult(gin.H{
         "name": cCustomer["username"],
+        "persion_name": cCustomer["name"],
         "avatar": "https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif",
         "roles": roles,
     })
@@ -326,6 +457,7 @@ func CustomerList(c *gin.Context){
     page, _  := strconv.Atoi(c.DefaultQuery("page", "1"))
     limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
     id, _    := strconv.Atoi(c.DefaultQuery("id", ""))
+    status, _    := strconv.Atoi(c.DefaultQuery("status", ""))
     sex, _   := strconv.Atoi(c.DefaultQuery("sex", ""))
     username := c.DefaultQuery("username", "")
     sort     := c.DefaultQuery("sort", "")
@@ -337,6 +469,7 @@ func CustomerList(c *gin.Context){
     } 
     whereParam := make(mysqldb.XOrmWhereParam)
     whereParam["id"] = id
+    whereParam["status"] = status
     whereParam["sex"] = sex
     whereParam["username"] = []string{"like", username}
     //whereParam["age"] = []string{"scope","2","20"}
