@@ -9,8 +9,10 @@ import(
     //"fmt"
 )
 
+// 定义当前用户
 var currentCustomer interface{}
 
+// 从header中取出来相关的数据
 func getHeader(c *gin.Context, key string) string{
     if values, _ := c.Request.Header[key]; len(values) > 0 {
 		return values[0]
@@ -18,9 +20,9 @@ func getHeader(c *gin.Context, key string) string{
 	return ""
 }
 /**
- * 通过id查询customer
+ * 验证用户是否登录
  */
-func PermissionAdmin(c *gin.Context){
+func PermissionLoginToken(c *gin.Context){
     //c.AbortWithStatusJSON(http.StatusOK, c.Request.Header)
     access_token := getHeader(c, "X-Token");
     if  access_token == "" {
@@ -51,6 +53,35 @@ func PermissionAdmin(c *gin.Context){
     currentCustomer = data
 }
 
+
+
+// 验证登录用户，是否有权限访问当前的资源
+
+func PermissionRole(c *gin.Context){
+    /*
+    cCustomer, ok := currentCustomer.(map[string]interface{})
+    if ok == false {
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("you must relogin your account"))
+        return
+    }
+    username := cCustomer["username"].(string)
+    customerType := cCustomer["type"].(float64)
+    parentId := cCustomer["parent_id"].(float64)
+    */
+    /*
+    r := c.Request
+    // url path
+    path := r.URL.Path
+    // url request method
+    requestMethod := r.Method
+    */
+    // 验证当前访问的url，是否存在访问权限。
+    // c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("you do not have permission to visit this url"))
+    // return
+    
+}
+
+// cors中间件，跨域请求加入相关参数。
 func CORSMiddleware() gin.HandlerFunc {
     return func(c *gin.Context) {
         c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
@@ -64,8 +95,3 @@ func CORSMiddleware() gin.HandlerFunc {
         c.Next()
     }
 }
-
-
-
-
-

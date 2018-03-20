@@ -1,5 +1,5 @@
 
 
-1.½« config.ini µÄÄÚÈÝ£¬¸´ÖÆµ½ `/etc/fec-go/config.ini`
+1.å°† config.ini çš„å†…å®¹ï¼Œå¤åˆ¶åˆ° `/etc/fec-go/config.ini`
 
-2.ÔÚÉÏÃæµÄÅäÖÃÎÄ¼þÖÐÅäÖÃÏàÓ¦µÄ²ÎÊý
+2.åœ¨ä¸Šé¢çš„é…ç½®æ–‡ä»¶ä¸­é…ç½®ç›¸åº”çš„å‚æ•°

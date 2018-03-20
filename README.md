@@ -27,6 +27,32 @@ go get github.com/gin-gonic/gin
 go get github.com/dgrijalva/jwt-go
 ```
 
+### 配置
+
+
+
+1.将 config/config.ini 的内容，复制到 `/etc/fec-go/config.ini`
+,上面的配置文件中配置相应的参数
+
+
+2.main.go 设置绑定的ip和端口
+
+```
+listenIp := "120.24.37.249:3000"
+```
+
+将这个文件复制到main包下面，然后执行
+
+```
+go run main.go
+```
+
+启动go web
+
+
+
+
+
 
 
 

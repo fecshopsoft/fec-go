@@ -4,6 +4,7 @@ import(
     "github.com/dgrijalva/jwt-go"
     "time"
     "fmt"
+    "errors"
 )
 
 var hmacSampleSecret = []byte("fdasfdsafdsfdsf534re#$ed");
@@ -36,15 +37,23 @@ func JwtParse(tokenString string) (interface{}, int, int64, error) {
     })
     
     if err != nil {
-        return nil, 0, 0, nil
+        return nil, 0, 0, err
     }
 
     if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-        logined := int(claims["logined"].(float64))
-        expired := int64(claims["expired"].(float64))
+        lg, ok := claims["logined"].(float64)
+        if !ok {
+            return nil, 0, 0, errors.New("JwtParse logined convert float64 fail")
+        }
+        logined := int(lg)
+        ex, ok := claims["expired"].(float64)
+        if !ok {
+            return nil, 0, 0, errors.New("JwtParse expired convert float64 fail")
+        }
+        expired := int64(ex)
         return claims["data"], logined, expired, nil
     } else {
-        return nil, 0, 0, nil
+        return nil, 0, 0, errors.New("JwtParse token fail")
     }
 
 }
