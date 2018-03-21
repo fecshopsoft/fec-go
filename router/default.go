@@ -29,7 +29,7 @@ func Listen(listenIp string) {
         })
         
         // #### customer account ####
-        // 得到customer 列表
+        // 得到 customer 列表
         v1.GET("/customer/list", handle.PermissionLoginToken, handle.PermissionRole, handle.CustomerList)
         // 增加一个用户
         v1.POST("/customer/addone", handle.PermissionLoginToken, handle.CustomerAddOne)
@@ -43,7 +43,7 @@ func Listen(listenIp string) {
         v1.DELETE("/customer/deletebatch", handle.PermissionLoginToken, handle.CustomerDeleteByIds)
         
         // #### customer resource group ####
-        // 得到resource group 列表
+        // 得到 resource group 列表
         v1.GET("/customer/resourcegroup/list", handle.PermissionLoginToken, handle.ResourceGroupList)
         // 增加一个resource group
         v1.POST("/customer/resourcegroup/addone", handle.PermissionLoginToken, handle.ResourceGroupAddOne)
@@ -54,6 +54,29 @@ func Listen(listenIp string) {
         // 批量删除resource group
         v1.DELETE("/customer/resourcegroup/deletebatch", handle.PermissionLoginToken, handle.ResourceGroupDeleteByIds)
         
+        // #### customer resource ####
+        // 得到 resource 列表
+        v1.GET("/customer/resource/list", handle.PermissionLoginToken, handle.ResourceList)
+        // 增加一个resource group
+        v1.POST("/customer/resource/addone", handle.PermissionLoginToken, handle.ResourceAddOne)
+        // 更新一个resource group
+        v1.PATCH("/customer/resource/updateone", handle.PermissionLoginToken, handle.ResourceUpdateById)
+        // 删除一个resource group
+        v1.DELETE("/customer/resource/deleteone", handle.PermissionLoginToken, handle.ResourceDeleteById)
+        // 批量删除resource group
+        v1.DELETE("/customer/resource/deletebatch", handle.PermissionLoginToken, handle.ResourceDeleteByIds)
+        
+        // #### customer role ####
+        // 得到 role 列表
+        v1.GET("/customer/role/list", handle.PermissionLoginToken, handle.RoleList)
+        // 增加一个resource group
+        v1.POST("/customer/role/addone", handle.PermissionLoginToken, handle.RoleAddOne)
+        // 更新一个resource group
+        v1.PATCH("/customer/role/updateone", handle.PermissionLoginToken, handle.RoleUpdateById)
+        // 删除一个resource group
+        v1.DELETE("/customer/role/deleteone", handle.PermissionLoginToken, handle.RoleDeleteById)
+        // 批量删除resource group
+        v1.DELETE("/customer/role/deletebatch", handle.PermissionLoginToken, handle.RoleDeleteByIds)
         
         
         /*

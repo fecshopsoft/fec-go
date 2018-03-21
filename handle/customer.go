@@ -25,6 +25,11 @@ type CustomerToken struct {
     ParentId int `form:"parent_id" json:"parent_id"`
 }
 
+type CustomerUsername struct {
+    Id int64 `form:"id" json:"id"`
+    Username string `form:"username" json:"username" binding:"required"`
+}
+
 type Customer struct {
     Id int64 `form:"id" json:"id"`
     Username string `form:"username" json:"username" binding:"required"`
@@ -35,16 +40,19 @@ type Customer struct {
     Remark string `form:"remark" json:"remark"`
     Status int `form:"status" json:"status"`
     Age int `form:"age" json:"age"`
+    Type int `form:"type" json:"type"`
     CreatedAt int64 `xorm:"created" form:"created_at" json:"created_at"`
     UpdatedAt int64 `xorm:"updated" form:"updated_at" json:"updated_at"`
     BirthDate  int64 `form:"birth_date" json:"birth_date"`
 }
+
 
 type CustomerPassword struct {
     Password string `form:"password" json:"password" binding:"required"`
     NewPassword string `form:"new_password" json:"new_password" binding:"required"`
     ConfirmPassword string `form:"confirm_password" json:"confirm_password" binding:"required"`
 }
+
 
 type CustomerLogin struct {
     Username string `form:"username" json:"username" binding:"required"`
@@ -87,6 +95,12 @@ type CustomerUpdate struct {
 var statusEnable int = 1
 // 密码最小长度
 var PasswordMinLen int = 6
+// superAdmin
+var AdminSuperType int = 1 
+// superAdmin
+var AdminCommonType int = 2 
+// superAdmin
+var AdminChildType int = 3 
 
 func (customerUpdate CustomerUpdate) TableName() string {
     return "customer"
@@ -103,6 +117,12 @@ func (customerLogin CustomerLogin) TableName() string {
 func (customerToken CustomerToken) TableName() string {
     return "customer"
 }
+
+func (customerUsername CustomerUsername) TableName() string {
+    return "customer"
+}
+
+
 /**
  * 增加一条记录
  */
@@ -414,6 +434,52 @@ func CustomerList(c *gin.Context){
     // 返回json
     c.JSON(http.StatusOK, result)
 }
+
+
+/**
+ * 通过ids，查询customer表，得到
+ */
+func GetCustomerUsernameByIds(ids []int64) ([]CustomerUsername, error){
+    // 得到结果数据
+    var customers []CustomerUsername
+    engine := mysqldb.GetEngine()
+    err := engine.In("id", ids).Find(&customers) 
+    if err != nil{
+        return nil, err 
+    }
+    return customers, nil
+}
+
+
+/**
+ * 通过id查询一条记录
+ */
+func GetCustomerOneById(id int64) (Customer, error){
+    var customer Customer
+    has, err := engine.Where("id = ?", id).Get(&customer)
+    if err != nil {
+        return customer, err
+    } 
+    if has == false {
+        return customer, errors.New("get customer by id error, empty data.")
+    }
+    return customer, nil
+}
+
+/**
+ * 得到enable的common  admin 
+ */
+func GetAllEnableCommonCustomer() ([]CustomerUsername, error){
+    // 得到结果数据
+    var customers []CustomerUsername
+    engine := mysqldb.GetEngine()
+    err := engine.In("type = ? and status = ? ", AdminCommonType, statusEnable).Find(&customers) 
+    if err != nil{
+        return nil, err 
+    }
+    return customers, nil
+}
+
 /**
  * 通过id查询customer
  */
