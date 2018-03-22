@@ -6,10 +6,11 @@ import (
 	"os"
 	"path/filepath"
 )
-
+// 初始化log
 func InitGlobalLog() {
 	if "false" == config.Get("output_log") {
-		return
+		log.SetOutput(os.Stdout)
+        return
 	}
 	globalLogUrl := config.Get("global_log")
 	if globalLogUrl == "" {

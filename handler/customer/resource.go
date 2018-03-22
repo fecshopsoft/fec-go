@@ -1,4 +1,4 @@
-package handle
+package customer
 
 import(
     "github.com/gin-gonic/gin"

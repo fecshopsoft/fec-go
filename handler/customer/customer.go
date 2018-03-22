@@ -1,4 +1,4 @@
-package handle
+package customer
 
 import(
     "github.com/gin-gonic/gin"
@@ -122,7 +122,6 @@ func (customerUsername CustomerUsername) TableName() string {
     return "customer"
 }
 
-
 /**
  * 增加一条记录
  */
@@ -219,14 +218,6 @@ func CustomerUpdatePassword(c *gin.Context){
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return
     }
-    /*
-    cCustomer, ok := currentCustomer.(map[string]interface{})
-    if ok == false {
-        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("you must relogin your account"))
-        return
-    }
-    username := cCustomer["username"].(string)
-    */
     username := GetCurrentCustomerUsername(c)
     var customerLogin CustomerLogin
     customerLogin.Username = username

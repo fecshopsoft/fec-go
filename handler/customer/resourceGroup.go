@@ -1,12 +1,11 @@
-package handle
+package customer
 
 import(
     "github.com/gin-gonic/gin"
     "net/http"
     "strconv"
-    // "errors"
+    "errors"
     // "time"
-    // "log"
     "unicode/utf8"
     _ "github.com/go-sql-driver/mysql"
     "github.com/fecshopsoft/fec-go/util"
@@ -14,96 +13,68 @@ import(
     //"fmt"
 )
 
-type Role struct {
+type ResourceGroup struct {
     Id int64 `form:"id" json:"id"`
     Name string `form:"name" json:"name" binding:"required"`
-    OwnId int64 `form:"own_id" json:"own_id"`
     CreatedAt int64 `xorm:"created" form:"created_at" json:"created_at"`
     UpdatedAt int64 `xorm:"updated" form:"updated_at" json:"updated_at"`
     CreatedCustomerId  int64 `form:"created_customer_id" json:"created_customer_id"`
 }
 
-type RoleUpdate struct {
-    Id int64 `form:"id" json:"id"`
-    Name string `form:"name" json:"name" binding:"required"`
-    OwnId int64 `form:"own_id" json:"own_id"`
-    UpdatedAt int64 `xorm:"updated" form:"updated_at" json:"updated_at"`
-}
-
-func (role Role) TableName() string {
-    return "role_info"
-}
-func (roleUpdate RoleUpdate) TableName() string {
-    return "role_info"
+func (resourceGroup ResourceGroup) TableName() string {
+    return "resource_group"
 }
 
 /**
  * 增加一条记录
  */
-func RoleAddOne(c *gin.Context){
-    var role Role
-    err := c.ShouldBindJSON(&role);
+func ResourceGroupAddOne(c *gin.Context){
+    var resourceGroup ResourceGroup
+    err := c.ShouldBindJSON(&resourceGroup);
     if err != nil {
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return
     }
-    // 添加创建人
     customerId := GetCurrentCustomerId(c)
-    
-    role.CreatedCustomerId = customerId
-    // 添加own_id
-    ownId, err := GetCustomerOwnId(c, role.OwnId)
-    if err != nil {
-        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
-        return
-    } 
-    role.OwnId = ownId
+    resourceGroup.CreatedCustomerId = customerId
     // 插入
-    affected, err := engine.Insert(&role)
+    affected, err := engine.Insert(&resourceGroup)
     if err != nil {
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return
     }
     result := util.BuildSuccessResult(gin.H{
         "affected":affected,
-        "role":role,
+        "resourceGroup":resourceGroup,
     })
     c.JSON(http.StatusOK, result)
 }
-
 /**
  * 通过id为条件，更新一条记录
  */
-func RoleUpdateById(c *gin.Context){
-    var role RoleUpdate
-    err := c.ShouldBindJSON(&role);
+func ResourceGroupUpdateById(c *gin.Context){
+    var resourceGroup ResourceGroup
+    err := c.ShouldBindJSON(&resourceGroup);
     if err != nil {
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return
     }
-    // 添加own_id
-    ownId, err := GetCustomerOwnId(c, role.OwnId)
-    if err != nil {
-        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
-        return
-    } 
-    role.OwnId = ownId
-    affected, err := engine.Update(&role, &RoleUpdate{Id:role.Id})
+    affected, err := engine.Update(&resourceGroup, &ResourceGroup{Id:resourceGroup.Id})
     if err != nil {
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return
     } 
     result := util.BuildSuccessResult(gin.H{
         "affected":affected,
-        "role":role,
+        "resourceGroup":resourceGroup,
     })
     c.JSON(http.StatusOK, result)
 }
 /**
  * 删除一条记录
  */
-func RoleDeleteById(c *gin.Context){
-    var role Role
+func ResourceGroupDeleteById(c *gin.Context){
+    var resourceGroup ResourceGroup
     var id DeleteId
     err := c.ShouldBindJSON(&id);
     // customerId, err := strconv.Atoi(c.Param("id"))
@@ -111,7 +82,7 @@ func RoleDeleteById(c *gin.Context){
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return
     }
-    affected, err := engine.Where("id = ?",id.Id).Delete(&role)
+    affected, err := engine.Where("id = ?",id.Id).Delete(&resourceGroup)
     if err != nil {
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return
@@ -125,13 +96,13 @@ func RoleDeleteById(c *gin.Context){
 /**
  * 通过ids批量删除数据
  */
-func RoleDeleteByIds(c *gin.Context){
+func ResourceGroupDeleteByIds(c *gin.Context){
     engine := mysqldb.GetEngine()
-    var role Role
+    var resourceGroup ResourceGroup
     var ids DeleteIds
     err := c.ShouldBindJSON(&ids);
     //c.JSON(http.StatusOK, ids)
-    affected, err := engine.In("id", ids.Ids).Delete(&role)
+    affected, err := engine.In("id", ids.Ids).Delete(&resourceGroup)
     if err != nil {
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return
@@ -145,7 +116,7 @@ func RoleDeleteByIds(c *gin.Context){
 /**
  * 列表查询
  */
-func RoleList(c *gin.Context){
+func ResourceGroupList(c *gin.Context){
     // params := c.Request.URL.Query()
     // 获取参数并处理
     var sortD string
@@ -156,15 +127,12 @@ func RoleList(c *gin.Context){
     limit, _ := strconv.Atoi(c.DefaultQuery("limit", defaultPageCount))
     name     := c.DefaultQuery("name", "")
     sort     := c.DefaultQuery("sort", "")
-    created_at_begin := c.DefaultQuery("created_begin_timestamps", "")
-    created_at_end   := c.DefaultQuery("created_end_timestamps", "")
     if utf8.RuneCountInString(sort) >= 2 {
         sortD = string([]byte(sort)[:1])
         sortColumns = string([]byte(sort)[1:])
     } 
     whereParam := make(mysqldb.XOrmWhereParam)
     whereParam["name"] = []string{"like", name}
-    whereParam["created_at"] = []string{"scope", created_at_begin, created_at_end}
     whereStr, whereVal := mysqldb.GetXOrmWhere(whereParam)
     // 进行查询
     query := engine.Limit(limit, (page-1)*limit)
@@ -178,66 +146,48 @@ func RoleList(c *gin.Context){
         query = query.Desc(sortColumns)
     }
     // 得到查询count数
-    var role Role
-    counts, err := engine.Where(whereStr, whereVal...).Count(&role)
+    var resourceGroup ResourceGroup
+    counts, err := engine.Where(whereStr, whereVal...).Count(&resourceGroup)
     if err != nil{
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return  
     }
     // 得到结果数据
-    var roles []Role
-    err = query.Find(&roles) 
+    var resourceGroups []ResourceGroup
+    err = query.Find(&resourceGroups) 
     if err != nil{
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return  
     }
-    ownIdOps, err := OwnIdOps(c)
-    if err != nil{
-        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
-        return  
-    }
-    createdCustomerOps, err := GetRoleCreatedCustomerOps(roles)
-    if err != nil{
-        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
-        return  
-    }
-    
-    customerUsername := GetCurrentCustomerUsername(c)
-    customerType := GetCurrentCustomerType(c)
-    
-    
-    
     // 生成返回结果
     result := util.BuildSuccessResult(gin.H{
-        "items": roles,
-        "total": counts,
-        "createdCustomerOps": createdCustomerOps,
-        "ownIdOps": ownIdOps,
-        "customerUsername": customerUsername,
-        "customerType": customerType,
+        "items": resourceGroups,
+        "total":counts,
     })
     // 返回json
     c.JSON(http.StatusOK, result)
 }
 
 
-func GetRoleCreatedCustomerOps(roles []Role) ([]VueSelectOps, error){
+/**
+ * 列表查询
+ */
+func ResourceGroupOps() ([]VueSelectOps, error){
     var groupArr []VueSelectOps
-    var ids []int64
-    for i:=0; i<len(roles); i++ {
-        role := roles[i]
-        ids = append(ids, role.CreatedCustomerId)
-    }
-    customers, err := GetCustomerUsernameByIds(ids)
+    // 得到结果数据
+    var resourceGroups []ResourceGroup
+    err := engine.Find(&resourceGroups) 
     if err != nil{
+        //c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return nil, err
     }
-    for i:=0; i<len(customers); i++ {
-        customer := customers[i]
-        groupArr = append(groupArr, VueSelectOps{Key: customer.Id, DisplayName: customer.Username})
+    for i:=0; i<len(resourceGroups); i++ {
+        resourceGp := resourceGroups[i]
+        groupArr = append(groupArr, VueSelectOps{Key: resourceGp.Id, DisplayName: resourceGp.Name})
+        
     }
-    // if groupArr == nil {
-    //     return nil, errors.New("customer ids is empty")
-    // }
+    if groupArr == nil {
+        return nil, errors.New("resource group data is empty, you should config in [resource group]")
+    }
     return groupArr, nil
 }
