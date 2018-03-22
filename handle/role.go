@@ -6,6 +6,7 @@ import(
     "strconv"
     // "errors"
     // "time"
+    // "log"
     "unicode/utf8"
     _ "github.com/go-sql-driver/mysql"
     "github.com/fecshopsoft/fec-go/util"
@@ -47,14 +48,11 @@ func RoleAddOne(c *gin.Context){
         return
     }
     // 添加创建人
-    customerId, err := GetCurrentCustomerId()
-    if err != nil {
-        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
-        return
-    }
+    customerId := GetCurrentCustomerId(c)
+    
     role.CreatedCustomerId = customerId
     // 添加own_id
-    ownId, err := GetCustomerOwnId(role.OwnId)
+    ownId, err := GetCustomerOwnId(c, role.OwnId)
     if err != nil {
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return
@@ -84,7 +82,7 @@ func RoleUpdateById(c *gin.Context){
         return
     }
     // 添加own_id
-    ownId, err := GetCustomerOwnId(role.OwnId)
+    ownId, err := GetCustomerOwnId(c, role.OwnId)
     if err != nil {
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return
@@ -152,8 +150,10 @@ func RoleList(c *gin.Context){
     // 获取参数并处理
     var sortD string
     var sortColumns string
-    page, _  := strconv.Atoi(c.DefaultQuery("page", listDefaultPage))
-    limit, _ := strconv.Atoi(c.DefaultQuery("limit", listPageCount))
+    defaultPageNum:= c.GetString("defaultPageNum")
+    defaultPageCount := c.GetString("defaultPageCount")
+    page, _  := strconv.Atoi(c.DefaultQuery("page", defaultPageNum))
+    limit, _ := strconv.Atoi(c.DefaultQuery("limit", defaultPageCount))
     name     := c.DefaultQuery("name", "")
     sort     := c.DefaultQuery("sort", "")
     created_at_begin := c.DefaultQuery("created_begin_timestamps", "")
@@ -191,7 +191,7 @@ func RoleList(c *gin.Context){
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return  
     }
-    ownIdOps, err := OwnIdOps()
+    ownIdOps, err := OwnIdOps(c)
     if err != nil{
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return  
@@ -201,12 +201,20 @@ func RoleList(c *gin.Context){
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return  
     }
+    
+    customerUsername := GetCurrentCustomerUsername(c)
+    customerType := GetCurrentCustomerType(c)
+    
+    
+    
     // 生成返回结果
     result := util.BuildSuccessResult(gin.H{
         "items": roles,
         "total": counts,
         "createdCustomerOps": createdCustomerOps,
         "ownIdOps": ownIdOps,
+        "customerUsername": customerUsername,
+        "customerType": customerType,
     })
     // 返回json
     c.JSON(http.StatusOK, result)

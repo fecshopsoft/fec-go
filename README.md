@@ -27,6 +27,12 @@ go get github.com/gin-gonic/gin
 go get github.com/dgrijalva/jwt-go
 ```
 
+```
+// go get github.com/alecthomas/log4go
+
+
+```
+
 ### 配置
 
 

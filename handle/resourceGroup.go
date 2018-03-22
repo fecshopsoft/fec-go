@@ -35,11 +35,7 @@ func ResourceGroupAddOne(c *gin.Context){
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return
     }
-    customerId, err := GetCurrentCustomerId()
-    if err != nil {
-        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
-        return
-    }
+    customerId := GetCurrentCustomerId(c)
     resourceGroup.CreatedCustomerId = customerId
     // 插入
     affected, err := engine.Insert(&resourceGroup)
@@ -125,8 +121,10 @@ func ResourceGroupList(c *gin.Context){
     // 获取参数并处理
     var sortD string
     var sortColumns string
-    page, _  := strconv.Atoi(c.DefaultQuery("page", listDefaultPage))
-    limit, _ := strconv.Atoi(c.DefaultQuery("limit", listPageCount))
+    defaultPageNum:= c.GetString("defaultPageNum")
+    defaultPageCount := c.GetString("defaultPageCount")
+    page, _  := strconv.Atoi(c.DefaultQuery("page", defaultPageNum))
+    limit, _ := strconv.Atoi(c.DefaultQuery("limit", defaultPageCount))
     name     := c.DefaultQuery("name", "")
     sort     := c.DefaultQuery("sort", "")
     if utf8.RuneCountInString(sort) >= 2 {

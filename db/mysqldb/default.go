@@ -27,9 +27,9 @@ func GetEngine() *(xorm.Engine){
         autocommit := config.Get("autocommit")
         // engine, err := xorm.NewEngine("mysql", "root:Zhaoy34ggsd@tcp(127.0.0.1:3306)/fec-go?charset=utf8&autocommit=true")
         mysql_str := mysql_user + ":" + mysql_password + "@tcp(" + mysql_host + ":" + mysql_port + ")/" + mysql_db + "?charset=" + charset + "&autocommit=" + autocommit
-        if mysql_str != "" {}
+        //if mysql_str != "" {}
         var err error
-        engine, err = xorm.NewEngine("mysql", "root:Zhaoyong2017fdsfds3f3GDs3fgsd@tcp(127.0.0.1:3306)/fec-go?charset=utf8&autocommit=true")
+        engine, err = xorm.NewEngine("mysql", mysql_str)
         if err != nil {
             panic(err.Error())
         }
