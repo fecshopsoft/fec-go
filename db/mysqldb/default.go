@@ -68,6 +68,15 @@ func GetXOrmWhere(whereParam XOrmWhereParam) (string, []interface{}){
                 }
                 whereVal = append(whereVal, columnVal)
             }
+        } else if _, ok := columnVal.(int64); ok {
+            if columnVal != 0 {
+                if whereStr != "" {
+                    whereStr += " and " + columnName + " = ? "
+                } else {
+                    whereStr += columnName + " = ? "
+                }
+                whereVal = append(whereVal, columnVal)
+            }
         } else if _, ok := columnVal.(string); ok {
             if columnVal != "" {
                 if whereStr != "" {

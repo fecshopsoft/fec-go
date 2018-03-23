@@ -84,16 +84,18 @@ func Listen(listenIp string) {
         // #### customer role ####
         // 得到 role 列表
         v1.GET("/customer/role/list",               middleware.PermissionLoginToken, customerHandler.RoleList)
-        // 增加一个resource group
+        // 增加一个role
         v1.POST("/customer/role/addone",            middleware.PermissionLoginToken, customerHandler.RoleAddOne)
-        // 更新一个resource group
+        // 更新一个role
         v1.PATCH("/customer/role/updateone",        middleware.PermissionLoginToken, customerHandler.RoleUpdateById)
-        // 删除一个resource group
+        // 删除一个role
         v1.DELETE("/customer/role/deleteone",       middleware.PermissionLoginToken, customerHandler.RoleDeleteById)
-        // 批量删除resource group
+        // 批量删除role
         v1.DELETE("/customer/role/deletebatch",     middleware.PermissionLoginToken, customerHandler.RoleDeleteByIds)
+        // 权限编辑，得到全部的可用资源，以及勾选的权限
+        v1.GET("/customer/role/resource/allandselected",   middleware.PermissionLoginToken, customerHandler.RoleResourceAllAndSelect)
         
-        
+        v1.PATCH("/customer/role/resource/updateone",        middleware.PermissionLoginToken, customerHandler.RoleResourceUpdate)
         /*
         v1.GET("/customer/list", func(c *gin.Context) {
             item := []gin.H{}

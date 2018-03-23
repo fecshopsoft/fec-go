@@ -141,8 +141,12 @@ func ResourceList(c *gin.Context){
         sortColumns = string([]byte(sort)[1:])
     } 
     whereParam := make(mysqldb.XOrmWhereParam)
-    whereParam["name"] = []string{"like", name}
-    whereParam["url_key"] = []string{"like", url_key}
+    if name != "" {
+        whereParam["name"] = []string{"like", name}
+    }
+    if url_key != "" {    
+        whereParam["url_key"] = []string{"like", url_key}
+    }   
     whereParam["request_method"] = request_method
     whereParam["group_id"] = group_id
     whereParam["created_at"] = []string{"scope", created_at_begin, created_at_end}
@@ -192,6 +196,15 @@ func ResourceList(c *gin.Context){
     })
     // 返回json
     c.JSON(http.StatusOK, result)
+}
+
+func GetResourceAll() ([]Resource, error){
+    var resources []Resource
+    err := engine.Find(&resources) 
+    if err != nil{
+        return resources, err 
+    }
+    return resources, nil
 }
 
 

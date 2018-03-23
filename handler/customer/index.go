@@ -2,7 +2,7 @@ package customer
 
 import(
     // "net/http"
-    // "errors"
+    "errors"
     "log"
     "sync"
     "github.com/gin-gonic/gin"
@@ -23,6 +23,8 @@ type DeleteId struct{
 type MapStrInterface map[string]interface{}
 type MapIntStr map[int]string
 type MapStrInt map[string]int
+type MapInt64Str map[int64]string
+type MapStrInt64 map[string]int64
 
 type VueSelectOps struct{
     Key int64 `form:"key" json:"key"`
@@ -85,7 +87,19 @@ func ReqMethodOps() ([]VueSelectOps){
                 DisplayName: "OPTIONS",
             },
         }
-    }
+    })
     return reqMethodArr
 }
 
+/**
+ * 根据用户的级别，通过own_id字段进行数据的过滤
+ */
+func OwnIdQueryFilter(c *gin.Context, whereParam mysqldb.XOrmWhereParam) (mysqldb.XOrmWhereParam, error){
+    customerType := GetCurrentCustomerType(c)
+    if customerType == AdminCommonType {
+        whereParam["own_id"] = GetCurrentCustomerId(c)
+    } else if customerType != AdminSuperType {
+        return  nil, errors.New("you donot have role")
+    }
+    return whereParam, nil
+}

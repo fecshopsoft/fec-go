@@ -4,6 +4,7 @@ import(
     "github.com/gin-gonic/gin"
     "net/http"
     "strconv"
+    "log"
     // "errors"
     // "time"
     // "log"
@@ -88,9 +89,20 @@ func RoleUpdateById(c *gin.Context){
         return
     } 
     role.OwnId = ownId
-    affected, err := engine.Update(&role, &RoleUpdate{Id:role.Id})
+    // 根据用户级别，得到更新的条件。
+    roleUpdate := &RoleUpdate{Id:role.Id}
+    customerType := GetCurrentCustomerType(c)
+    if customerType != AdminSuperType {
+        roleUpdate.OwnId = ownId
+    }
+    // 进行更新。
+    affected, err := engine.Update(&role, roleUpdate)
     if err != nil {
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+        return
+    } 
+    if affected == 0 {
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("该数据不存在，或您没有权限编辑该数据"))
         return
     } 
     result := util.BuildSuccessResult(gin.H{
@@ -163,9 +175,24 @@ func RoleList(c *gin.Context){
         sortColumns = string([]byte(sort)[1:])
     } 
     whereParam := make(mysqldb.XOrmWhereParam)
-    whereParam["name"] = []string{"like", name}
+    if name != "" {
+        whereParam["name"] = []string{"like", name}
+    }
     whereParam["created_at"] = []string{"scope", created_at_begin, created_at_end}
+    // 根据用户的级别，通过own_id字段进行数据的过滤
+    
+    whereParam, err := OwnIdQueryFilter(c, whereParam)
+    if err != nil{
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+        return  
+    }
+    
+    //whereParam["own_id"] = 93
+    log.Println(whereParam)
+    
     whereStr, whereVal := mysqldb.GetXOrmWhere(whereParam)
+    log.Println(whereStr)
+    log.Println(whereVal)
     // 进行查询
     query := engine.Limit(limit, (page-1)*limit)
     if whereStr != "" {
@@ -220,7 +247,7 @@ func RoleList(c *gin.Context){
     c.JSON(http.StatusOK, result)
 }
 
-
+// vue将created_customer_id 渲染成 created customer username 所需要的slice
 func GetRoleCreatedCustomerOps(roles []Role) ([]VueSelectOps, error){
     var groupArr []VueSelectOps
     var ids []int64

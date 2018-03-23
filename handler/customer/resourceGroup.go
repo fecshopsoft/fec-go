@@ -132,7 +132,9 @@ func ResourceGroupList(c *gin.Context){
         sortColumns = string([]byte(sort)[1:])
     } 
     whereParam := make(mysqldb.XOrmWhereParam)
-    whereParam["name"] = []string{"like", name}
+    if name != "" {
+        whereParam["name"] = []string{"like", name}
+    }
     whereStr, whereVal := mysqldb.GetXOrmWhere(whereParam)
     // 进行查询
     query := engine.Limit(limit, (page-1)*limit)
@@ -168,6 +170,14 @@ func ResourceGroupList(c *gin.Context){
     c.JSON(http.StatusOK, result)
 }
 
+func GetResourceGroupAll() ([]ResourceGroup, error){
+    var resourceGroups []ResourceGroup
+    err := engine.Find(&resourceGroups) 
+    if err != nil{
+        return resourceGroups, err 
+    }
+    return resourceGroups, nil
+}
 
 /**
  * 列表查询

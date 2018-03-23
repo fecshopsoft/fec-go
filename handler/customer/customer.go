@@ -384,7 +384,9 @@ func CustomerList(c *gin.Context){
     whereParam["id"] = id
     whereParam["status"] = status
     whereParam["sex"] = sex
-    whereParam["username"] = []string{"like", username}
+    if username != "" {
+        whereParam["username"] = []string{"like", username}
+    }
     //whereParam["age"] = []string{"scope","2","20"}
     whereParam["created_at"] = []string{"scope", created_at_begin, created_at_end}
     whereStr, whereVal := mysqldb.GetXOrmWhere(whereParam)

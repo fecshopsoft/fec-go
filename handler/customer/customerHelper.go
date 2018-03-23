@@ -6,7 +6,7 @@ import(
 )
 
 /**
- * 通过前台传递的own_id，得到当前的own_id
+ * 通过前台传递的own_id，得到合法的own_id
  * 如果当前用户type == 2,则own_id = 当前用户的customerId
  * 如果创建人的type == 1,则own_id = 前台传递的own_id，另外需要检查传递的own_id的合法性，数据库中是否存在，并且type是否 == 2
  * 其他的判定为不合法
@@ -66,3 +66,4 @@ func ReqMethodArr() {
     }
 }
 */
+
