@@ -55,6 +55,8 @@ func GetCustomerOwnIdOps(c *gin.Context) ([]VueSelectOps, error){
     }
     return nil, errors.New("you do not have role to operate own_id")
 }
+
+
 /*
 func ReqMethodArr() {
     return map[int]string{

@@ -186,7 +186,6 @@ func RoleList(c *gin.Context){
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return  
     }
-    
     //whereParam["own_id"] = 93
     log.Println(whereParam)
     
@@ -228,12 +227,8 @@ func RoleList(c *gin.Context){
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return  
     }
-    
     customerUsername := GetCurrentCustomerUsername(c)
     customerType := GetCurrentCustomerType(c)
-    
-    
-    
     // 生成返回结果
     result := util.BuildSuccessResult(gin.H{
         "items": roles,

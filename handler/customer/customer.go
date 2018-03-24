@@ -41,6 +41,7 @@ type Customer struct {
     Status int `form:"status" json:"status"`
     Age int `form:"age" json:"age"`
     Type int `form:"type" json:"type"`
+    ParentId int64 `form:"parent_id" json:"parent_id" xorm:"int null"`
     CreatedAt int64 `xorm:"created" form:"created_at" json:"created_at"`
     UpdatedAt int64 `xorm:"updated" form:"updated_at" json:"updated_at"`
     BirthDate  int64 `form:"birth_date" json:"birth_date"`
@@ -66,6 +67,8 @@ type CustomerAdd struct {
     Sex int `form:"sex" json:"sex"`
     Name string `form:"name" json:"name"`
     Telephone string `form:"telephone" json:"telephone"`
+    Type int `form:"type" json:"type" binding:"required"`
+    ParentId int64 `form:"parent_id" json:"parent_id" `
     Remark string `form:"remark" json:"remark"`
     Status int `form:"status" json:"status"`
     Age int `form:"age" json:"age"`
@@ -80,10 +83,12 @@ type CustomerUpdate struct {
     Username string `form:"username" json:"username" binding:"required"`
     Email string `form:"email" json:"email"`
     Sex int `form:"sex" json:"sex"`
-    Name string `form:"name" json:"name"`
+    Name string `form:"name" json:"name" binding:"required"`
     Telephone string `form:"telephone" json:"telephone"`
+    Type int `form:"type" json:"type" binding:"required"`
+    ParentId int64 `form:"parent_id" json:"parent_id"`
     Remark string `form:"remark" json:"remark"`
-    Status int `form:"status" json:"status"`
+    Status int `form:"status" json:"status" binding:"required"`
     Age int `form:"age" json:"age"`
     CreatedAt int64 `xorm:"created" form:"created_at" json:"created_at"`
     UpdatedAt int64 `xorm:"updated" form:"updated_at" json:"updated_at"`
@@ -95,12 +100,7 @@ type CustomerUpdate struct {
 var statusEnable int = 1
 // 密码最小长度
 var PasswordMinLen int = 6
-// superAdmin
-var AdminSuperType int = 1 
-// superAdmin
-var AdminCommonType int = 2 
-// superAdmin
-var AdminChildType int = 3 
+ 
 
 func (customerUpdate CustomerUpdate) TableName() string {
     return "customer"
@@ -139,6 +139,25 @@ func CustomerAddOne(c *gin.Context){
         return
     } 
     customer.Password = passwordEncry
+    // 处理账户类型
+    if customer.Type == AdminChildType {
+        if customer.ParentId == 0 {
+            c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("child admin account , Must fill in parent account "))
+            return
+        }
+        parentCustomer, err := GetCustomerOneById(customer.ParentId)
+        if err != nil {
+            c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+            return
+        } 
+        if parentCustomer.Type != AdminCommonType {
+            c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("parent account is incorrect"))
+            return
+        }
+    } else {
+        customer.ParentId = 0
+    }
+    
     // 插入
     affected, err := engine.Insert(&customer)
     if err != nil {
@@ -167,7 +186,27 @@ func CustomerUpdateById(c *gin.Context){
         return
     } 
     customer.Password = passwordEncry
-    affected, err := engine.Update(&customer, &Customer{Id:customer.Id})
+    
+    // 处理账户类型
+    if customer.Type == AdminChildType {
+        if customer.ParentId == 0 {
+            c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("child admin account , Must fill in parent account "))
+            return
+        }
+        parentCustomer, err := GetCustomerOneById(customer.ParentId)
+        if err != nil {
+            c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+            return
+        } 
+        if parentCustomer.Type != AdminCommonType {
+            c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("parent account is incorrect"))
+            return
+        }
+    } else {
+        customer.ParentId = 0
+    }
+    
+    affected, err := engine.Where("id = ?", customer.Id).MustCols("parent_id").Update(&customer)
     if err != nil {
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return
@@ -369,9 +408,9 @@ func CustomerList(c *gin.Context){
     defaultPageCount := c.GetString("defaultPageCount")
     page, _  := strconv.Atoi(c.DefaultQuery("page", defaultPageNum))
     limit, _ := strconv.Atoi(c.DefaultQuery("limit", defaultPageCount))
-    id, _    := strconv.Atoi(c.DefaultQuery("id", ""))
+    parent_id, _    := strconv.Atoi(c.DefaultQuery("parent_id", ""))
     status, _    := strconv.Atoi(c.DefaultQuery("status", ""))
-    sex, _   := strconv.Atoi(c.DefaultQuery("sex", ""))
+    accountType, _    := strconv.Atoi(c.DefaultQuery("type", ""))
     username := c.DefaultQuery("username", "")
     sort     := c.DefaultQuery("sort", "")
     created_at_begin := c.DefaultQuery("created_begin_timestamps", "")
@@ -381,9 +420,9 @@ func CustomerList(c *gin.Context){
         sortColumns = string([]byte(sort)[1:])
     } 
     whereParam := make(mysqldb.XOrmWhereParam)
-    whereParam["id"] = id
+    whereParam["parent_id"] = parent_id
     whereParam["status"] = status
-    whereParam["sex"] = sex
+    whereParam["type"] = accountType
     if username != "" {
         whereParam["username"] = []string{"like", username}
     }
@@ -415,14 +454,23 @@ func CustomerList(c *gin.Context){
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return  
     }
+    // 
+    commonAdminAccount, err := GetCustomerOwnIdOps(c)
+    if err != nil{
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+        return  
+    }
     // 生成返回结果
     result := util.BuildSuccessResult(gin.H{
         "items": customers,
         "total":counts,
+        "typeOps": GetCustomerTypeName(),
+        "commonAdminOps": commonAdminAccount,
     })
     // 返回json
     c.JSON(http.StatusOK, result)
 }
+
 
 
 /**
@@ -438,7 +486,6 @@ func GetCustomerUsernameByIds(ids []int64) ([]CustomerUsername, error){
     }
     return customers, nil
 }
-
 
 /**
  * 通过id查询一条记录

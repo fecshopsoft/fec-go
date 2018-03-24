@@ -9,9 +9,7 @@ import(
     "log"
     "errors"
 )
-
-type VueMutilSelect map[string][]MapStrInterface
-
+// role_id 和resource_id 关系对应表。
 type RoleResource struct {
     Id int64 `form:"id" json:"id"`
     OwnId int64 `form:"own_id" json:"own_id"`
@@ -46,8 +44,6 @@ func RoleResourceAllAndSelect(c *gin.Context){
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return  
     }
-    
-    
     vueMutilSelect := make(VueMutilSelect)
     // 得到所有的resource列表
     // var allResource []MapStrInterface
@@ -117,7 +113,6 @@ type UpdateResource struct{
     RoleId int64 `form:"role_id" json:"role_id" binding:"required"`
     Resources []int64 `form:"resources" json:"resources" binding:"required"`
 }
-
 // 更新role 对应的resource
 func RoleResourceUpdate(c *gin.Context){
     var updateResource UpdateResource
@@ -137,7 +132,6 @@ func RoleResourceUpdate(c *gin.Context){
     // 删除 在RoleResource表中role_id 和 own_id对应的所有的资源
     var roleResource RoleResource
     _, err = engine.Where("role_id = ? and own_id = ? ", role_id, own_id).Delete(&roleResource)
-    
     // 将获取的数据插入。
     createdCustomerId := GetCurrentCustomerId(c)
     for i:=0; i<len(resource_ids); i++ {

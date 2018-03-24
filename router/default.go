@@ -34,30 +34,44 @@ func Listen(listenIp string) {
     v1 := r.Group("/v1")
     {
         // #### customer login ####
-        // 登录账户
+        // 登录账户 - 权限：1,2,3
         v1.POST("/customer/account/login",  customerHandler.CustomerAccountLogin)
-        // 得到账户信息
+        // 得到账户信息 - 权限：1,2,3
         v1.GET("/customer/account/index",   middleware.PermissionLoginToken, customerHandler.CustomerAccountIndex)
-        // 退出登录
+        // 退出登录 - 权限：1,2,3
         v1.POST("/customer/account/logout", middleware.PermissionLoginToken, func(c *gin.Context) {
             c.JSON(http.StatusOK, gin.H{"code":20000,"data":gin.H{"token":"admin"}})
         })
         
-        // #### customer account ####
-        // 得到 customer 列表
+        // 更新账户密码 权限：1，2,3
+        v1.PATCH("/customer/updatepassword",    middleware.PermissionLoginToken, customerHandler.CustomerUpdatePassword)
+        
+        // #### customer account #### 权限：1 ，只有super admin才能访问
+        // 得到 customer 列表  
         v1.GET("/customer/list",                middleware.PermissionLoginToken, middleware.PermissionRole, customerHandler.CustomerList)
         // 增加一个用户
         v1.POST("/customer/addone",             middleware.PermissionLoginToken, customerHandler.CustomerAddOne)
         // 更新一个用户
         v1.PATCH("/customer/updateone",         middleware.PermissionLoginToken, customerHandler.CustomerUpdateById)
-        // 更新一个用户
-        v1.PATCH("/customer/updatepassword",    middleware.PermissionLoginToken, customerHandler.CustomerUpdatePassword)
         // 删除一个用户
         v1.DELETE("/customer/deleteone",        middleware.PermissionLoginToken, customerHandler.CustomerDeleteById)
         // 批量删除用户
         v1.DELETE("/customer/deletebatch",      middleware.PermissionLoginToken, customerHandler.CustomerDeleteByIds)
         
-        // #### customer resource group ####
+        // 得到 customer 列表  role: 1,2,3
+        v1.GET("/customer/child/list",                middleware.PermissionLoginToken, customerHandler.CustomerChildList)
+        // 增加一个用户 role: 1,2
+        v1.POST("/customer/child/addone",             middleware.PermissionLoginToken, customerHandler.CustomerChildAddOne)
+        // 更新一个用户 role: 1,2
+        v1.PATCH("/customer/child/updateone",         middleware.PermissionLoginToken, customerHandler.CustomerChildUpdateById)
+        // 删除一个用户 role: 1,2
+        v1.DELETE("/customer/child/deleteone",        middleware.PermissionLoginToken, customerHandler.CustomerChildDeleteById)
+        // 批量删除用户 role: 1,2
+        v1.DELETE("/customer/child/deletebatch",      middleware.PermissionLoginToken, customerHandler.CustomerChildDeleteByIds)
+        
+        
+        
+        // #### customer resource group #### 权限：1 ，只有super admin才能访问
         // 得到 resource group 列表
         v1.GET("/customer/resourcegroup/list",              middleware.PermissionLoginToken, customerHandler.ResourceGroupList)
         // 增加一个resource group
@@ -69,7 +83,7 @@ func Listen(listenIp string) {
         // 批量删除resource group
         v1.DELETE("/customer/resourcegroup/deletebatch",    middleware.PermissionLoginToken, customerHandler.ResourceGroupDeleteByIds)
         
-        // #### customer resource ####
+        // #### customer resource #### 权限：1 ，只有super admin才能访问
         // 得到 resource 列表
         v1.GET("/customer/resource/list",           middleware.PermissionLoginToken, customerHandler.ResourceList)
         // 增加一个resource group
@@ -81,7 +95,7 @@ func Listen(listenIp string) {
         // 批量删除resource group
         v1.DELETE("/customer/resource/deletebatch", middleware.PermissionLoginToken, customerHandler.ResourceDeleteByIds)
         
-        // #### customer role ####
+        // #### customer role #### 权限：1，2 
         // 得到 role 列表
         v1.GET("/customer/role/list",               middleware.PermissionLoginToken, customerHandler.RoleList)
         // 增加一个role

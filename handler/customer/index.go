@@ -26,6 +26,8 @@ type MapStrInt map[string]int
 type MapInt64Str map[int64]string
 type MapStrInt64 map[string]int64
 
+type VueMutilSelect map[string][]MapStrInterface
+
 type VueSelectOps struct{
     Key int64 `form:"key" json:"key"`
     DisplayName string `form:"display_name" json:"display_name"`
@@ -34,6 +36,14 @@ type VueSelectOps struct{
 var once sync.Once
 var engine *(xorm.Engine)
 var reqMethodArr []VueSelectOps
+var typeArr []VueSelectOps
+
+// superAdmin
+var AdminSuperType int = 1 
+// superAdmin
+var AdminCommonType int = 2 
+// superAdmin
+var AdminChildType int = 3
 
 // init 函数在程序启动时执行，后面不会再执行。
 func init(){
@@ -102,4 +112,29 @@ func OwnIdQueryFilter(c *gin.Context, whereParam mysqldb.XOrmWhereParam) (mysqld
         return  nil, errors.New("you donot have role")
     }
     return whereParam, nil
+}
+
+
+
+/**
+ * 得到customer type 对应的name
+ */
+func GetCustomerTypeName() ([]VueSelectOps){
+    once.Do(func() {
+        typeArr = []VueSelectOps{
+            VueSelectOps{
+                Key: int64(AdminSuperType),
+                DisplayName: "Super Admin",
+            },
+            VueSelectOps{
+                Key: int64(AdminCommonType),
+                DisplayName: "Common Admin",
+            },
+            VueSelectOps{
+                Key: int64(AdminChildType),
+                DisplayName: "Child Account",
+            },
+        }
+    })
+    return typeArr
 }
