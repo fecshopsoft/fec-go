@@ -13,6 +13,7 @@ import(
     "github.com/fecshopsoft/fec-go/security"
     "github.com/fecshopsoft/fec-go/util"
     "github.com/fecshopsoft/fec-go/db/mysqldb"
+    "github.com/fecshopsoft/fec-go/helper"
     //"fmt"
 )
 
@@ -140,7 +141,7 @@ func CustomerAddOne(c *gin.Context){
     } 
     customer.Password = passwordEncry
     // 处理账户类型
-    if customer.Type == AdminChildType {
+    if customer.Type == helper.AdminChildType {
         if customer.ParentId == 0 {
             c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("child admin account , Must fill in parent account "))
             return
@@ -150,7 +151,7 @@ func CustomerAddOne(c *gin.Context){
             c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
             return
         } 
-        if parentCustomer.Type != AdminCommonType {
+        if parentCustomer.Type != helper.AdminCommonType {
             c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("parent account is incorrect"))
             return
         }
@@ -188,7 +189,7 @@ func CustomerUpdateById(c *gin.Context){
     customer.Password = passwordEncry
     
     // 处理账户类型
-    if customer.Type == AdminChildType {
+    if customer.Type == helper.AdminChildType {
         if customer.ParentId == 0 {
             c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("child admin account , Must fill in parent account "))
             return
@@ -198,7 +199,7 @@ func CustomerUpdateById(c *gin.Context){
             c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
             return
         } 
-        if parentCustomer.Type != AdminCommonType {
+        if parentCustomer.Type != helper.AdminCommonType {
             c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("parent account is incorrect"))
             return
         }
@@ -257,7 +258,7 @@ func CustomerUpdatePassword(c *gin.Context){
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return
     }
-    username := GetCurrentCustomerUsername(c)
+    username := helper.GetCurrentCustomerUsername(c)
     var customerLogin CustomerLogin
     customerLogin.Username = username
     customerLogin.Password = newEncryptionPassStr
@@ -369,10 +370,17 @@ func CustomerAccountLogin(c *gin.Context){
  */
 func CustomerAccountIndex(c *gin.Context){
     var roles []string
-    roles = append(roles, "admin")
+    customerType := helper.GetCurrentCustomerType(c)
+    if customerType == helper.AdminSuperType {
+        roles = append(roles, helper.VueUserRoles[helper.AdminSuperType])
+    } else if customerType == helper.AdminCommonType {
+        roles = append(roles, helper.VueUserRoles[helper.AdminCommonType])
+    } else if customerType == helper.AdminChildType {
+        roles = append(roles, helper.VueUserRoles[helper.AdminChildType])
+    }
     // roles = append(roles, "editor")
     // cCustomer := currentCustomer.(map[string]interface{})
-    cCustomer := GetCurrentCustomer(c)
+    cCustomer := helper.GetCurrentCustomer(c)
     result := util.BuildSuccessResult(gin.H{
         "name": cCustomer["username"],
         "persion_name": cCustomer["name"],
@@ -382,6 +390,7 @@ func CustomerAccountIndex(c *gin.Context){
     c.JSON(http.StatusOK, result)
     
 }
+
 /**
  * 密码加密，得到字符串md5加密后的字符串
  */
@@ -509,7 +518,7 @@ func GetAllEnableCommonCustomer() ([]CustomerUsername, error){
     // 得到结果数据
     var customers []CustomerUsername
     engine := mysqldb.GetEngine()
-    err := engine.Where("type = ? and status = ? ", AdminCommonType, statusEnable).Find(&customers) 
+    err := engine.Where("type = ? and status = ? ", helper.AdminCommonType, statusEnable).Find(&customers) 
     if err != nil{
         return nil, err 
     }

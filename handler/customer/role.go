@@ -12,6 +12,7 @@ import(
     _ "github.com/go-sql-driver/mysql"
     "github.com/fecshopsoft/fec-go/util"
     "github.com/fecshopsoft/fec-go/db/mysqldb"
+    "github.com/fecshopsoft/fec-go/helper"
     //"fmt"
 )
 
@@ -49,7 +50,7 @@ func RoleAddOne(c *gin.Context){
         return
     }
     // 添加创建人
-    customerId := GetCurrentCustomerId(c)
+    customerId := helper.GetCurrentCustomerId(c)
     
     role.CreatedCustomerId = customerId
     // 添加own_id
@@ -91,8 +92,8 @@ func RoleUpdateById(c *gin.Context){
     role.OwnId = ownId
     // 根据用户级别，得到更新的条件。
     roleUpdate := &RoleUpdate{Id:role.Id}
-    customerType := GetCurrentCustomerType(c)
-    if customerType != AdminSuperType {
+    customerType := helper.GetCurrentCustomerType(c)
+    if customerType != helper.AdminSuperType {
         roleUpdate.OwnId = ownId
     }
     // 进行更新。
@@ -227,8 +228,8 @@ func RoleList(c *gin.Context){
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return  
     }
-    customerUsername := GetCurrentCustomerUsername(c)
-    customerType := GetCurrentCustomerType(c)
+    customerUsername := helper.GetCurrentCustomerUsername(c)
+    customerType := helper.GetCurrentCustomerType(c)
     // 生成返回结果
     result := util.BuildSuccessResult(gin.H{
         "items": roles,
@@ -262,4 +263,14 @@ func GetRoleCreatedCustomerOps(roles []Role) ([]VueSelectOps, error){
     //     return nil, errors.New("customer ids is empty")
     // }
     return groupArr, nil
+}
+
+// 通过 own_id 得到所有的roles
+func GetRolesByOwnId(own_id int64) ([]Role, error){
+    var roles []Role
+    err := engine.Where("own_id = ?", own_id).Find(&roles) 
+    if err != nil{
+        return roles, err 
+    }
+    return roles, nil
 }

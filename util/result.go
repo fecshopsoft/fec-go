@@ -11,8 +11,8 @@ const (
 	ResultStatusFail           = 10000
 )
 
-var ErrNeedMiLogin = errors.New("请先登录再进行下一步操作")
-var ErrNeedMiPermission = errors.New("没有足够权限进行下一步操作")
+var ErrNeedMiLogin = errors.New("Please login to your account first")
+var ErrNeedMiPermission = errors.New("You do not have permission to operate this resource")
 
 type ResultVO struct {
 	Code int         `form:"code" json:"code"`

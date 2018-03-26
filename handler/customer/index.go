@@ -10,6 +10,7 @@ import(
     // "github.com/fecshopsoft/fec-go/util"
     // "github.com/fecshopsoft/fec-go/config"
     "github.com/fecshopsoft/fec-go/db/mysqldb"
+    "github.com/fecshopsoft/fec-go/helper"
 )
 
 type DeleteIds struct{
@@ -38,37 +39,23 @@ var engine *(xorm.Engine)
 var reqMethodArr []VueSelectOps
 var typeArr []VueSelectOps
 
-// superAdmin
-var AdminSuperType int = 1 
-// superAdmin
-var AdminCommonType int = 2 
-// superAdmin
-var AdminChildType int = 3
-
 // init 函数在程序启动时执行，后面不会再执行。
 func init(){
     engine = mysqldb.GetEngine()
     log.Println("GetEngine complete")
 }
 
-// 得到当前的customerId
-func GetCurrentCustomerId(c *gin.Context) (int64){
-    return c.GetInt64("currentCustomerId");
-}  
+// 请求类型
+var ReqMehdArr = map[int]string{
+    1: "GET",
+    2: "POST",
+    3: "PATCH",
+    4: "DELETE",
+    5: "OPTIONS",
+}
 
-// 得到当前的customerType
-func GetCurrentCustomerType(c *gin.Context) (int){
-    return c.GetInt("currentCustomerType");
-} 
- 
-// 得到当前的customer
-func GetCurrentCustomer(c *gin.Context) (MapStrInterface){
-    return c.GetStringMap("currentCustomer");
-}  
-// 得到当前的 customerUsername
-func GetCurrentCustomerUsername(c *gin.Context) (string){
-    return c.GetString("currentCustomerUsername");
-}  
+
+
 
 /**
  * 得到Request Method的ops数组
@@ -78,23 +65,23 @@ func ReqMethodOps() ([]VueSelectOps){
         reqMethodArr = []VueSelectOps{
             VueSelectOps{
                 Key: 1,
-                DisplayName: "GET",
+                DisplayName: ReqMehdArr[1],
             },
             VueSelectOps{
                 Key: 2,
-                DisplayName: "POST",
+                DisplayName: ReqMehdArr[2],
             },
             VueSelectOps{
                 Key: 3,
-                DisplayName: "PATCH",
+                DisplayName: ReqMehdArr[3],
             },
             VueSelectOps{
                 Key: 4,
-                DisplayName: "DELETE",
+                DisplayName: ReqMehdArr[4],
             },
             VueSelectOps{
                 Key: 5,
-                DisplayName: "OPTIONS",
+                DisplayName: ReqMehdArr[5],
             },
         }
     })
@@ -105,10 +92,10 @@ func ReqMethodOps() ([]VueSelectOps){
  * 根据用户的级别，通过own_id字段进行数据的过滤
  */
 func OwnIdQueryFilter(c *gin.Context, whereParam mysqldb.XOrmWhereParam) (mysqldb.XOrmWhereParam, error){
-    customerType := GetCurrentCustomerType(c)
-    if customerType == AdminCommonType {
-        whereParam["own_id"] = GetCurrentCustomerId(c)
-    } else if customerType != AdminSuperType {
+    customerType := helper.GetCurrentCustomerType(c)
+    if customerType == helper.AdminCommonType {
+        whereParam["own_id"] = helper.GetCurrentCustomerId(c)
+    } else if customerType != helper.AdminSuperType {
         return  nil, errors.New("you donot have role")
     }
     return whereParam, nil
@@ -123,15 +110,15 @@ func GetCustomerTypeName() ([]VueSelectOps){
     once.Do(func() {
         typeArr = []VueSelectOps{
             VueSelectOps{
-                Key: int64(AdminSuperType),
+                Key: int64(helper.AdminSuperType),
                 DisplayName: "Super Admin",
             },
             VueSelectOps{
-                Key: int64(AdminCommonType),
+                Key: int64(helper.AdminCommonType),
                 DisplayName: "Common Admin",
             },
             VueSelectOps{
-                Key: int64(AdminChildType),
+                Key: int64(helper.AdminChildType),
                 DisplayName: "Child Account",
             },
         }

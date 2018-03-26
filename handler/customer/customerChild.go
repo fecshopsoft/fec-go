@@ -10,6 +10,7 @@ import(
     _ "github.com/go-sql-driver/mysql"
     "github.com/fecshopsoft/fec-go/util"
     "github.com/fecshopsoft/fec-go/db/mysqldb"
+    "github.com/fecshopsoft/fec-go/helper"
     //"fmt"
 )
 
@@ -70,18 +71,18 @@ func CustomerChildAddOne(c *gin.Context){
     } 
     customer.Password = passwordEncry
     
-    customer_id := GetCurrentCustomerId(c)
+    customer_id := helper.GetCurrentCustomerId(c)
     if customer_id == 0 {
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("current customer id is empty"))
         return
     }
-    customer_type := GetCurrentCustomerType(c)
-    if customer_type != AdminCommonType {
+    customer_type := helper.GetCurrentCustomerType(c)
+    if customer_type != helper.AdminCommonType {
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("only common admin account can add child account"))
         return
     }
     customer.ParentId = customer_id
-    customer.Type = AdminChildType
+    customer.Type = helper.AdminChildType
     // 插入
     affected, err := engine.Insert(&customer)
     if err != nil {
@@ -111,21 +112,21 @@ func CustomerChildUpdateById(c *gin.Context){
     } 
     customer.Password = passwordEncry
     
-    customer_id := GetCurrentCustomerId(c)
+    customer_id := helper.GetCurrentCustomerId(c)
     if customer_id == 0 {
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("current customer id is empty"))
         return
     }
-    customer_type := GetCurrentCustomerType(c)
-    if customer_type != AdminCommonType {
+    customer_type := helper.GetCurrentCustomerType(c)
+    if customer_type != helper.AdminCommonType {
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("only common admin account can add child account"))
         return
     }
     // 在条件和更改中都加入parent_id 和 type，防止数据被恶意篡改。
     customer.ParentId = customer_id
-    customer.Type = AdminChildType
+    customer.Type = helper.AdminChildType
     
-    affected, err := engine.Update(&customer, &Customer{Id:customer.Id, ParentId:customer_id, Type: AdminChildType})
+    affected, err := engine.Update(&customer, &Customer{Id:customer.Id, ParentId:customer_id, Type: helper.AdminChildType})
     if err != nil {
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return
@@ -165,20 +166,20 @@ func CustomerChildDeleteById(c *gin.Context){
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return
     }
-    customer_id := GetCurrentCustomerId(c)
+    customer_id := helper.GetCurrentCustomerId(c)
     if customer_id == 0 {
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("current customer id is empty"))
         return
     }
-    customer_type := GetCurrentCustomerType(c)
-    if customer_type != AdminCommonType {
+    customer_type := helper.GetCurrentCustomerType(c)
+    if customer_type != helper.AdminCommonType {
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("only common admin account can add child account"))
         return
     }
     // 在条件和更改中都加入parent_id 和 type，防止数据被恶意篡改。
     // customer.ParentId = customer_id
-    // customer.Type = AdminChildType
-    affected, err := engine.Where("id = ? and parent_id = ? and type = ?",id.Id, customer_id, AdminChildType).Delete(&customer)
+    // customer.Type = helper.AdminChildType
+    affected, err := engine.Where("id = ? and parent_id = ? and type = ?",id.Id, customer_id, helper.AdminChildType).Delete(&customer)
     if err != nil {
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return
@@ -198,20 +199,20 @@ func CustomerChildDeleteByIds(c *gin.Context){
     var ids DeleteIds
     err := c.ShouldBindJSON(&ids);
     //c.JSON(http.StatusOK, ids)
-    customer_id := GetCurrentCustomerId(c)
+    customer_id := helper.GetCurrentCustomerId(c)
     if customer_id == 0 {
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("current customer id is empty"))
         return
     }
-    customer_type := GetCurrentCustomerType(c)
-    if customer_type != AdminCommonType {
+    customer_type := helper.GetCurrentCustomerType(c)
+    if customer_type != helper.AdminCommonType {
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("only common admin account can add child account"))
         return
     }
     // 在条件和更改中都加入parent_id 和 type，防止数据被恶意篡改。
     // customer.ParentId = customer_id
-    // customer.Type = AdminChildType
-    affected, err := engine.In("id", ids.Ids).Where("parent_id = ? and type = ?", customer_id, AdminChildType).Delete(&customer)
+    // customer.Type = helper.AdminChildType
+    affected, err := engine.In("id", ids.Ids).Where("parent_id = ? and type = ?", customer_id, helper.AdminChildType).Delete(&customer)
     if err != nil {
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return
@@ -253,8 +254,8 @@ func CustomerChildList(c *gin.Context){
     if username != "" {
         whereParam["username"] = []string{"like", username}
     }
-    whereParam["type"] = AdminChildType
-    whereParam["parent_id"] = GetCurrentCustomerId(c)
+    whereParam["type"] = helper.AdminChildType
+    whereParam["parent_id"] = helper.GetCurrentCustomerId(c)
     whereParam["created_at"] = []string{"scope", created_at_begin, created_at_end}
     whereStr, whereVal := mysqldb.GetXOrmWhere(whereParam)
     // 进行查询
@@ -330,7 +331,7 @@ func GetAllEnableCommonCustomerChild() ([]CustomerUsername, error){
     // 得到结果数据
     var customers []CustomerUsername
     engine := mysqldb.GetEngine()
-    err := engine.Where("type = ? and status = ? ", AdminCommonType, statusEnable).Find(&customers) 
+    err := engine.Where("type = ? and status = ? ", helper.AdminCommonType, statusEnable).Find(&customers) 
     if err != nil{
         return nil, err 
     }

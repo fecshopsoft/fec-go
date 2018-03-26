@@ -10,6 +10,7 @@ import(
     _ "github.com/go-sql-driver/mysql"
     "github.com/fecshopsoft/fec-go/util"
     "github.com/fecshopsoft/fec-go/db/mysqldb"
+    "github.com/fecshopsoft/fec-go/helper"
     //"fmt"
 )
 
@@ -28,6 +29,16 @@ func (resource Resource) TableName() string {
     return "resource"
 }
 
+type ResourceRole struct {
+    Id int64 `form:"id" json:"id"`
+    UrlKey string `form:"url_key" json:"url_key" binding:"required"`
+    RequestMethod int `form:"request_method" json:"request_method" binding:"required"`
+}
+
+func (resourceRole ResourceRole) TableName() string {
+    return "resource"
+}
+
 /**
  * 增加一条记录
  */
@@ -38,7 +49,7 @@ func ResourceAddOne(c *gin.Context){
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return
     }
-    customerId := GetCurrentCustomerId(c)
+    customerId := helper.GetCurrentCustomerId(c)
     
     resource.CreatedCustomerId = customerId
     // 插入
@@ -227,4 +238,18 @@ func GetResCreatedCustomerOps(resources []Resource) ([]VueSelectOps, error){
     //     return nil, errors.New("customer ids is empty")
     // }
     return groupArr, nil
+}
+
+
+/**
+ * 根据 resource_ids 查询得到resources
+ */
+func GetResourcesByIds(resource_ids []int64) ([]ResourceRole, error){
+    // 得到结果数据
+    var resources []ResourceRole
+    err := engine.In("id",resource_ids).Find(&resources) 
+    if err != nil{
+        return resources, err
+    }
+    return resources, nil
 }

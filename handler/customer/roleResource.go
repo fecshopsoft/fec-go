@@ -8,6 +8,7 @@ import(
     "strconv"
     "log"
     "errors"
+    "github.com/fecshopsoft/fec-go/helper"
 )
 // role_id 和resource_id 关系对应表。
 type RoleResource struct {
@@ -77,6 +78,22 @@ func RoleResourceAllAndSelect(c *gin.Context){
     c.JSON(http.StatusOK, result)
 }
 
+// 通过 own_id 和role_ids 得到 resource_ids
+func GetResourceIdsByRoleOwnIds(own_id int64, role_ids []int64) ([]int64, error){
+    var roleResources []RoleResource
+    var resource_ids []int64
+    err := engine.In("role_id", role_ids).Where("own_id = ?", own_id).Find(&roleResources) 
+    if err != nil{
+        return resource_ids, err 
+    }
+    for i:=0; i<len(roleResources); i++ {
+        roleResource := roleResources[i]
+        resource_ids = append(resource_ids, roleResource.ResourceId)
+    }
+    // resource_ids = helper.SliceInt64Unique(resource_ids)
+    return resource_ids, nil 
+}
+
 // 根据role_id own_id 得到权限资源list
 func GetCurrentRoleResourceAll(c *gin.Context) ([]RoleResource, error){
     var roleResources []RoleResource
@@ -132,8 +149,12 @@ func RoleResourceUpdate(c *gin.Context){
     // 删除 在RoleResource表中role_id 和 own_id对应的所有的资源
     var roleResource RoleResource
     _, err = engine.Where("role_id = ? and own_id = ? ", role_id, own_id).Delete(&roleResource)
+    if err != nil {
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+        return
+    }
     // 将获取的数据插入。
-    createdCustomerId := GetCurrentCustomerId(c)
+    createdCustomerId := helper.GetCurrentCustomerId(c)
     for i:=0; i<len(resource_ids); i++ {
         var rr RoleResource
         rr.CreatedCustomerId = createdCustomerId

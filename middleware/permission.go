@@ -93,32 +93,6 @@ func PermissionLoginToken(c *gin.Context){
 
 
 
-// 验证登录用户，是否有权限访问当前的资源
-
-func PermissionRole(c *gin.Context){
-    /*
-    cCustomer, ok := currentCustomer.(map[string]interface{})
-    if ok == false {
-        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("you must relogin your account"))
-        return
-    }
-    username := cCustomer["username"].(string)
-    customerType := cCustomer["type"].(float64)
-    parentId := cCustomer["parent_id"].(float64)
-    */
-    /*
-    r := c.Request
-    // url path
-    path := r.URL.Path
-    // url request method
-    requestMethod := r.Method
-    */
-    // 验证当前访问的url，是否存在访问权限。
-    // c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("you do not have permission to visit this url"))
-    // return
-    
-}
-
 // cors中间件，跨域请求加入相关参数。
 /*
 func CORSMiddleware() gin.HandlerFunc {

@@ -48,68 +48,85 @@ func Listen(listenIp string) {
         
         // #### customer account #### 权限：1 ，只有super admin才能访问
         // 得到 customer 列表  
-        v1.GET("/customer/list",                middleware.PermissionLoginToken, middleware.PermissionRole, customerHandler.CustomerList)
+        v1.GET("/customer/list",                middleware.PermissionLoginToken, middleware.SuperAdminRole, customerHandler.CustomerList)
         // 增加一个用户
-        v1.POST("/customer/addone",             middleware.PermissionLoginToken, customerHandler.CustomerAddOne)
+        v1.POST("/customer/addone",             middleware.PermissionLoginToken, middleware.SuperAdminRole, customerHandler.CustomerAddOne)
         // 更新一个用户
-        v1.PATCH("/customer/updateone",         middleware.PermissionLoginToken, customerHandler.CustomerUpdateById)
+        v1.PATCH("/customer/updateone",         middleware.PermissionLoginToken, middleware.SuperAdminRole, customerHandler.CustomerUpdateById)
         // 删除一个用户
-        v1.DELETE("/customer/deleteone",        middleware.PermissionLoginToken, customerHandler.CustomerDeleteById)
+        v1.DELETE("/customer/deleteone",        middleware.PermissionLoginToken, middleware.SuperAdminRole, customerHandler.CustomerDeleteById)
         // 批量删除用户
-        v1.DELETE("/customer/deletebatch",      middleware.PermissionLoginToken, customerHandler.CustomerDeleteByIds)
+        v1.DELETE("/customer/deletebatch",      middleware.PermissionLoginToken, middleware.SuperAdminRole, customerHandler.CustomerDeleteByIds)
         
         // 得到 customer 列表  role: 1,2,3
-        v1.GET("/customer/child/list",                middleware.PermissionLoginToken, customerHandler.CustomerChildList)
+        v1.GET("/customer/child/list",                middleware.PermissionLoginToken, middleware.CommonAdminRole, customerHandler.CustomerChildList)
         // 增加一个用户 role: 1,2
-        v1.POST("/customer/child/addone",             middleware.PermissionLoginToken, customerHandler.CustomerChildAddOne)
+        v1.POST("/customer/child/addone",             middleware.PermissionLoginToken, middleware.CommonAdminRole, customerHandler.CustomerChildAddOne)
         // 更新一个用户 role: 1,2
-        v1.PATCH("/customer/child/updateone",         middleware.PermissionLoginToken, customerHandler.CustomerChildUpdateById)
+        v1.PATCH("/customer/child/updateone",         middleware.PermissionLoginToken, middleware.CommonAdminRole, customerHandler.CustomerChildUpdateById)
         // 删除一个用户 role: 1,2
-        v1.DELETE("/customer/child/deleteone",        middleware.PermissionLoginToken, customerHandler.CustomerChildDeleteById)
+        v1.DELETE("/customer/child/deleteone",        middleware.PermissionLoginToken, middleware.CommonAdminRole, customerHandler.CustomerChildDeleteById)
         // 批量删除用户 role: 1,2
-        v1.DELETE("/customer/child/deletebatch",      middleware.PermissionLoginToken, customerHandler.CustomerChildDeleteByIds)
+        v1.DELETE("/customer/child/deletebatch",      middleware.PermissionLoginToken, middleware.CommonAdminRole, customerHandler.CustomerChildDeleteByIds)
         
+        v1.GET("/customer/child/role/allandselected", middleware.PermissionLoginToken, middleware.CommonAdminRole, customerHandler.CustomerRoleAllAndSelect)
+        // 更新customer 的 roles
+        v1.PATCH("/customer/child/role/updateone",    middleware.PermissionLoginToken, middleware.CommonAdminRole, customerHandler.CustomerRoleUpdate)
         
         
         // #### customer resource group #### 权限：1 ，只有super admin才能访问
         // 得到 resource group 列表
-        v1.GET("/customer/resourcegroup/list",              middleware.PermissionLoginToken, customerHandler.ResourceGroupList)
+        v1.GET("/customer/resourcegroup/list",              middleware.PermissionLoginToken, middleware.SuperAdminRole, customerHandler.ResourceGroupList)
         // 增加一个resource group
-        v1.POST("/customer/resourcegroup/addone",           middleware.PermissionLoginToken, customerHandler.ResourceGroupAddOne)
+        v1.POST("/customer/resourcegroup/addone",           middleware.PermissionLoginToken, middleware.SuperAdminRole, customerHandler.ResourceGroupAddOne)
         // 更新一个resource group
-        v1.PATCH("/customer/resourcegroup/updateone",       middleware.PermissionLoginToken, customerHandler.ResourceGroupUpdateById)
+        v1.PATCH("/customer/resourcegroup/updateone",       middleware.PermissionLoginToken, middleware.SuperAdminRole, customerHandler.ResourceGroupUpdateById)
         // 删除一个resource group
-        v1.DELETE("/customer/resourcegroup/deleteone",      middleware.PermissionLoginToken, customerHandler.ResourceGroupDeleteById)
+        v1.DELETE("/customer/resourcegroup/deleteone",      middleware.PermissionLoginToken, middleware.SuperAdminRole, customerHandler.ResourceGroupDeleteById)
         // 批量删除resource group
-        v1.DELETE("/customer/resourcegroup/deletebatch",    middleware.PermissionLoginToken, customerHandler.ResourceGroupDeleteByIds)
+        v1.DELETE("/customer/resourcegroup/deletebatch",    middleware.PermissionLoginToken, middleware.SuperAdminRole, customerHandler.ResourceGroupDeleteByIds)
         
         // #### customer resource #### 权限：1 ，只有super admin才能访问
         // 得到 resource 列表
-        v1.GET("/customer/resource/list",           middleware.PermissionLoginToken, customerHandler.ResourceList)
+        v1.GET("/customer/resource/list",           middleware.PermissionLoginToken, middleware.SuperAdminRole, customerHandler.ResourceList)
         // 增加一个resource group
-        v1.POST("/customer/resource/addone",        middleware.PermissionLoginToken, customerHandler.ResourceAddOne)
+        v1.POST("/customer/resource/addone",        middleware.PermissionLoginToken, middleware.SuperAdminRole, customerHandler.ResourceAddOne)
         // 更新一个resource group
-        v1.PATCH("/customer/resource/updateone",    middleware.PermissionLoginToken, customerHandler.ResourceUpdateById)
+        v1.PATCH("/customer/resource/updateone",    middleware.PermissionLoginToken, middleware.SuperAdminRole, customerHandler.ResourceUpdateById)
         // 删除一个resource group
-        v1.DELETE("/customer/resource/deleteone",   middleware.PermissionLoginToken, customerHandler.ResourceDeleteById)
+        v1.DELETE("/customer/resource/deleteone",   middleware.PermissionLoginToken, middleware.SuperAdminRole, customerHandler.ResourceDeleteById)
         // 批量删除resource group
-        v1.DELETE("/customer/resource/deletebatch", middleware.PermissionLoginToken, customerHandler.ResourceDeleteByIds)
+        v1.DELETE("/customer/resource/deletebatch", middleware.PermissionLoginToken, middleware.SuperAdminRole, customerHandler.ResourceDeleteByIds)
         
         // #### customer role #### 权限：1，2 
         // 得到 role 列表
-        v1.GET("/customer/role/list",               middleware.PermissionLoginToken, customerHandler.RoleList)
+        v1.GET("/customer/role/list",               middleware.PermissionLoginToken, middleware.CommonAdminRole, customerHandler.RoleList)
         // 增加一个role
-        v1.POST("/customer/role/addone",            middleware.PermissionLoginToken, customerHandler.RoleAddOne)
+        v1.POST("/customer/role/addone",            middleware.PermissionLoginToken, middleware.CommonAdminRole, customerHandler.RoleAddOne)
         // 更新一个role
-        v1.PATCH("/customer/role/updateone",        middleware.PermissionLoginToken, customerHandler.RoleUpdateById)
+        v1.PATCH("/customer/role/updateone",        middleware.PermissionLoginToken, middleware.CommonAdminRole, customerHandler.RoleUpdateById)
         // 删除一个role
-        v1.DELETE("/customer/role/deleteone",       middleware.PermissionLoginToken, customerHandler.RoleDeleteById)
+        v1.DELETE("/customer/role/deleteone",       middleware.PermissionLoginToken, middleware.CommonAdminRole, customerHandler.RoleDeleteById)
         // 批量删除role
-        v1.DELETE("/customer/role/deletebatch",     middleware.PermissionLoginToken, customerHandler.RoleDeleteByIds)
-        // 权限编辑，得到全部的可用资源，以及勾选的权限
-        v1.GET("/customer/role/resource/allandselected",   middleware.PermissionLoginToken, customerHandler.RoleResourceAllAndSelect)
+        v1.DELETE("/customer/role/deletebatch",     middleware.PermissionLoginToken, middleware.CommonAdminRole, customerHandler.RoleDeleteByIds)
+        // 权限资源编辑页面的数据获取，得到全部的可用资源，以及勾选的权限
+        v1.GET("/customer/role/resource/allandselected",   middleware.PermissionLoginToken, middleware.CommonAdminRole, customerHandler.RoleResourceAllAndSelect)
+        // 权限资源信息的更新
+        v1.PATCH("/customer/role/resource/updateone",      middleware.PermissionLoginToken, middleware.CommonAdminRole, customerHandler.RoleResourceUpdate)
         
-        v1.PATCH("/customer/role/resource/updateone",        middleware.PermissionLoginToken, customerHandler.RoleResourceUpdate)
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
         /*
         v1.GET("/customer/list", func(c *gin.Context) {
             item := []gin.H{}

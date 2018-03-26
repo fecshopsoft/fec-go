@@ -10,6 +10,7 @@ import(
     _ "github.com/go-sql-driver/mysql"
     "github.com/fecshopsoft/fec-go/util"
     "github.com/fecshopsoft/fec-go/db/mysqldb"
+    "github.com/fecshopsoft/fec-go/helper"
     //"fmt"
 )
 
@@ -35,7 +36,7 @@ func ResourceGroupAddOne(c *gin.Context){
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return
     }
-    customerId := GetCurrentCustomerId(c)
+    customerId := helper.GetCurrentCustomerId(c)
     resourceGroup.CreatedCustomerId = customerId
     // 插入
     affected, err := engine.Insert(&resourceGroup)

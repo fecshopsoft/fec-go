@@ -3,6 +3,7 @@ package customer
 import(
     "github.com/gin-gonic/gin"
     "errors"
+    "github.com/fecshopsoft/fec-go/helper"
 )
 
 /**
@@ -13,17 +14,17 @@ import(
  */
 func GetCustomerOwnId(c *gin.Context, ownId int64) (int64, error){
     // 添加创建人
-    customerId := GetCurrentCustomerId(c)
-    customerType := GetCurrentCustomerType(c)
-    if customerType == AdminCommonType {
+    customerId := helper.GetCurrentCustomerId(c)
+    customerType := helper.GetCurrentCustomerType(c)
+    if customerType == helper.AdminCommonType {
         return customerId, nil
     }
-    if customerType == AdminSuperType {
+    if customerType == helper.AdminSuperType {
         customerOwn, err := GetCustomerOneById(ownId)
         if err != nil {
             return 0, err
         }
-        if customerOwn.Type != AdminCommonType { 
+        if customerOwn.Type != helper.AdminCommonType { 
             return 0, errors.New("error: own id account type error")
         }
         return ownId, nil
@@ -35,14 +36,14 @@ func GetCustomerOwnId(c *gin.Context, ownId int64) (int64, error){
 // super admin账户可以选择所有的common admin账户
 func GetCustomerOwnIdOps(c *gin.Context) ([]VueSelectOps, error){
     var ownIdArr []VueSelectOps
-    customerType := GetCurrentCustomerType(c)
-    customerId := GetCurrentCustomerId(c)
-    customerUsername := GetCurrentCustomerUsername(c)
-    if customerType == AdminCommonType {
+    customerType := helper.GetCurrentCustomerType(c)
+    customerId := helper.GetCurrentCustomerId(c)
+    customerUsername := helper.GetCurrentCustomerUsername(c)
+    if customerType == helper.AdminCommonType {
         ownIdArr = append(ownIdArr, VueSelectOps{Key: customerId, DisplayName: customerUsername})
         return ownIdArr, nil
     }
-    if customerType == AdminSuperType {
+    if customerType == helper.AdminSuperType {
         customers, err := GetAllEnableCommonCustomer()
         if err != nil{
             return nil, err 
