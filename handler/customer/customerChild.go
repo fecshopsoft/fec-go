@@ -24,6 +24,8 @@ type CustomerChildAdd struct {
     Type int `form:"type" json:"type" `
     ParentId int64 `form:"parent_id" json:"parent_id" `
     Remark string `form:"remark" json:"remark"`
+    MarketGroupId int `form:"market_group_id" json:"market_group_id"`
+    JobType int `form:"job_type" json:"job_type"`
     Status int `form:"status" json:"status"`
     Age int `form:"age" json:"age"`
     CreatedAt int64 `xorm:"created" form:"created_at" json:"created_at"`
@@ -42,6 +44,8 @@ type CustomerChildUpdate struct {
     Type int `form:"type" json:"type" binding:"required"`
     ParentId int64 `form:"parent_id" json:"parent_id"`
     Remark string `form:"remark" json:"remark"`
+    MarketGroupId int `form:"market_group_id" json:"market_group_id"`
+    JobType int `form:"job_type" json:"job_type"`
     Status int `form:"status" json:"status" binding:"required"`
     Age int `form:"age" json:"age"`
     CreatedAt int64 `xorm:"created" form:"created_at" json:"created_at"`
@@ -51,6 +55,10 @@ type CustomerChildUpdate struct {
 }
 
 func (customerChildAdd CustomerChildAdd) TableName() string {
+    return "customer"
+}
+
+func (customerChildUpdate CustomerChildUpdate) TableName() string {
     return "customer"
 }
 /**
@@ -283,13 +291,66 @@ func CustomerChildList(c *gin.Context){
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return  
     }
+    marketGroupOps, err := GetCurrentMarketGroupOps(c)
+    if err != nil{
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+        return  
+    }
     // 生成返回结果
     result := util.BuildSuccessResult(gin.H{
         "items": customers,
         "total":counts,
+        "marketGroupOps": marketGroupOps,
     })
     // 返回json
     c.JSON(http.StatusOK, result)
+}
+
+
+
+type CMarketGroup struct {
+    Id int64 `form:"id" json:"id"`
+    Name string `form:"name" json:"name" binding:"required"`
+    OwnId int64 `form:"own_id" json:"own_id"`
+}
+func (cMarketGroup CMarketGroup) TableName() string {
+    return "base_market_group"
+}
+
+// 2,3用户对应的marketGroups
+func GetCurrentMarketGroupOps(c *gin.Context) ([]VueSelectOps, error){
+    var own_id int64
+    var MGArr []VueSelectOps
+    currentCustomerId := helper.GetCurrentCustomerId(c)
+    GetCurrentCustomerType := helper.GetCurrentCustomerType(c)
+    if GetCurrentCustomerType == helper.AdminCommonType {
+        own_id = currentCustomerId
+    } else if GetCurrentCustomerType == helper.AdminChildType {
+        parent_id, err := GetCurrentCustomerParentId(c)
+        if err != nil{
+            return nil, err
+        }
+        own_id = parent_id
+    }
+    if GetCurrentCustomerType != helper.AdminSuperType && own_id == 0 {
+        return nil, errors.New(" current own id is empty ")
+    }
+    
+    var cMarketGroups []CMarketGroup
+    var err error
+    if own_id != 0 {
+        err = engine.Where("own_id = ?", own_id).Find(&cMarketGroups) 
+    } else {
+        err = engine.Find(&cMarketGroups) 
+    }
+    if err != nil{
+        return nil, err  
+    }
+    for i:=0; i<len(cMarketGroups); i++ {
+        cMarketGroup := cMarketGroups[i]
+        MGArr = append(MGArr, VueSelectOps{Key: cMarketGroup.Id, DisplayName: cMarketGroup.Name})
+    }
+    return MGArr, nil
 }
 
 

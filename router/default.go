@@ -3,6 +3,7 @@ package router
 import(
     "github.com/gin-gonic/gin"
     customerHandler "github.com/fecshopsoft/fec-go/handler/customer"
+    commonHandler "github.com/fecshopsoft/fec-go/handler/common"
     "github.com/fecshopsoft/fec-go/middleware"
     "github.com/fecshopsoft/fec-go/config"
     // "github.com/fecshopsoft/fec-go/initialization"
@@ -115,6 +116,17 @@ func Listen(listenIp string) {
         v1.PATCH("/customer/role/resource/updateone",      middleware.PermissionLoginToken, middleware.CommonAdminRole, customerHandler.RoleResourceUpdate)
         
         
+        // #### Common Market Group #### 权限：1, 2, 3
+        // 得到 marketGroup 列表
+        v1.GET("/common/marketgroup/list",           middleware.PermissionLoginToken, middleware.CommonAdminChildRole, commonHandler.MarketGroupList)
+        // 增加一个 marketGroup
+        v1.POST("/common/marketgroup/addone",        middleware.PermissionLoginToken, middleware.CommonAdminChildRole, commonHandler.MarketGroupAddOne)
+        // 更新一个 marketGroup
+        v1.PATCH("/common/marketgroup/updateone",    middleware.PermissionLoginToken, middleware.CommonAdminChildRole, commonHandler.MarketGroupUpdateById)
+        // 删除一个 marketGroup
+        v1.DELETE("/common/marketgroup/deleteone",   middleware.PermissionLoginToken, middleware.CommonAdminChildRole, commonHandler.MarketGroupDeleteById)
+        // 批量删除 marketGroup
+        v1.DELETE("/common/marketgroup/deletebatch", middleware.PermissionLoginToken, middleware.CommonAdminChildRole, commonHandler.MarketGroupDeleteByIds)
         
         
         

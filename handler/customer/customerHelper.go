@@ -58,6 +58,8 @@ func GetCustomerOwnIdOps(c *gin.Context) ([]VueSelectOps, error){
 }
 
 
+
+
 /*
 func ReqMethodArr() {
     return map[int]string{

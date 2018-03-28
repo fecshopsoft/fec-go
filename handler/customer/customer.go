@@ -42,6 +42,10 @@ type Customer struct {
     Status int `form:"status" json:"status"`
     Age int `form:"age" json:"age"`
     Type int `form:"type" json:"type"`
+    
+    MarketGroupId int `form:"market_group_id" json:"market_group_id"`
+    JobType int `form:"job_type" json:"job_type"`
+    
     ParentId int64 `form:"parent_id" json:"parent_id" xorm:"int null"`
     CreatedAt int64 `xorm:"created" form:"created_at" json:"created_at"`
     UpdatedAt int64 `xorm:"updated" form:"updated_at" json:"updated_at"`

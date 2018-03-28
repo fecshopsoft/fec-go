@@ -17,7 +17,6 @@ var VueUserRoles = map[int]string{
     AdminChildType: "common_admin_child",
 }
 
-type MapStrInterface map[string]interface{}
 
 // 得到当前的customerId
 func GetCurrentCustomerId(c *gin.Context) (int64){
@@ -37,3 +36,5 @@ func GetCurrentCustomer(c *gin.Context) (MapStrInterface){
 func GetCurrentCustomerUsername(c *gin.Context) (string){
     return c.GetString("currentCustomerUsername");
 }  
+
+
