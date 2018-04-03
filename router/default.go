@@ -4,6 +4,7 @@ import(
     "github.com/gin-gonic/gin"
     customerHandler "github.com/fecshopsoft/fec-go/handler/customer"
     commonHandler "github.com/fecshopsoft/fec-go/handler/common"
+    fecHandler "github.com/fecshopsoft/fec-go/handler/fec"
     "github.com/fecshopsoft/fec-go/middleware"
     "github.com/fecshopsoft/fec-go/config"
     // "github.com/fecshopsoft/fec-go/initialization"
@@ -29,11 +30,16 @@ func Listen(listenIp string) {
     r.Use(middleware.CORS())
     // 初始化上下文中的全局变量
     r.Use(middleware.InitContext)
+    r.GET("/fec/trace", fecHandler.SaveJsData)
+        
     //mi := router.Group("/mi", handler.ApiGlobal, handler.AdminCheckLogin)
     // ##：【middleware.PermissionLoginToken】 验证是否有token，以及token是否有效
     // ##：【customerHandler.PermissionRole】 验证用户是否有权限访问该资源
     v1 := r.Group("/v1")
     {
+        
+        
+        
         // #### customer login ####
         // 登录账户 - 权限：1,2,3
         v1.POST("/customer/account/login",  customerHandler.CustomerAccountLogin)
@@ -129,9 +135,33 @@ func Listen(listenIp string) {
         v1.DELETE("/common/marketgroup/deletebatch", middleware.PermissionLoginToken, middleware.CommonAdminChildRole, commonHandler.MarketGroupDeleteByIds)
         
         
+        // #### Common Market Group #### 权限：1, 2, 3
+        // 得到 marketGroup 列表
+        v1.GET("/common/channel/list",           middleware.PermissionLoginToken, middleware.CommonAdminChildRole, commonHandler.ChannelList)
+        // 增加一个 marketGroup
+        v1.POST("/common/channel/addone",        middleware.PermissionLoginToken, middleware.CommonAdminChildRole, commonHandler.ChannelAddOne)
+        // 更新一个 marketGroup
+        v1.PATCH("/common/channel/updateone",    middleware.PermissionLoginToken, middleware.CommonAdminChildRole, commonHandler.ChannelUpdateById)
+        // 删除一个 marketGroup
+        v1.DELETE("/common/channel/deleteone",   middleware.PermissionLoginToken, middleware.CommonAdminChildRole, commonHandler.ChannelDeleteById)
+        // 批量删除 marketGroup
+        v1.DELETE("/common/channel/deletebatch", middleware.PermissionLoginToken, middleware.CommonAdminChildRole, commonHandler.ChannelDeleteByIds)
         
         
+        // #### Common Market Group #### 权限：1, 2, 3
+        // 得到 marketGroup 列表
+        v1.GET("/common/website/list",           middleware.PermissionLoginToken, middleware.CommonAdminChildRole, commonHandler.WebsiteList)
+        // 增加一个 marketGroup
+        v1.POST("/common/website/addone",        middleware.PermissionLoginToken, middleware.CommonAdminChildRole, commonHandler.WebsiteAddOne)
+        // 更新一个 marketGroup
+        v1.PATCH("/common/website/updateone",    middleware.PermissionLoginToken, middleware.CommonAdminChildRole, commonHandler.WebsiteUpdateById)
+        // 删除一个 marketGroup
+        v1.DELETE("/common/website/deleteone",   middleware.PermissionLoginToken, middleware.CommonAdminChildRole, commonHandler.WebsiteDeleteById)
+        // 批量删除 marketGroup
+        v1.DELETE("/common/website/deletebatch", middleware.PermissionLoginToken, middleware.CommonAdminChildRole, commonHandler.WebsiteDeleteByIds)
         
+        // 得到 marketGroup 列表
+        v1.GET("/common/website/jscode",           middleware.PermissionLoginToken, middleware.CommonAdminChildRole, commonHandler.WebsiteJsCode)
         
         
         
@@ -223,6 +253,7 @@ func Listen(listenIp string) {
         */
     }
     r.Run(listenIp) // 这里改成您的ip和端口
+    // r.RunTLS(listenIp, "/etc/letsencrypt/live/fecshop.appfront.fancyecommerce.com/fullchain.pem", "/etc/letsencrypt/live/fecshop.appfront.fancyecommerce.com/privkey.pem") // 这里改成您的ip和端口
 }
 // 设置 gin.DefaultWriter 和 gin.DefaultErrorWriter
 func initLog() {
