@@ -353,16 +353,12 @@ func WebsiteJsCode(c *gin.Context){
     {
         "sku":"grxjy56002622",
         "qty":1,
-        "price":35.52,
-        "currency":"RMB",
-        "currency_rate":6.2
+        "price":35.52
     },
     {
         "sku":"grxjy5606622",
         "qty":4,
-        "price":75.11,
-        "currency":"RMB",
-        "currency_rate":6.2
+        "price":75.11
     }
 ]`
     order_js := ` // 如果您的订单生成后，需要跳转到支付平台，如果有跳转桥页，可以在该桥页添加下面的js，如果没有，直接跳转，那么需要在服务端调用api发送数据。
@@ -383,12 +379,14 @@ func WebsiteJsCode(c *gin.Context){
     "discount_amount":0.00, // 折扣金额
     "coupon":"xxxxx", // 优惠券，没有则为空
     "city":"fdasfds", // 城市
-    "country":"US", // 国家简码
     "email":"2358269014@qq.com", // 下单填写的email
     "first_name":"terry", //
     "last_name":"water", //
     "zip":"266326", // 邮编
-    "state":"CT", // 省或州
+    "country_code":"US", // 国家简码
+    "state_code":"CT", // 省或州简码
+    "country_name":"Unite States", // 国家全称
+    "state_name":"Ctsrse", // 省或州全称
     "address1":"address street 1", // 详细地址1
     "address2":"address street 2", // 详细地址2
     "products":[ // 产品详情
@@ -425,12 +423,14 @@ func WebsiteJsCode(c *gin.Context){
     "discount_amount":0.00, // 折扣金额
     "coupon":"xxxxx", // 优惠券，没有则为空
     "city":"fdasfds", // 城市
-    "country":"US", // 国家简码
     "email":"2358269014@qq.com", // 下单填写的email
     "first_name":"terry", //
     "last_name":"water", //
     "zip":"266326", // 邮编
-    "state":"CT", // 省或州
+    "country_code":"US", // 国家简码
+    "state_code":"CT", // 省或州简码
+    "country_name":"Unite States", // 国家全称
+    "state_name":"Ctsrse", // 省或州全称
     "address1":"address street 1", // 详细地址1
     "address2":"address street 2", // 详细地址2
     "products":[ // 产品详情

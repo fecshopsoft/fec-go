@@ -5,6 +5,7 @@ import(
     customerHandler "github.com/fecshopsoft/fec-go/handler/customer"
     commonHandler "github.com/fecshopsoft/fec-go/handler/common"
     fecHandler "github.com/fecshopsoft/fec-go/handler/fec"
+    testHandler "github.com/fecshopsoft/fec-go/handler/test"
     "github.com/fecshopsoft/fec-go/middleware"
     "github.com/fecshopsoft/fec-go/config"
     // "github.com/fecshopsoft/fec-go/initialization"
@@ -31,6 +32,7 @@ func Listen(listenIp string) {
     // 初始化上下文中的全局变量
     r.Use(middleware.InitContext)
     r.GET("/fec/trace", fecHandler.SaveJsData)
+    r.GET("/test/mgo", testHandler.MgoFind)
         
     //mi := router.Group("/mi", handler.ApiGlobal, handler.AdminCheckLogin)
     // ##：【middleware.PermissionLoginToken】 验证是否有token，以及token是否有效
@@ -162,8 +164,6 @@ func Listen(listenIp string) {
         
         // 得到 marketGroup 列表
         v1.GET("/common/website/jscode",           middleware.PermissionLoginToken, middleware.CommonAdminChildRole, commonHandler.WebsiteJsCode)
-        
-        
         
         
         
