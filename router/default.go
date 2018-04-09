@@ -32,6 +32,7 @@ func Listen(listenIp string) {
     // 初始化上下文中的全局变量
     r.Use(middleware.InitContext)
     r.GET("/fec/trace", fecHandler.SaveJsData)
+    r.POST("/fec/trace/api", fecHandler.PermissionAccessToken, fecHandler.SaveApiData)
     r.GET("/test/mgo", testHandler.MgoFind)
         
     //mi := router.Group("/mi", handler.ApiGlobal, handler.AdminCheckLogin)

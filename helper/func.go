@@ -91,3 +91,14 @@ func GenerateAccessToken() (string, error){
     return security.JwtSignToken(uuid)
 }
 
+// siteUid 是传递的网站的website_uid的字符串
+func GenerateAccessTokenBySiteId(siteUid string) (string, error){
+    return security.JwtSignAccessToken(siteUid)
+}
+
+func GetSiteUIdByAccessToken(accessToken string) (string, error){
+    return security.JwtParseAccessToken(accessToken)
+}
+
+
+

@@ -56,7 +56,8 @@ func WebsiteAddOne(c *gin.Context){
         return
     }
     websiteInfo.SiteUid = helper.RandomUUID()
-    access_token, err := helper.GenerateAccessToken()
+    // access_token, err := helper.GenerateAccessToken()
+    access_token, err := helper.GenerateAccessTokenBySiteId(websiteInfo.SiteUid)
     if err != nil {
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return
@@ -293,6 +294,23 @@ func GetCustomerOneById(id int64) (WebsiteInfo, error){
     }
     return websiteInfo, nil
 }
+
+/**
+ * 根据 access_token 查询得到 WebsiteInfo
+ */
+func GetWebsiteByAccessToken(access_token string) (WebsiteInfo, error){
+    // 得到结果数据
+    var websiteInfo WebsiteInfo
+    has, err := engine.Where("access_token = ?", access_token).Get(&websiteInfo)
+    if err != nil {
+        return websiteInfo, err
+    } 
+    if has == false {
+        return websiteInfo, errors.New("get websiteInfo by id error, empty data.")
+    }
+    return websiteInfo, nil
+}
+
 
 /**
  * 列表查询

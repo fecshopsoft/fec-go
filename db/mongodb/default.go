@@ -42,17 +42,17 @@ func Session() *mgo.Session {
 }
 
 // 可以指定collection，database使用配置中的值
-func MC(collection string, f func(*mgo.Collection) error ) (err error) {
+func MC(collection string, f func(*mgo.Collection) error ) error {
     session := Session()
     defer func() {
         session.Close()
-        if err = recover(); err != nil {
+        // if err = recover(); err != nil {
             // Log("M", err)
-        }
+        // }
     }()
     c := session.DB(databaseName).C(collection)
     // 关于return 和 defer 执行的优先级参看:https://studygolang.com/articles/4809
-    err = f(c)
+    return f(c) 
 }
 
 // 可以指定database和collection

@@ -10,7 +10,7 @@ import(
 )
 
 
-
+// trace info
 type TraceInfo struct{
     Id_ bson.ObjectId `form:"_id" json:"_id" bson:"_id"` 
     Uuid string `binding:"required" form:"uuid" json:"uuid" bson:"uuid"`
@@ -30,14 +30,49 @@ type TraceInfo struct{
     FirstReferrerDomain string `form:"first_referrer_domain" json:"first_referrer_domain" bson:"first_referrer_domain"`
     FirstReferrerUrl string `form:"first_referrer_url" json:"first_referrer_url" bson:"first_referrer_url"`
     ClActivity string `form:"cl_activity" json:"cl_activity" bson:"cl_activity"`
-    ClActivity_child string `form:"icl_activity_childd" json:"cl_activity_child" bson:"cl_activity_child"`
+    ClActivity_child string `form:"cl_activity_child" json:"cl_activity_child" bson:"cl_activity_child"`
     IsReturn string `form:"is_return" json:"is_return" bson:"is_return"`
     FirstPage string `form:"first_page" json:"first_page" bson:"first_page"`
     DevicePixelRatio string `form:"device_pixel_ratio" json:"device_pixel_ratio" bson:"device_pixel_ratio"`
     Resolution string `form:"resolution" json:"resolution" bson:"resolution"`
     ColorDepth string `form:"color_depth" json:"color_depth" bson:"color_depth"`
+    /**
+     * fid  广告id
+     * fec_source   渠道
+     * fec_medium   子渠道
+     * fec_campaign 活动 
+     * fec_content  推广员
+     * fec_design   广告设计员
+     */
+    Fid string `form:"fid" json:"fid" bson:"fid"`
+    FecSource string `form:"fec_source" json:"fec_source" bson:"fec_source"`
+    FecMedium string `form:"fec_medium" json:"fec_medium" bson:"fec_medium"`
+    FecCampaign string `form:"fec_campaign" json:"fec_campaign" bson:"fec_campaign"`
+    FecContent string `form:"fec_content" json:"fec_content" bson:"fec_content"`
+    FecDesign string `form:"fec_design" json:"fec_design" bson:"fec_design"`
+    
+    
+    Category string `form:"category" json:"category" bson:"category"`
+    Sku string `form:"sku" json:"sku" bson:"sku"`
+    Cart []CartItem `form:"cart" json:"cart" bson:"cart"`
+    Search SearchInfo `form:"search" json:"search" bson:"search"`
+    
     
 }
+// cart
+type CartItem struct{
+    Sku string `form:"sku" json:"sku" bson:"sku"`
+    Qty string `form:"qty" json:"qty" bson:"qty"`
+    Price string `form:"price" json:"price" bson:"price"`
+}
+// search
+type SearchInfo struct{
+    Text string `form:"text" json:"text" bson:"text"`
+    ResultQty string `form:"result_qty" json:"result_qty" bson:"result_qty"`
+}
+
+
+
 func (traceInfo TraceInfo) TableName() string {
     return "trace_info"
 }
