@@ -19,7 +19,7 @@ type TraceApiInfo struct{
     
     Uuid string `binding:"required" form:"uuid" json:"uuid" bson:"uuid"`
     ClActivity string `form:"cl_activity" json:"cl_activity" bson:"cl_activity"`
-    ClActivity_child string `form:"cl_activity_child" json:"cl_activity_child" bson:"cl_activity_child"`
+    ClActivityChild string `form:"cl_activity_child" json:"cl_activity_child" bson:"cl_activity_child"`
     FirstReferrerDomain string `form:"first_referrer_domain" json:"first_referrer_domain" bson:"first_referrer_domain"`
     FirstPage string `form:"first_page" json:"first_page" bson:"first_page"`
     FirstReferrerUrl string `form:"first_referrer_url" json:"first_referrer_url" bson:"first_referrer_url"`
@@ -57,7 +57,7 @@ type TraceApiDbInfo struct{
     
     Uuid string `binding:"required" form:"uuid" json:"uuid" bson:"uuid"`
     ClActivity string `form:"cl_activity" json:"cl_activity" bson:"cl_activity"`
-    ClActivity_child string `form:"cl_activity_child" json:"cl_activity_child" bson:"cl_activity_child"`
+    ClActivityChild string `form:"cl_activity_child" json:"cl_activity_child" bson:"cl_activity_child"`
     FirstReferrerDomain string `form:"first_referrer_domain" json:"first_referrer_domain" bson:"first_referrer_domain"`
     FirstPage string `form:"first_page" json:"first_page" bson:"first_page"`
     FirstReferrerUrl string `form:"first_referrer_url" json:"first_referrer_url" bson:"first_referrer_url"`
@@ -90,6 +90,7 @@ type TraceApiDbInfo struct{
 type OrderInfo struct{
     Invoice string `form:"invoice" json:"invoice" bson:"invoice"`
     OrderType string `form:"order_type" json:"order_type" bson:"order_type"`
+    // 未支付：payment_pending，  已支付：payment_confirmed  
     PaymentStatus string `form:"payment_status" json:"payment_status" bson:"payment_status"`
     PaymentType string `form:"payment_type" json:"payment_type" bson:"payment_type"`
     Amount float64 `form:"amount" json:"amount" bson:"amount"`
@@ -166,7 +167,7 @@ func SaveApiData(c *gin.Context){
             traceApiDbInfo.Id_ = bson.NewObjectId()
             traceApiDbInfo.Uuid = traceApiInfo.Uuid
             traceApiDbInfo.ClActivity = traceApiInfo.ClActivity
-            traceApiDbInfo.ClActivity_child = traceApiInfo.ClActivity_child
+            traceApiDbInfo.ClActivityChild = traceApiInfo.ClActivityChild
             traceApiDbInfo.FirstReferrerDomain = traceApiInfo.FirstReferrerDomain
             traceApiDbInfo.FirstPage = traceApiInfo.FirstPage
             traceApiDbInfo.FirstReferrerUrl = traceApiInfo.FirstReferrerUrl
@@ -186,15 +187,12 @@ func SaveApiData(c *gin.Context){
             err = coll.Insert(traceApiDbInfo)
             return err
         }
-        
         // 进行赋值。 // bsonObjectID := bson.ObjectIdHex("573ce4451e02f4bae78788aa")
-      
     })
     if err != nil {
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return
     } 
-    
     // 生成返回结果
     result := util.BuildSuccessResult(gin.H{
         "success": "success",
