@@ -54,6 +54,13 @@ type TraceGetInfo struct{
     FecContent string `form:"fec_content" json:"fec_content" bson:"fec_content"`
     FecDesign string `form:"fec_design" json:"fec_design" bson:"fec_design"`
     
+    FecStore string `form:"fec_store" json:"fec_store" bson:"fec_store"`
+    FecLang string `form:"fec_lang" json:"fec_lang" bson:"fec_lang"`
+    FecApp string `form:"fec_app" json:"fec_app" bson:"fec_app"`
+    FecCurrency string `form:"fec_currency" json:"fec_currency" bson:"fec_currency"`
+    
+    
+    
     Category string `form:"category" json:"category" bson:"category"`
     Sku string `form:"sku" json:"sku" bson:"sku"`
     
@@ -102,6 +109,11 @@ type TraceInfo struct{
     FecCampaign string `form:"fec_campaign" json:"fec_campaign" bson:"fec_campaign"`
     FecContent string `form:"fec_content" json:"fec_content" bson:"fec_content"`
     FecDesign string `form:"fec_design" json:"fec_design" bson:"fec_design"`
+    
+    FecStore string `form:"fec_store" json:"fec_store" bson:"fec_store"`
+    FecLang string `form:"fec_lang" json:"fec_lang" bson:"fec_lang"`
+    FecApp string `form:"fec_app" json:"fec_app" bson:"fec_app"`
+    FecCurrency string `form:"fec_currency" json:"fec_currency" bson:"fec_currency"`
     
     
     Category string `form:"category" json:"category" bson:"category"`
@@ -186,6 +198,12 @@ func SaveJsData(c *gin.Context){
     
     // sku
     traceInfo.Sku, _ = url.QueryUnescape(traceGetInfo.Sku)
+    
+    traceInfo.FecStore, _ = url.QueryUnescape(traceGetInfo.FecStore)
+    traceInfo.FecLang, _ = url.QueryUnescape(traceGetInfo.FecLang)
+    traceInfo.FecApp, _ = url.QueryUnescape(traceGetInfo.FecApp)
+    traceInfo.FecCurrency, _ = url.QueryUnescape(traceGetInfo.FecCurrency)
+    
     
     
     // 进行保存。

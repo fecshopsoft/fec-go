@@ -6,6 +6,7 @@ import(
     "github.com/fecshopsoft/fec-go/db/mongodb"
     "github.com/gin-gonic/gin"
     "net/http"
+    "errors"
     "github.com/globalsign/mgo"
     "github.com/globalsign/mgo/bson"
 )
@@ -17,7 +18,7 @@ import(
 type TraceApiInfo struct{
     Id_ bson.ObjectId `form:"_id" json:"_id" bson:"_id"` 
     
-    Uuid string `binding:"required" form:"uuid" json:"uuid" bson:"uuid"`
+    Uuid string `form:"uuid" json:"uuid" bson:"uuid"`
     ClActivity string `form:"cl_activity" json:"cl_activity" bson:"cl_activity"`
     ClActivityChild string `form:"cl_activity_child" json:"cl_activity_child" bson:"cl_activity_child"`
     FirstReferrerDomain string `form:"first_referrer_domain" json:"first_referrer_domain" bson:"first_referrer_domain"`
@@ -40,6 +41,11 @@ type TraceApiInfo struct{
     FecCampaign string `form:"fec_campaign" json:"fec_campaign" bson:"fec_campaign"`
     FecContent string `form:"fec_content" json:"fec_content" bson:"fec_content"`
     FecDesign string `form:"fec_design" json:"fec_design" bson:"fec_design"`
+    
+    FecStore string `form:"fec_store" json:"fec_store" bson:"fec_store"`
+    FecLang string `form:"fec_lang" json:"fec_lang" bson:"fec_lang"`
+    FecApp string `form:"fec_app" json:"fec_app" bson:"fec_app"`
+    FecCurrency string `form:"fec_currency" json:"fec_currency" bson:"fec_currency"`
     
     LoginEmail string `form:"login_email" json:"login_email" bson:"login_email"`
     RegisterEmail string `form:"register_email" json:"register_email" bson:"register_email"`
@@ -55,7 +61,7 @@ func (traceApiDbInfo TraceApiDbInfo) TableName() string {
 type TraceApiDbInfo struct{
     Id_ bson.ObjectId `form:"_id" json:"_id" bson:"_id"` 
     
-    Uuid string `binding:"required" form:"uuid" json:"uuid" bson:"uuid"`
+    Uuid string `form:"uuid" json:"uuid" bson:"uuid"`
     ClActivity string `form:"cl_activity" json:"cl_activity" bson:"cl_activity"`
     ClActivityChild string `form:"cl_activity_child" json:"cl_activity_child" bson:"cl_activity_child"`
     FirstReferrerDomain string `form:"first_referrer_domain" json:"first_referrer_domain" bson:"first_referrer_domain"`
@@ -78,6 +84,11 @@ type TraceApiDbInfo struct{
     FecCampaign string `form:"fec_campaign" json:"fec_campaign" bson:"fec_campaign"`
     FecContent string `form:"fec_content" json:"fec_content" bson:"fec_content"`
     FecDesign string `form:"fec_design" json:"fec_design" bson:"fec_design"`
+    
+    FecStore string `form:"fec_store" json:"fec_store" bson:"fec_store"`
+    FecLang string `form:"fec_lang" json:"fec_lang" bson:"fec_lang"`
+    FecApp string `form:"fec_app" json:"fec_app" bson:"fec_app"`
+    FecCurrency string `form:"fec_currency" json:"fec_currency" bson:"fec_currency"`
     
     LoginEmail string `form:"login_email" json:"login_email" bson:"login_email"`
     RegisterEmail string `form:"register_email" json:"register_email" bson:"register_email"`
@@ -156,13 +167,23 @@ func SaveApiData(c *gin.Context){
         // 如果是成功订单，那么只更新订单的支付状态，其他的不变
         if traceApiInfo.PaymentSuccessOrder.Invoice != "" {
             invoice := traceApiInfo.PaymentSuccessOrder.Invoice
+            websiteId := traceApiInfo.WebsiteId
             payment_status := traceApiInfo.PaymentSuccessOrder.PaymentStatus
-            
-            selector := bson.M{"order.invoice": invoice}
+            if websiteId == "" {
+                return errors.New("websiteId can not empty")
+            }
+            if invoice == "" {
+                return errors.New("invoice can not empty")
+            }
+            // websiteId 和 invoice两个作为条件查询
+            selector := bson.M{"order.invoice": invoice, "website_id": websiteId}
             updateData := bson.M{"$set": bson.M{"order.payment_status": payment_status}}
             err = coll.Update(selector, updateData)
             return err
         } else {
+            if traceApiInfo.Uuid == "" {
+                return errors.New("uuid can not empty")
+            } 
             // 其他的则为插入
             traceApiDbInfo.Id_ = bson.NewObjectId()
             traceApiDbInfo.Uuid = traceApiInfo.Uuid
@@ -181,6 +202,11 @@ func SaveApiData(c *gin.Context){
             traceApiDbInfo.FecContent = traceApiInfo.FecContent
             traceApiDbInfo.FecDesign = traceApiInfo.FecDesign
             
+            traceApiDbInfo.FecStore = traceApiInfo.FecStore
+            traceApiDbInfo.FecLang = traceApiInfo.FecLang
+            traceApiDbInfo.FecApp = traceApiInfo.FecApp
+            traceApiDbInfo.FecCurrency = traceApiInfo.FecCurrency
+    
             traceApiDbInfo.LoginEmail = traceApiInfo.LoginEmail
             traceApiDbInfo.RegisterEmail = traceApiInfo.RegisterEmail
             traceApiDbInfo.Order = traceApiInfo.PaymentPendingOrder
