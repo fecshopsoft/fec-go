@@ -8,6 +8,7 @@ import(
     testHandler "github.com/fecshopsoft/fec-go/handler/test"
     "github.com/fecshopsoft/fec-go/middleware"
     "github.com/fecshopsoft/fec-go/config"
+    "github.com/fecshopsoft/fec-go/initialization"
     // "github.com/fecshopsoft/fec-go/initialization"
     //"fmt"
     //"time"
@@ -24,6 +25,10 @@ func Listen(listenIp string) {
     // gin.DisableConsoleColor()
     // log.Println("------333：" + time.Now().String())
     initLog()
+    err := initialization.InitWebsiteInfo()
+    if err != nil {
+        panic(err)
+    }
     // log.Println("------444：" + time.Now().String())
     r := gin.Default()
     r.NoRoute(middleware.NotFound)
@@ -31,7 +36,8 @@ func Listen(listenIp string) {
     r.Use(middleware.CORS())
     // 初始化上下文中的全局变量
     r.Use(middleware.InitContext)
-    r.GET("/fec/trace", fecHandler.SaveJsData)
+    r.GET("/fec/trace", fecHandler.PermisstionWebsiteId, fecHandler.SaveJsData)
+    // r.GET("/fec/ip", fecHandler.Iptest)
     r.POST("/fec/trace/api", fecHandler.PermissionAccessToken, fecHandler.SaveApiData)
     r.GET("/test/mgo", testHandler.MgoFind)
         

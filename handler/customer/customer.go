@@ -6,7 +6,7 @@ import(
     "strconv"
     "crypto/md5"
     "errors"
-    // "time"
+    "time"
     "unicode/utf8"
     "encoding/hex"
     _ "github.com/go-sql-driver/mysql"
@@ -50,6 +50,11 @@ type Customer struct {
     CreatedAt int64 `xorm:"created" form:"created_at" json:"created_at"`
     UpdatedAt int64 `xorm:"updated" form:"updated_at" json:"updated_at"`
     BirthDate  int64 `form:"birth_date" json:"birth_date"`
+    
+    PaymentEndTime int64 `xorm:"payment_end_time" form:"payment_end_time" json:"payment_end_time"`
+    WebsiteCount int64 `xorm:"website_count" form:"website_count" json:"website_count"`
+    WebsiteDayMaxCount int64 `xorm:"website_day_max_count" form:"website_day_max_count" json:"website_day_max_count"`
+    
 }
 
 
@@ -499,6 +504,25 @@ func GetCustomerUsernameByIds(ids []int64) ([]CustomerUsername, error){
     }
     return customers, nil
 }
+
+
+/**
+ * 通过ids，查询customer表，得到
+ */
+func GetPaymentActiveCustomers() ([]Customer, error){
+    newTime := time.Now().Unix()
+    enableStatus := 1
+    // 得到结果数据
+    var customers []Customer
+    engine := mysqldb.GetEngine()
+    err := engine.Where("status = ? and payment_end_time > ? ", enableStatus, newTime).Find(&customers) 
+    if err != nil{
+        return nil, err 
+    }
+    return customers, nil
+}
+
+
 
 /**
  * 通过id查询一条记录

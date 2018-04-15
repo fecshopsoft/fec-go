@@ -11,8 +11,20 @@
 *  [关于平台账户](platform-account.md)
 *  [数据对接原理](site_relate_yuanli.md)
 *  [Cookie说明](trace_cookie.md)
+*  [Trace系统添加新平台](trace_add_new.md)
+*  [接收数据安全验证](trace_data_get_verify.md)
+*  [数据库字段介绍](trace_db_data.md)
 
-对接信息
+
+数据传递
+------------
+
+*  [数据接收验证](data_get_verify.md)
+
+
+
+
+商城对接
 ----------
 
 *  [Fecshop对接](fecshop_relate.md)

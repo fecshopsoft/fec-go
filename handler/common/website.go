@@ -20,6 +20,7 @@ type WebsiteInfo struct {
     SiteName string `form:"site_name" json:"site_name" binding:"required"`
     Domain string `form:"domain" json:"domain" binding:"required"`
     TraceJsUrl string `form:"trace_js_url" json:"trace_js_url" `
+    TraceApiUrl string `form:"trace_api_url" json:"trace_api_url" `
     SiteUid string `form:"site_uid" json:"site_uid"`
     AccessToken string `form:"access_token" json:"access_token"`
     OwnId int64 `form:"own_id" json:"own_id"`
@@ -33,7 +34,8 @@ func (websiteInfo WebsiteInfo) TableName() string {
     return "base_website_info"
 }
 
-var FecTraceUrl string = "trace.fecshop.com/fec_trace.js"
+var FecTraceJsUrl string = "trace.fecshop.com/fec_trace.js"
+var FecTraceApiUrl string = "120.24.37.249:3000/fec/trace/api"
 /**
  * 增加一条记录
  */
@@ -64,7 +66,8 @@ func WebsiteAddOne(c *gin.Context){
     }
     websiteInfo.AccessToken = access_token
     websiteInfo.OwnId = own_id
-    websiteInfo.TraceJsUrl = FecTraceUrl
+    websiteInfo.TraceJsUrl = FecTraceJsUrl
+    websiteInfo.TraceApiUrl = FecTraceApiUrl
     customerId := helper.GetCurrentCustomerId(c)
     websiteInfo.CreatedCustomerId = customerId
     // 插入
@@ -273,7 +276,20 @@ func GetWebsiteCreatedCustomerOps(websiteInfos []WebsiteInfo) ([]helper.VueSelec
 func GetWebsiteByIds(market_group_ids []int64) ([]WebsiteInfo, error){
     // 得到结果数据
     var websiteInfos []WebsiteInfo
-    err := engine.In("id",market_group_ids).Find(&websiteInfos) 
+    err := engine.In("id", market_group_ids).Find(&websiteInfos) 
+    if err != nil{
+        return websiteInfos, err
+    }
+    return websiteInfos, nil
+}
+
+/**
+ * 根据 market_group_ids 查询得到 WebsiteInfo
+ */
+func GetWebsiteByOwnId(own_id int64) ([]WebsiteInfo, error){
+    // 得到结果数据
+    var websiteInfos []WebsiteInfo
+    err := engine.Where("own_id = ? ", own_id).Find(&websiteInfos) 
     if err != nil{
         return websiteInfos, err
     }
@@ -342,6 +358,11 @@ func WebsiteJsCode(c *gin.Context){
 <script type="text/javascript">
 	var _maq = _maq || [];
 	_maq.push(['website_id', '` + site_uid + `']);
+    _maq.push(['fec_store', store_name]);
+    _maq.push(['fec_lang', store_language]);
+    _maq.push(['fec_app', store_app_name]);
+    _maq.push(['fec_currency', store_currency]);
+    
 	(function() {
 		var ma = document.createElement('script'); ma.type = 'text/javascript'; ma.async = true;
 		ma.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + '` + trace_js_url + `';
@@ -352,21 +373,22 @@ func WebsiteJsCode(c *gin.Context){
     category_js := ` // 将该js代码添加到分类页面
 <script type="text/javascript">
 	var _maq = _maq || [];
-	_maq.push(['category', $category]);  // $category：填写分类的name，如果是多语言网站，那么这里填写默认语言的分类name
+	_maq.push(['category', category]);  // category：填写分类的name，如果是多语言网站，那么这里填写默认语言的分类name
 </script>`
 
     product_js := ` // 将该js添加到产品页面
 <script type="text/javascript">
 	var _maq = _maq || [];
-	_maq.push(['sku', $sku]); // $sku：当前产品页面的sku编码
+	_maq.push(['sku', sku]); // sku：当前产品页面的sku编码
 </script>`
     
     cart_js := ` // 将该js添加到购物车页面，
 <script type="text/javascript">
 	var _maq = _maq || [];
-	_maq.push(['cart', $cart]); // $cart：购物车页面的购物车数据，该值的示例数据请看下面
+	_maq.push(['cart', cart]); // cart：购物车页面的购物车数据，该值的示例数据请看下面
 </script>`
-    example_cart_js := ` // 上面 $cart 变量的示例格式数据。
+
+    example_cart_js := ` // 上面 cart 变量的示例格式数据。
 [
     {
         "sku":"grxjy56002622",
@@ -379,12 +401,43 @@ func WebsiteJsCode(c *gin.Context){
         "price":75.11
     }
 ]`
+
+    search_js := ` // 将该js添加到搜索页面
+<script type="text/javascript">
+	var _maq = _maq || [];
+	_maq.push(['search', search_text]);
+</script>`
+    example_search_js := ` search_text 变量的示例数据
+{
+    "text": "fashion handbag", // 搜索词
+    "result_qty":5  // 搜索的产品个数
+}`
+    
+    
+    
+    
+    
+    
+    
+
+    login_js := ` // 登录成功页面添加的js，如果是ajax登录，那么需要通过API，服务端发送用户登录email
+<script type="text/javascript">
+	var _maq = _maq || [];
+	_maq.push(['login_email', $login_email]);
+</script>`
+    
+    register_js := ` // 注册成功页面添加的js，如果是ajax登录，那么需要通过API，服务端发送用户注册email
+<script type="text/javascript">
+	var _maq = _maq || [];
+	_maq.push(['register_email', $register_email]);
+</script>`
+
     order_js := ` // 如果您的订单生成后，需要跳转到支付平台，如果有跳转桥页，可以在该桥页添加下面的js，如果没有，直接跳转，那么需要在服务端调用api发送数据。
 <script type="text/javascript">
 	var _maq = _maq || [];
-	_maq.push(['order', $order]);
+	_maq.push(['order', order]);
 </script>`
-    example_order_js := ` // 上面的 $order 变量的示例数据
+    example_order_js := ` // 上面的 order 变量的示例数据
 {
     "invoice": "500023149", // 订单号
     "order_type": "standard or express", // standard（标准支付流程类型）express（基于api的支付类型，譬如paypal快捷支付。）
@@ -467,34 +520,10 @@ func WebsiteJsCode(c *gin.Context){
     ]
 }`
     
-    login_js := ` // 登录成功页面添加的js，如果是ajax登录，那么需要通过API，服务端发送用户登录email
-<script type="text/javascript">
-	var _maq = _maq || [];
-	_maq.push(['login_email', $login_email]);
-</script>`
     
-    register_js := ` // 注册成功页面添加的js，如果是ajax登录，那么需要通过API，服务端发送用户注册email
-<script type="text/javascript">
-	var _maq = _maq || [];
-	_maq.push(['register_email', $register_email]);
-</script>`
     
-    search_js := ` // 将该js添加到搜索页面
-<script type="text/javascript">
-	var _maq = _maq || [];
-	_maq.push(['search', $search_text]);
-</script>`
-    example_search_js := ` 上面 $search 变量的示例数据
-{
-    "text": "fashion handbag", // 搜索词
-    "result_qty":5  // 搜索的产品个数
-}`
     
-    currency_js := ` // 当前货币
-<script type="text/javascript">
-	var _maq = _maq || [];
-	_maq.push(['currency', $currency]);
-</script>`
+    
     
     // 生成返回结果
     result := util.BuildSuccessResult(gin.H{
@@ -511,7 +540,6 @@ func WebsiteJsCode(c *gin.Context){
         "register_js": register_js,
         "search_js": search_js,
         "example_search_js": example_search_js,
-        "currency_js": currency_js,
     })
     // 返回json
     c.JSON(http.StatusOK, result)

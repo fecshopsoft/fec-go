@@ -9,6 +9,7 @@ import(
     "encoding/json"
     "github.com/globalsign/mgo"
     "github.com/globalsign/mgo/bson"
+    "github.com/fecshopsoft/fec-go/helper"
 )
 
 
@@ -73,6 +74,13 @@ type TraceGetInfo struct{
 type TraceInfo struct{
     Id_ bson.ObjectId `form:"_id" json:"_id" bson:"_id"` 
     Uuid string `binding:"required" form:"uuid" json:"uuid" bson:"uuid"`
+    
+    Ip string `form:"ip" json:"ip" bson:"ip"`
+    CountryCode string `form:"country_code" json:"country_code" bson:"country_code"`
+    CountryName string `form:"country_name" json:"country_name" bson:"country_name"`
+    StateName string `form:"state_name" json:"state_name" bson:"state_name"`
+    CityName string `form:"city_name" json:"city_name" bson:"city_name"`
+    
     WebsiteId string `binding:"required" form:"website_id" json:"website_id" bson:"website_id"` 
     Devide string `form:"devide" json:"devide" bson:"devide"`
     UserAgent string `form:"user_agent" json:"user_agent" bson:"user_agent"`
@@ -140,6 +148,24 @@ func (traceInfo TraceInfo) TableName() string {
     return "trace_info"
 }
 
+/*
+func Iptest(c *gin.Context){
+    ipStr := "120.24.37.249"
+    countryCode, countryName, stateName, cityName := helper.GetIpInfo(ipStr) 
+    // 生成返回结果
+    result := util.BuildSuccessResult(gin.H{
+        "countryCode": countryCode,
+        "countryName": countryName,
+        "stateName": stateName,
+        "cityName": cityName,
+        // "query": query,
+    })
+    // 返回json
+    c.JSON(http.StatusOK, result)
+
+}
+*/
+
 func SaveJsData(c *gin.Context){
     var traceGetInfo TraceGetInfo
     // query := c.Request.URL.Query()
@@ -204,7 +230,13 @@ func SaveJsData(c *gin.Context){
     traceInfo.FecApp, _ = url.QueryUnescape(traceGetInfo.FecApp)
     traceInfo.FecCurrency, _ = url.QueryUnescape(traceGetInfo.FecCurrency)
     
-    
+    ipStr := c.ClientIP()
+    countryCode, countryName, stateName, cityName := helper.GetIpInfo(ipStr) 
+    traceInfo.Ip = ipStr
+    traceInfo.CountryCode = countryCode
+    traceInfo.CountryName = countryName
+    traceInfo.StateName   = stateName
+    traceInfo.CityName    = cityName
     
     // 进行保存。
     err = mongodb.MC(traceInfo.TableName(), func(coll *mgo.Collection) error {
