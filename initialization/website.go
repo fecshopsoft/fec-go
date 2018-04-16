@@ -19,9 +19,12 @@ type SiteInfo struct{
 type SiteInfos map[string]*SiteInfo  // string中存储的是websiteUid
 var WebsiteInfos SiteInfos = make(SiteInfos)
 
+func init(){
+    DaySiteCount  = make(DaySiteCountT)
+}
 // 初始化 WebsiteInfos
 func InitWebsiteInfo() error{
-    DaySiteCount  = make(DaySiteCountT)
+    var WebInfos SiteInfos = make(SiteInfos)
 	customers, err:= customerHandler.GetPaymentActiveCustomers()
     if err != nil {
         return err
@@ -33,7 +36,7 @@ func InitWebsiteInfo() error{
         // siteInfo.WebsiteDayMaxCount = customer.WebsiteDayMaxCount
         own_id := customer.Id
         // 查询出来该customer_id 对应的所有的website
-        websites, err := commonHandler.GetWebsiteByOwnId(own_id)
+        websites, err := commonHandler.GetActiveWebsiteByOwnId(own_id)
         if err != nil {
             return err
         }
@@ -41,9 +44,10 @@ func InitWebsiteInfo() error{
             website := websites[j]
             siteUid := website.SiteUid
             //WebsiteInfos[siteUid] = &siteInfo
-            WebsiteInfos[siteUid] = &SiteInfo{customer.PaymentEndTime, customer.WebsiteDayMaxCount}
+            WebInfos[siteUid] = &SiteInfo{website.PaymentEndTime, website.WebsiteDayMaxCount}
         }
     }
+    WebsiteInfos = WebInfos
     return nil
 }
 

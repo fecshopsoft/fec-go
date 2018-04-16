@@ -6,7 +6,7 @@ import(
     "strconv"
     "crypto/md5"
     "errors"
-    "time"
+    // "time"
     "unicode/utf8"
     "encoding/hex"
     _ "github.com/go-sql-driver/mysql"
@@ -51,6 +51,14 @@ type Customer struct {
     UpdatedAt int64 `xorm:"updated" form:"updated_at" json:"updated_at"`
     BirthDate  int64 `form:"birth_date" json:"birth_date"`
     
+    PaymentEndTime int64 `xorm:"payment_end_time" form:"payment_end_time" json:"payment_end_time"`
+    WebsiteCount int64 `xorm:"website_count" form:"website_count" json:"website_count"`
+    WebsiteDayMaxCount int64 `xorm:"website_day_max_count" form:"website_day_max_count" json:"website_day_max_count"`
+    
+}
+
+type CustomerUpdatePayInfo struct {
+    Id int64 `form:"id" json:"id"`
     PaymentEndTime int64 `xorm:"payment_end_time" form:"payment_end_time" json:"payment_end_time"`
     WebsiteCount int64 `xorm:"website_count" form:"website_count" json:"website_count"`
     WebsiteDayMaxCount int64 `xorm:"website_day_max_count" form:"website_day_max_count" json:"website_day_max_count"`
@@ -106,6 +114,8 @@ type CustomerUpdate struct {
     Password string `xorm:"varchar(200)" form:"password" json:"password"`
 }
 
+
+
 // 账户激活状态的值
 var statusEnable int = 1
 // 密码最小长度
@@ -129,6 +139,9 @@ func (customerToken CustomerToken) TableName() string {
 }
 
 func (customerUsername CustomerUsername) TableName() string {
+    return "customer"
+}
+func (customerUpdatePayInfo CustomerUpdatePayInfo) TableName() string {
     return "customer"
 }
 
@@ -227,6 +240,32 @@ func CustomerUpdateById(c *gin.Context){
     })
     c.JSON(http.StatusOK, result)
 }
+
+
+/**
+ * 通过id为条件，更新一条记录
+ */
+func CustomerUpdatePayInfoById(c *gin.Context){
+    var customer CustomerUpdatePayInfo
+    err := c.ShouldBindJSON(&customer);
+    if err != nil {
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+        return
+    }
+    
+    affected, err := engine.Where("id = ?", customer.Id).Update(&customer)
+    if err != nil {
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+        return
+    } 
+    result := util.BuildSuccessResult(gin.H{
+        "affected":affected,
+        "customer":customer,
+    })
+    c.JSON(http.StatusOK, result)
+}
+
+
 /**
  * 更新密码的格式等信息是否满足要求
  */
@@ -335,6 +374,7 @@ func CustomerDeleteByIds(c *gin.Context){
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return
     } 
+    
     result := util.BuildSuccessResult(gin.H{
         "affected": affected,
         "ids": ids.Ids,
@@ -478,12 +518,14 @@ func CustomerList(c *gin.Context){
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return  
     }
+    customerType := helper.GetCurrentCustomerType(c)
     // 生成返回结果
     result := util.BuildSuccessResult(gin.H{
         "items": customers,
         "total":counts,
         "typeOps": GetCustomerTypeName(),
         "commonAdminOps": commonAdminAccount,
+        "customerType": customerType,
     })
     // 返回json
     c.JSON(http.StatusOK, result)
@@ -510,18 +552,17 @@ func GetCustomerUsernameByIds(ids []int64) ([]CustomerUsername, error){
  * 通过ids，查询customer表，得到
  */
 func GetPaymentActiveCustomers() ([]Customer, error){
-    newTime := time.Now().Unix()
+    // newTime := time.Now().Unix()
     enableStatus := 1
     // 得到结果数据
     var customers []Customer
     engine := mysqldb.GetEngine()
-    err := engine.Where("status = ? and payment_end_time > ? ", enableStatus, newTime).Find(&customers) 
+    err := engine.Where("status = ? ", enableStatus).Find(&customers) 
     if err != nil{
         return nil, err 
     }
     return customers, nil
 }
-
 
 
 /**

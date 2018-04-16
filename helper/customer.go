@@ -27,6 +27,15 @@ func GetCurrentCustomerId(c *gin.Context) (int64){
 func GetCurrentCustomerType(c *gin.Context) (int){
     return c.GetInt("currentCustomerType");
 } 
+
+func IsSuperAdmin(c *gin.Context) bool{
+    customerType := GetCurrentCustomerType(c)
+    if customerType == AdminSuperType {
+        return true
+    } else {
+        return false
+    }
+}
  
 // 得到当前的customer
 func GetCurrentCustomer(c *gin.Context) (MapStrInterface){

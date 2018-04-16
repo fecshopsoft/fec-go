@@ -6,6 +6,7 @@ import(
     commonHandler "github.com/fecshopsoft/fec-go/handler/common"
     fecHandler "github.com/fecshopsoft/fec-go/handler/fec"
     testHandler "github.com/fecshopsoft/fec-go/handler/test"
+    cronHandler "github.com/fecshopsoft/fec-go/handler/cron"
     "github.com/fecshopsoft/fec-go/middleware"
     "github.com/fecshopsoft/fec-go/config"
     "github.com/fecshopsoft/fec-go/initialization"
@@ -40,6 +41,8 @@ func Listen(listenIp string) {
     // r.GET("/fec/ip", fecHandler.Iptest)
     r.POST("/fec/trace/api", fecHandler.PermissionAccessToken, fecHandler.SaveApiData)
     r.GET("/test/mgo", testHandler.MgoFind)
+    r.GET("/fec/trace/cronssss", cronHandler.UpdateSite)
+    
         
     //mi := router.Group("/mi", handler.ApiGlobal, handler.AdminCheckLogin)
     // ##：【middleware.PermissionLoginToken】 验证是否有token，以及token是否有效
@@ -69,6 +72,9 @@ func Listen(listenIp string) {
         v1.POST("/customer/addone",             middleware.PermissionLoginToken, middleware.SuperAdminRole, customerHandler.CustomerAddOne)
         // 更新一个用户
         v1.PATCH("/customer/updateone",         middleware.PermissionLoginToken, middleware.SuperAdminRole, customerHandler.CustomerUpdateById)
+        // 更新一个用户的付费信息
+        v1.PATCH("/customer/updateonepayinfo",         middleware.PermissionLoginToken, middleware.SuperAdminRole, customerHandler.CustomerUpdatePayInfoById)
+        
         // 删除一个用户
         v1.DELETE("/customer/deleteone",        middleware.PermissionLoginToken, middleware.SuperAdminRole, customerHandler.CustomerDeleteById)
         // 批量删除用户

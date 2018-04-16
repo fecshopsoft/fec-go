@@ -28,6 +28,10 @@ type WebsiteInfo struct {
     CreatedAt int64 `xorm:"created" form:"created_at" json:"created_at"`
     UpdatedAt int64 `xorm:"updated" form:"updated_at" json:"updated_at"`
     CreatedCustomerId  int64 `form:"created_customer_id" json:"created_customer_id"`
+    
+    PaymentEndTime int64 `xorm:"payment_end_time" form:"payment_end_time" json:"payment_end_time"`
+    WebsiteDayMaxCount int64 `xorm:"website_day_max_count" form:"website_day_max_count" json:"website_day_max_count"`
+    
 }
 
 func (websiteInfo WebsiteInfo) TableName() string {
@@ -57,6 +61,20 @@ func WebsiteAddOne(c *gin.Context){
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return
     }
+    // 查看创建site是否达到最大数
+    sites, err := GetWebsiteByOwnId(own_id)
+    if err != nil {
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+        return
+    }
+    ownIdSiteCount := len(sites)
+    ownCustomer, err := customer.GetCustomerOneById(own_id)
+    // 如果允许的新建site的最大数 <= 当前的site数，
+    if ownCustomer.WebsiteCount <= int64(ownIdSiteCount) {
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("max site count limit"))
+        return
+    }
+    
     websiteInfo.SiteUid = helper.RandomUUID()
     // access_token, err := helper.GenerateAccessToken()
     access_token, err := helper.GenerateAccessTokenBySiteId(websiteInfo.SiteUid)
@@ -70,6 +88,11 @@ func WebsiteAddOne(c *gin.Context){
     websiteInfo.TraceApiUrl = FecTraceApiUrl
     customerId := helper.GetCurrentCustomerId(c)
     websiteInfo.CreatedCustomerId = customerId
+    // 处理   PaymentEndTime WebsiteDayMaxCount, 如果不是超级用户，无权修改这个字段
+    if helper.IsSuperAdmin(c) == false {
+        websiteInfo.PaymentEndTime = 0
+        websiteInfo.WebsiteDayMaxCount = 0
+    }
     // 插入
     affected, err := engine.Insert(&websiteInfo)
     if err != nil {
@@ -82,6 +105,9 @@ func WebsiteAddOne(c *gin.Context){
     })
     c.JSON(http.StatusOK, result)
 }
+
+
+
 /**
  * 通过id为条件，更新一条记录
  */
@@ -104,8 +130,13 @@ func WebsiteUpdateById(c *gin.Context){
         return
     }
     websiteInfo.OwnId = own_id
+    cols := "site_name,domain,trace_js_url,status,own_id,updated_at"
+    // 处理   PaymentEndTime WebsiteDayMaxCount, 如果是超级用户，才可以修改这个字段
+    if helper.IsSuperAdmin(c) == true {
+        cols += ",payment_end_time,website_day_max_count"
+    }
     // 更新
-    affected, err := engine.Where("id = ?",websiteInfo.Id).Cols("site_name,domain,trace_js_url,status,own_id,updated_at").Update(&websiteInfo)
+    affected, err := engine.Where("id = ?",websiteInfo.Id).Cols(cols).Update(&websiteInfo)
     if err != nil {
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return
@@ -236,12 +267,14 @@ func WebsiteList(c *gin.Context){
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return  
     }
+    customerType := helper.GetCurrentCustomerType(c)
     // 生成返回结果
     result := util.BuildSuccessResult(gin.H{
         "items": websiteInfos,
         "total": counts,
         "createdCustomerOps": createdCustomerOps,
         "ownNameOps": ownNameOps,
+        "customerType": customerType,
     })
     // 返回json
     c.JSON(http.StatusOK, result)
@@ -290,6 +323,20 @@ func GetWebsiteByOwnId(own_id int64) ([]WebsiteInfo, error){
     // 得到结果数据
     var websiteInfos []WebsiteInfo
     err := engine.Where("own_id = ? ", own_id).Find(&websiteInfos) 
+    if err != nil{
+        return websiteInfos, err
+    }
+    return websiteInfos, nil
+}
+
+/**
+ * 根据 market_group_ids 查询得到 WebsiteInfo
+ */
+func GetActiveWebsiteByOwnId(own_id int64) ([]WebsiteInfo, error){
+    // 得到结果数据
+    var websiteInfos []WebsiteInfo
+    enableStatus := 1
+    err := engine.Where("own_id = ? and status = ? ", own_id, enableStatus).Find(&websiteInfos) 
     if err != nil{
         return websiteInfos, err
     }
