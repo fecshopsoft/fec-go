@@ -16,6 +16,13 @@
 *  [数据库字段介绍](trace_db_data.md)
 
 
+
+Mongodb
+----------
+
+*  [Mongo分表](trace_db_share_coll.md)
+*  [Mongo表索引](trace_db_coll_index.md)
+
 数据传递
 ------------
 

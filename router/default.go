@@ -41,6 +41,7 @@ func Listen(listenIp string) {
     // r.GET("/fec/ip", fecHandler.Iptest)
     r.POST("/fec/trace/api", fecHandler.PermissionAccessToken, fecHandler.SaveApiData)
     r.GET("/test/mgo", testHandler.MgoFind)
+    r.GET("/test/mgo/mapreduce", testHandler.MgoMapReduce)
     r.GET("/fec/trace/cronssss", cronHandler.UpdateSite)
     
         

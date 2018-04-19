@@ -37,7 +37,7 @@ type WebsiteInfo struct {
 func (websiteInfo WebsiteInfo) TableName() string {
     return "base_website_info"
 }
-
+var enableStatus int = 1
 var FecTraceJsUrl string = "trace.fecshop.com/fec_trace.js"
 var FecTraceApiUrl string = "120.24.37.249:3000/fec/trace/api"
 /**
@@ -335,12 +335,37 @@ func GetWebsiteByOwnId(own_id int64) ([]WebsiteInfo, error){
 func GetActiveWebsiteByOwnId(own_id int64) ([]WebsiteInfo, error){
     // 得到结果数据
     var websiteInfos []WebsiteInfo
-    enableStatus := 1
     err := engine.Where("own_id = ? and status = ? ", own_id, enableStatus).Find(&websiteInfos) 
     if err != nil{
         return websiteInfos, err
     }
     return websiteInfos, nil
+}
+
+
+/**
+ * 根据 market_group_ids 查询得到 WebsiteInfo
+ */
+func GetAllActiveWebsiteId() ([]WebsiteInfo, error){
+    var websiteInfos []WebsiteInfo
+    activeCustomers, err := customer.GetAllEnableCommonCustomer()
+    if err != nil{
+        return websiteInfos, err
+    }
+    var customerIds []int64
+    for i:=0; i<len(activeCustomers); i++ {
+        activeCustomer := activeCustomers[i]
+        customerId := activeCustomer.Id
+        customerIds = append(customerIds,customerId)
+    }
+    
+    
+    err = engine.In("own_id", customerIds).Where("status = ? ", enableStatus).Find(&websiteInfos) 
+    if err != nil{
+        return websiteInfos, err
+    }
+    return websiteInfos, nil
+    
 }
 
 /**
@@ -566,11 +591,6 @@ func WebsiteJsCode(c *gin.Context){
         }
     ]
 }`
-    
-    
-    
-    
-    
     
     // 生成返回结果
     result := util.BuildSuccessResult(gin.H{

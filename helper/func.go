@@ -3,6 +3,7 @@ package helper
 import(
     "regexp"
     "net/url"
+    "time"
     uuid "github.com/satori/go.uuid"
     "github.com/fecshopsoft/fec-go/security"
 )
@@ -98,6 +99,40 @@ func GenerateAccessTokenBySiteId(siteUid string) (string, error){
 
 func GetSiteUIdByAccessToken(accessToken string) (string, error){
     return security.JwtParseAccessToken(accessToken)
+}
+
+// 得到当前的时间戳
+func DateTimestamps() int64 {
+    return  time.Now().Unix()
+}
+
+// 通过时间戳，得到字符串，如果传递的时间戳为0，则取当前时间
+// 时间格式为 Y-m-d H:i:s
+func DateTimeUTCStr() string {
+    loc, _ := time.LoadLocation("UTC")
+    now := time.Now().In(loc)
+    return now.Format("2006-01-02 03:04:05")
+    
+}
+
+// 通过时间戳，得到字符串，如果传递的时间戳为0，则取当前时间
+// 时间格式为 Y-m-d 
+func DateUTCStr() string {
+    dateTimeStr := DateTimeUTCStr()
+    return dateTimeStr[0:10]
+}
+
+// 根据时间戳，得到UTC时区的时间，格式为:2006-01-02 03:04:05
+func GetDateUtcByTimestamps(timestamps int64) string {
+    loc, _ := time.LoadLocation("UTC")
+    nTime := time.Unix(timestamps, 0).In(loc)
+    return nTime.Format("2006-01-02 03:04:05")
+
+}
+// 根据时间戳，得到UTC时区的时间，格式为:2006-01-02
+func GetDateTimeUtcByTimestamps(timestamps int64) string {
+    dateStr := GetDateUtcByTimestamps(timestamps)
+    return dateStr[0:10]
 }
 
 

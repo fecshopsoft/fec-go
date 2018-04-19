@@ -90,6 +90,19 @@ type TraceApiDbInfo struct{
     FecApp string `form:"fec_app" json:"fec_app" bson:"fec_app"`
     FecCurrency string `form:"fec_currency" json:"fec_currency" bson:"fec_currency"`
     
+    // 附加字段 service_timestamp
+    // 服务器接收数据的时间戳
+    ServiceTimestamp int64 `form:"service_timestamp" json:"service_timestamp" bson:"service_timestamp"`
+    // 服务器接收数据, 格式：Y-m-d H:i:s
+    ServiceDatetime string `form:"service_datetime" json:"service_datetime" bson:"service_datetime"`
+    // 服务器接收数据, 格式：Y-m-d
+    ServiceDate string `form:"service_date" json:"service_date" bson:"service_date"`
+    // 页面停留时间
+    StaySeconds float64 `form:"stay_seconds" json:"stay_seconds" bson:"stay_seconds"`
+    // 由于按照时间分库，站点分表，查询当前表，是否存在uuid，如果不存在，则 uuid_first_page = 1，否则 uuid_first_page = 0
+    UuidFirstPage int `form:"uuid_first_page" json:"uuid_first_page" bson:"uuid_first_page"`
+    
+    
     LoginEmail string `form:"login_email" json:"login_email" bson:"login_email"`
     RegisterEmail string `form:"register_email" json:"register_email" bson:"register_email"`
     Order OrderInfo `form:"order" json:"order" bson:"order"`
@@ -116,7 +129,7 @@ type OrderInfo struct{
     CountryCode string `form:"country_code" json:"country_code" bson:"country_code"`
     StateCode string `form:"state_code" json:"state_code" bson:"state_code"`
     // StateCode string `form:"state_code" json:"state_code" bson:"state_code"`
-    
+    CreatedAt int64 `form:"created_at" json:"created_at" bson:"created_at"`
     CountryName string `form:"country_name" json:"country_name" bson:"country_name"`
     StateName string `form:"state_name" json:"state_name" bson:"state_name"`
     Address1 string `form:"address1" json:"address1" bson:"address1"`
@@ -147,36 +160,101 @@ func SaveApiData(c *gin.Context){
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("access-token(" + token_website_id + ") is not Inconsistent with website_id(" + traceApiInfo.WebsiteId + ")"))
         return
     }
+     
+    if  traceApiInfo.Uuid == "" {
+        // uuid为空的情况，只有订单状态更新的情况，如果下面的三个字段，有一个为空，则退出
+        if traceApiInfo.PaymentSuccessOrder.Invoice == "" ||  traceApiInfo.PaymentSuccessOrder.CreatedAt == 0 || traceApiInfo.PaymentSuccessOrder.PaymentStatus == "" {
+            c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(" uuid can not empty (if you update order payment status, [Invoice, CreatedAt, PaymentStatus] is required)"))
+            return
+        } else if traceApiInfo.PaymentSuccessOrder.PaymentStatus != "payment_pending" &&  traceApiInfo.PaymentSuccessOrder.PaymentStatus != "payment_confirmed" {
+            c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(" order payment status must in ['payment_pending', 'payment_confirmed']"))
+            return
+        }
+        
+    }
     
     // traceApiInfo.PaymentSuccessOrder.Invoice
     var traceApiDbInfo TraceApiDbInfo
     
-    // 进行数据的保存。
-    err = mongodb.MC(traceApiDbInfo.TableName(), func(coll *mgo.Collection) error {
+    // 得到db name
+    var dbName string
+    if traceApiInfo.PaymentSuccessOrder.Invoice == "" {
+        dbName = helper.GetTraceDbName()
+    } else {
+        OrderCreatedAt := traceApiInfo.PaymentSuccessOrder.CreatedAt
+        dateStr := helper.GetDateTimeUtcByTimestamps(OrderCreatedAt)
+        dbName = helper.GetTraceDbNameByDate(dateStr)
+    }
+    // 得到collection name
+    collName := helper.GetTraceDataCollName(traceApiInfo.WebsiteId)
+    
+    // 除了订单状态更新，其他的都是插入数据，也就是下面的赋值
+    traceApiDbInfo.Id_ = bson.NewObjectId()
+    traceApiDbInfo.Uuid = traceApiInfo.Uuid
+    traceApiDbInfo.ClActivity = traceApiInfo.ClActivity
+    traceApiDbInfo.ClActivityChild = traceApiInfo.ClActivityChild
+    traceApiDbInfo.FirstReferrerDomain = traceApiInfo.FirstReferrerDomain
+    traceApiDbInfo.FirstPage = traceApiInfo.FirstPage
+    traceApiDbInfo.FirstReferrerUrl = traceApiInfo.FirstReferrerUrl
+    
+    traceApiDbInfo.IsReturn = traceApiInfo.IsReturn
+    traceApiDbInfo.WebsiteId = traceApiInfo.WebsiteId
+    traceApiDbInfo.Fid = traceApiInfo.Fid
+    traceApiDbInfo.FecSource = traceApiInfo.FecSource
+    traceApiDbInfo.FecMedium = traceApiInfo.FecMedium
+    traceApiDbInfo.FecCampaign = traceApiInfo.FecCampaign
+    traceApiDbInfo.FecContent = traceApiInfo.FecContent
+    traceApiDbInfo.FecDesign = traceApiInfo.FecDesign
+    
+    traceApiDbInfo.FecStore = traceApiInfo.FecStore
+    traceApiDbInfo.FecLang = traceApiInfo.FecLang
+    traceApiDbInfo.FecApp = traceApiInfo.FecApp
+    traceApiDbInfo.FecCurrency = traceApiInfo.FecCurrency
+    
+    
+    
+    traceApiDbInfo.LoginEmail = traceApiInfo.LoginEmail
+    traceApiDbInfo.RegisterEmail = traceApiInfo.RegisterEmail
+    traceApiDbInfo.Order = traceApiInfo.PaymentPendingOrder
+    
+    //  ##############
+    
+    traceApiDbInfo.ServiceTimestamp = helper.DateTimestamps()
+    traceApiDbInfo.ServiceDatetime = helper.DateTimeUTCStr()
+    traceApiDbInfo.ServiceDate = helper.DateUTCStr()
+    
+    // 计算出来的属性
+    // StaySeconds
+    err = updatePreStaySeconds(dbName, collName, traceApiDbInfo.Uuid, traceApiDbInfo.ServiceTimestamp)
+    if err != nil {
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+        return
+    }
+    // UuidFirstPage
+    if traceApiDbInfo.StaySeconds > 0 {
+        traceApiDbInfo.UuidFirstPage = 0
+    } else {
+        traceApiDbInfo.UuidFirstPage = 1
+    }
+    
+    
+    //  ##############
+    
+            
+            
+    err = mongodb.MDC(dbName, collName, func(coll *mgo.Collection) error {
         // 如果传递了订单，那么将订单保存到这个变量中
         // var orderInfo OrderInfo
         var err error
-        /*
-        is_insert := 1
-        if traceApiInfo.PaymentPendingOrder.Invoice != "" {
-            invoice := traceApiInfo.PaymentPendingOrder.Invoice
-            coll.Find(bson.M{"order.invoice": invoice}).One(&traceApiDbInfo)
-            orderInfo = traceApiInfo.PaymentPendingOrder
-        }
-        */
         // 如果是成功订单，那么只更新订单的支付状态，其他的不变
         if traceApiInfo.PaymentSuccessOrder.Invoice != "" {
             invoice := traceApiInfo.PaymentSuccessOrder.Invoice
-            websiteId := traceApiInfo.WebsiteId
             payment_status := traceApiInfo.PaymentSuccessOrder.PaymentStatus
-            if websiteId == "" {
-                return errors.New("websiteId can not empty")
-            }
             if invoice == "" {
                 return errors.New("invoice can not empty")
             }
-            // websiteId 和 invoice两个作为条件查询
-            selector := bson.M{"order.invoice": invoice, "website_id": websiteId}
+            // invoice两个作为条件查询
+            selector := bson.M{"order.invoice": invoice}
             updateData := bson.M{"$set": bson.M{"order.payment_status": payment_status}}
             err = coll.Update(selector, updateData)
             return err
@@ -184,32 +262,7 @@ func SaveApiData(c *gin.Context){
             if traceApiInfo.Uuid == "" {
                 return errors.New("uuid can not empty")
             } 
-            // 其他的则为插入
-            traceApiDbInfo.Id_ = bson.NewObjectId()
-            traceApiDbInfo.Uuid = traceApiInfo.Uuid
-            traceApiDbInfo.ClActivity = traceApiInfo.ClActivity
-            traceApiDbInfo.ClActivityChild = traceApiInfo.ClActivityChild
-            traceApiDbInfo.FirstReferrerDomain = traceApiInfo.FirstReferrerDomain
-            traceApiDbInfo.FirstPage = traceApiInfo.FirstPage
-            traceApiDbInfo.FirstReferrerUrl = traceApiInfo.FirstReferrerUrl
             
-            traceApiDbInfo.IsReturn = traceApiInfo.IsReturn
-            traceApiDbInfo.WebsiteId = traceApiInfo.WebsiteId
-            traceApiDbInfo.Fid = traceApiInfo.Fid
-            traceApiDbInfo.FecSource = traceApiInfo.FecSource
-            traceApiDbInfo.FecMedium = traceApiInfo.FecMedium
-            traceApiDbInfo.FecCampaign = traceApiInfo.FecCampaign
-            traceApiDbInfo.FecContent = traceApiInfo.FecContent
-            traceApiDbInfo.FecDesign = traceApiInfo.FecDesign
-            
-            traceApiDbInfo.FecStore = traceApiInfo.FecStore
-            traceApiDbInfo.FecLang = traceApiInfo.FecLang
-            traceApiDbInfo.FecApp = traceApiInfo.FecApp
-            traceApiDbInfo.FecCurrency = traceApiInfo.FecCurrency
-    
-            traceApiDbInfo.LoginEmail = traceApiInfo.LoginEmail
-            traceApiDbInfo.RegisterEmail = traceApiInfo.RegisterEmail
-            traceApiDbInfo.Order = traceApiInfo.PaymentPendingOrder
             err = coll.Insert(traceApiDbInfo)
             return err
         }

@@ -57,9 +57,62 @@ func MgoFind(c *gin.Context){
 }
 
 
-
-
-
+func MgoMapReduce(c *gin.Context){
+    mapStr := `
+        function() { 
+            // emit(this.uuid, {uuid: 1});
+            if (this.browser_name) {
+                emit(this.browser_name, {browser_name: 1});
+            }
+        }
+    `
+    
+    reduceStr := `
+        function(key, emits) { 
+            // this_uuid_count = 0; 
+            var this_browser_name = 0
+            for(var i in emits){
+                if( emits[i].browser_name){
+                    this_browser_name 		+=  emits[i].browser_name;
+                }
+            }  
+            return {
+                browser_name: this_browser_name
+            };
+        }
+    
+    `
+    job := &mgo.MapReduce{
+        Map:      mapStr,
+        Reduce:   reduceStr,
+    }
+    type resultValue struct{
+        BrowserNameCount int64 `browser_name`
+    }
+    var result []struct { 
+        Id string `_id`
+        Value resultValue 
+    }
+    err := mongodb.MC("trace_info", func(coll *mgo.Collection) error {
+        _, err := coll.Find(nil).MapReduce(job, &result)
+        return err
+    })
+    
+    if err != nil {
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+        return
+    } 
+    // for _, item := range result {
+    //    fmt.Println(item.Value)
+    // }
+    // 生成返回结果
+    re := util.BuildSuccessResult(gin.H{
+        "success": "success",
+        "productFlats": result,
+    })
+    // 返回json
+    c.JSON(http.StatusOK, re)
+}
 
 
 

@@ -6,10 +6,13 @@ import(
     "github.com/gin-gonic/gin"
     "net/http"
     "net/url"
+    // "errors"
+    // "log"
     "encoding/json"
     "github.com/globalsign/mgo"
     "github.com/globalsign/mgo/bson"
     "github.com/fecshopsoft/fec-go/helper"
+    commonHandler "github.com/fecshopsoft/fec-go/handler/common"
 )
 
 
@@ -123,6 +126,27 @@ type TraceInfo struct{
     FecApp string `form:"fec_app" json:"fec_app" bson:"fec_app"`
     FecCurrency string `form:"fec_currency" json:"fec_currency" bson:"fec_currency"`
     
+    // 附加字段 service_timestamp
+    // 服务器接收数据的时间戳
+    ServiceTimestamp int64 `form:"service_timestamp" json:"service_timestamp" bson:"service_timestamp"`
+    // 服务器接收数据, 格式：Y-m-d H:i:s
+    ServiceDatetime string `form:"service_datetime" json:"service_datetime" bson:"service_datetime"`
+    // 服务器接收数据, 格式：Y-m-d
+    ServiceDate string `form:"service_date" json:"service_date" bson:"service_date"`
+    // 页面停留时间
+    StaySeconds float64 `form:"stay_seconds" json:"stay_seconds" bson:"stay_seconds"`
+    // 由于按照时间分库，站点分表，查询当前表，是否存在uuid，如果不存在，则 uuid_first_page = 1，否则 uuid_first_page = 0
+    UuidFirstPage int `form:"uuid_first_page" json:"uuid_first_page" bson:"uuid_first_page"`
+    // Ip First Page ，类似上面的 uuid_first_page
+    IpFirstPage int `form:"ip_first_page" json:"ip_first_page" bson:"ip_first_page"`
+    // uuid 
+    UuidFirstCategory int `form:"uuid_first_category" json:"uuid_first_category" bson:"uuid_first_category"`
+    //
+    IpFirstCategory int `form:"ip_first_category" json:"ip_first_category" bson:"ip_first_category"`
+    // 去掉某些参数后的url
+    UrlNew string `form:"url_new" json:"url_new" bson:"url_new"`
+    // 登录后访问搜索页面的用户
+    SearchLoginEmail int `form:"search_login_email" json:"search_login_email" bson:"search_login_email"`
     
     Category string `form:"category" json:"category" bson:"category"`
     Sku string `form:"sku" json:"sku" bson:"sku"`
@@ -130,6 +154,36 @@ type TraceInfo struct{
     Cart []CartItem `form:"cart" json:"cart" bson:"cart"`
     Search SearchInfo `form:"search" json:"search" bson:"search"`
 }
+
+// 为了中间变量的生成，而进行查询
+type TraceMiddInfo struct{
+    Id_ bson.ObjectId `form:"_id" json:"_id" bson:"_id"` 
+    Uuid string `binding:"required" form:"uuid" json:"uuid" bson:"uuid"`
+    Ip string `binding:"required" form:"ip" json:"ip" bson:"ip"`
+    // 附加字段 service_timestamp
+    // 服务器接收数据的时间戳
+    ServiceTimestamp int64 `form:"service_timestamp" json:"service_timestamp" bson:"service_timestamp"`
+    // 服务器接收数据, 格式：Y-m-d H:i:s
+    ServiceDatetime string `form:"service_datetime" json:"service_datetime" bson:"service_datetime"`
+    // 服务器接收数据, 格式：Y-m-d
+    ServiceDate string `form:"service_date" json:"service_date" bson:"service_date"`
+    // 页面停留时间
+    StaySeconds float64 `form:"stay_seconds" json:"stay_seconds" bson:"stay_seconds"`
+    // 由于按照时间分库，站点分表，查询当前表，是否存在uuid，如果不存在，则 uuid_first_page = 1，否则 uuid_first_page = 0
+    UuidFirstPage int `form:"uuid_first_page" json:"uuid_first_page" bson:"uuid_first_page"`
+    // Ip First Page ，类似上面的 uuid_first_page
+    IpFirstPage int `form:"ip_first_page" json:"ip_first_page" bson:"ip_first_page"`
+    // uuid 
+    UuidFirstCategory int `form:"uuid_first_category" json:"uuid_first_category" bson:"uuid_first_category"`
+    //
+    IpFirstCategory int `form:"ip_first_category" json:"ip_first_category" bson:"ip_first_category"`
+    // 去掉某些参数后的url
+    UrlNew string `form:"url_new" json:"url_new" bson:"url_new"`
+    // 登录后访问搜索页面的用户
+    SearchLoginEmail int `form:"search_login_email" json:"search_login_email" bson:"search_login_email"`
+    
+}
+
 // cart
 type CartItem struct{
     Sku string `form:"sku" json:"sku" bson:"sku"`
@@ -142,29 +196,9 @@ type SearchInfo struct{
     ResultQty int64 `form:"result_qty" json:"result_qty" bson:"result_qty" json:"result_qty"`
 }
 
-
-
 func (traceInfo TraceInfo) TableName() string {
     return "trace_info"
 }
-
-/*
-func Iptest(c *gin.Context){
-    ipStr := "120.24.37.249"
-    countryCode, countryName, stateName, cityName := helper.GetIpInfo(ipStr) 
-    // 生成返回结果
-    result := util.BuildSuccessResult(gin.H{
-        "countryCode": countryCode,
-        "countryName": countryName,
-        "stateName": stateName,
-        "cityName": cityName,
-        // "query": query,
-    })
-    // 返回json
-    c.JSON(http.StatusOK, result)
-
-}
-*/
 
 func SaveJsData(c *gin.Context){
     var traceGetInfo TraceGetInfo
@@ -237,10 +271,63 @@ func SaveJsData(c *gin.Context){
     traceInfo.CountryName = countryName
     traceInfo.StateName   = stateName
     traceInfo.CityName    = cityName
+    // 得到 dbName 和 collName
+    dbName := helper.GetTraceDbName()
+    collName := helper.GetTraceDataCollName(traceInfo.WebsiteId)
     
+    traceInfo.ServiceTimestamp = helper.DateTimestamps()
+    traceInfo.ServiceDatetime = helper.DateTimeUTCStr()
+    traceInfo.ServiceDate = helper.DateUTCStr()
+    // 计算出来的属性
+    // StaySeconds 查找最近的一次访问，时间差，就是最近一次访问的停留时间
+    err = updatePreStaySeconds(dbName, collName, traceInfo.Uuid, traceInfo.ServiceTimestamp)
+    if err != nil {
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+        return
+    }
+    // UuidFirstPage
+    if traceInfo.StaySeconds > 0 {
+        traceInfo.UuidFirstPage = 0
+    } else {
+        traceInfo.UuidFirstPage = 1
+    }
+    // IpFirstPage
+    traceInfo.IpFirstPage, err = getIpFirstPage(dbName, collName, ipStr)
+    if err != nil {
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+        return
+    }
+    
+    if traceInfo.Category != "" {
+        // UuidFirstCategory
+        traceInfo.UuidFirstCategory, err = getUuidFirstCategory(dbName, collName, traceInfo.Uuid, traceInfo.Category)
+        if err != nil {
+            c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+            return
+        }
+        // IpFirstCategory
+        traceInfo.IpFirstCategory, err = getIpFirstCategory(dbName, collName, ipStr, traceInfo.Category)
+        if err != nil {
+            c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+            return
+        }
+        
+    }
+    // UrlNew
+    traceInfo.UrlNew = getUrlNew(traceInfo.Url)
+    // SearchLoginEmail
+    if traceInfo.Search.Text != "" {
+        // SearchLoginEmail
+        traceInfo.SearchLoginEmail, err = getSearchLoginEmail(dbName, collName, traceInfo.Uuid)
+        if err != nil {
+            c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+            return
+        }
+        
+    }
     // 进行保存。
-    err = mongodb.MC(traceInfo.TableName(), func(coll *mgo.Collection) error {
-        // c.Find(bson.M{"_id": id}).One(traceInfo)
+    
+    err = mongodb.MDC(dbName, collName, func(coll *mgo.Collection) error {
         traceInfo.Id_ = bson.NewObjectId()
         err := coll.Insert(traceInfo)
         return err
@@ -259,9 +346,73 @@ func SaveJsData(c *gin.Context){
     // 返回json
     c.JSON(http.StatusOK, result)
 }
+    
+    
+// 初始化mongodb表，以及表索引。
+func InitTraceDataCollIndex() error{
+    // 得到所有的 active websiteId
+    dateInt64 := helper.DateTimestamps()
+    var daySec int64 = 24 * 3600
+    var dInt64 int64
+    var err error
+    // websiteId := "9b17f5b4-b96f-46fd-abe6-a579837ccdd9"
+    // 得到今天以及未来15天的日期
+    var j int64
+    websiteInfos, err := commonHandler.GetAllActiveWebsiteId()
+    if err != nil {
+        return err
+    }
+    // var websiteIds []int64
+    for i:=0; i<len(websiteInfos); i++ {
+        websiteInfo := websiteInfos[i]
+        websiteId := websiteInfo.SiteUid 
+        // 最长五天。
+        for j=0; j<5; j++ {
+            dInt64 = dateInt64 + j * daySec
+            dateStr := helper.GetDateTimeUtcByTimestamps(dInt64)
+            err = createIndex(dateStr, websiteId)
+            if err != nil {
+                return err
+            }
+        }
+    }
+    
+    return err
+}
 
+// 创建表索引
+func createIndex(dateStr string, websiteId string) error{
+    dbName := helper.GetTraceDbNameByDate(dateStr)
+    collName := helper.GetTraceDataCollName(websiteId)
+    err := mongodb.MDC(dbName, collName, func(coll *mgo.Collection) error {
+        var err error
+        // 下面的每一个子项，就是一个索引。
+        mgoIndex := [][]string{
+            []string{"order.invoice"},
+            []string{"uuid", "_id"},
+            []string{"ip"},
+            []string{"uuid", "service_timestamp"},
+        }
+        for i:=0; i<len(mgoIndex); i++ {
+            index := mgo.Index{
+                Key: mgoIndex[i],
+                // Unique: true,
+                // DropDups: true,
+                Background: true, // See notes.
+                // Sparse: true,
+            }
+            err = coll.EnsureIndex(index)
+            if err != nil {
+                return err
+            }
+        }
+        // lastIndexes, err := coll.Indexes() // 查看表索引
+        // if err != nil {
+        //     return err
+        // }
+        // log.Println(lastIndexes)
+        return err
+    })
+    return err
+}
 
-
-/*
-
-*/
