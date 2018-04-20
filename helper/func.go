@@ -4,6 +4,7 @@ import(
     "regexp"
     "net/url"
     "time"
+    "strconv"
     uuid "github.com/satori/go.uuid"
     "github.com/fecshopsoft/fec-go/security"
 )
@@ -134,6 +135,26 @@ func GetDateTimeUtcByTimestamps(timestamps int64) string {
     dateStr := GetDateUtcByTimestamps(timestamps)
     return dateStr[0:10]
 }
-
+// 字符串转换成数字int
+func Int(str string) (int, error) {
+    return strconv.Atoi(str)
+    
+}
+// 字符串转换成数字int64
+func Int64(str string) (int64, error) {
+    c, err := strconv.Atoi(str)
+    if err == nil {
+        return int64(c), err
+    }
+    return 0, err
+}
+// 数字转换成字符串
+func str(c int) (string) {
+    return strconv.Itoa(c)
+}
+// 数字int64 转换成字符串
+func str64(c int64) (string) {
+    return strconv.Itoa(int(c))
+}
 
 

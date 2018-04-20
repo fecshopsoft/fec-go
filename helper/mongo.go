@@ -18,13 +18,10 @@ func GetCollName(collName string, websiteId string) string {
     return collName + "_" + websiteId
 }
 
+
 // 初始数据接收的数据库
 func GetTraceDbName() (string){
     return GetDbName("trace", "")
-}
-
-func GetTraceDataCollName(websiteId string) (string){
-    return GetCollName("trace_data", websiteId)
 }
 
 // dateStr 格式：  2009-12-12 
@@ -32,5 +29,30 @@ func GetTraceDataCollName(websiteId string) (string){
 func GetTraceDbNameByDate(dateStr string) string {
     return GetDbName("trace", dateStr)
 }
+
+func GetTraceDataCollName(websiteId string) (string){
+    return GetCollName("trace_data", websiteId)
+}
+
+// 得到Browser统计后的数据输出的collection
+func GetOutWholeBrowserCollName(websiteId string) (string){
+    return GetCollName("trace_whole_browser_data", websiteId)
+}
+
+// 得到Browser统计后的数据输出的collection
+func GetOutWholeAllCollName(websiteId string) (string){
+    return GetCollName("trace_whole_all_data", websiteId)
+}
+
+
+
+
+
+
+
+
+
+
+
 
 

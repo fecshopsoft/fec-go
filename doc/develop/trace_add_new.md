@@ -32,7 +32,15 @@ var FecTraceApiUrl string = "120.24.37.249:3000/fec/trace/api"
 
 1.4、让新用户在这里注册，对接。
 
+1.5、配置文件 `/etc/fec-go/config.ini` 中的数据库连接等
 
+1.6、website更新部分，http://120.24.37.249:3000/fec/trace/cronssss
+
+通过cron访问该链接，五分钟间隔一次，更新website信息。
+
+1.7、启动数据接收功能： `go run fec-go.go` 
+
+1.8、通过cron，在9点左右启动脚本计算，启动计算统计功能： `go run fec-go-shell.go`
 
 
 

@@ -102,7 +102,7 @@ type TraceInfo struct{
     ClActivity string `form:"cl_activity" json:"cl_activity" bson:"cl_activity"`
     ClActivityChild string `form:"cl_activity_child" json:"cl_activity_child" bson:"cl_activity_child"`
     IsReturn string `form:"is_return" json:"is_return" bson:"is_return"`
-    FirstPage string `form:"first_page" json:"first_page" bson:"first_page"`
+    FirstPage int `form:"first_page" json:"first_page" bson:"first_page"`
     DevicePixelRatio string `form:"device_pixel_ratio" json:"device_pixel_ratio" bson:"device_pixel_ratio"`
     Resolution string `form:"resolution" json:"resolution" bson:"resolution"`
     ColorDepth string `form:"color_depth" json:"color_depth" bson:"color_depth"`
@@ -132,7 +132,7 @@ type TraceInfo struct{
     // 服务器接收数据, 格式：Y-m-d H:i:s
     ServiceDatetime string `form:"service_datetime" json:"service_datetime" bson:"service_datetime"`
     // 服务器接收数据, 格式：Y-m-d
-    ServiceDate string `form:"service_date" json:"service_date" bson:"service_date"`
+    ServiceDateStr string `form:"service_date_str" json:"service_date_str" bson:"service_date_str"`
     // 页面停留时间
     StaySeconds float64 `form:"stay_seconds" json:"stay_seconds" bson:"stay_seconds"`
     // 由于按照时间分库，站点分表，查询当前表，是否存在uuid，如果不存在，则 uuid_first_page = 1，否则 uuid_first_page = 0
@@ -147,6 +147,9 @@ type TraceInfo struct{
     UrlNew string `form:"url_new" json:"url_new" bson:"url_new"`
     // 登录后访问搜索页面的用户
     SearchLoginEmail int `form:"search_login_email" json:"search_login_email" bson:"search_login_email"`
+    // 首次访问某个url的时候，标记为1
+    FirstVisitThisUrl int `form:"first_visit_this_url" json:"first_visit_this_url" bson:"first_visit_this_url"`
+    
     
     Category string `form:"category" json:"category" bson:"category"`
     Sku string `form:"sku" json:"sku" bson:"sku"`
@@ -166,7 +169,7 @@ type TraceMiddInfo struct{
     // 服务器接收数据, 格式：Y-m-d H:i:s
     ServiceDatetime string `form:"service_datetime" json:"service_datetime" bson:"service_datetime"`
     // 服务器接收数据, 格式：Y-m-d
-    ServiceDate string `form:"service_date" json:"service_date" bson:"service_date"`
+    ServiceDateStr string `form:"service_date_str" json:"service_date_str" bson:"service_date_str"`
     // 页面停留时间
     StaySeconds float64 `form:"stay_seconds" json:"stay_seconds" bson:"stay_seconds"`
     // 由于按照时间分库，站点分表，查询当前表，是否存在uuid，如果不存在，则 uuid_first_page = 1，否则 uuid_first_page = 0
@@ -181,6 +184,8 @@ type TraceMiddInfo struct{
     UrlNew string `form:"url_new" json:"url_new" bson:"url_new"`
     // 登录后访问搜索页面的用户
     SearchLoginEmail int `form:"search_login_email" json:"search_login_email" bson:"search_login_email"`
+    // 首次访问某个url的时候，标记为1
+    FirstVisitThisUrl int `form:"first_visit_this_url" json:"first_visit_this_url" bson:"first_visit_this_url"`
     
 }
 
@@ -242,7 +247,9 @@ func SaveJsData(c *gin.Context){
     traceInfo.ClActivity, _ = url.QueryUnescape(traceGetInfo.ClActivity)
     traceInfo.ClActivityChild, _ = url.QueryUnescape(traceGetInfo.ClActivityChild)
     traceInfo.IsReturn, _ = url.QueryUnescape(traceGetInfo.IsReturn)
-    traceInfo.FirstPage, _ = url.QueryUnescape(traceGetInfo.FirstPage)
+    firstPage, _ := url.QueryUnescape(traceGetInfo.FirstPage)
+    traceInfo.FirstPage, _ = helper.Int(firstPage)
+    
     traceInfo.DevicePixelRatio, _ = url.QueryUnescape(traceGetInfo.DevicePixelRatio)
     traceInfo.Resolution, _ = url.QueryUnescape(traceGetInfo.Resolution)
     traceInfo.ColorDepth, _ = url.QueryUnescape(traceGetInfo.ColorDepth)
@@ -277,7 +284,7 @@ func SaveJsData(c *gin.Context){
     
     traceInfo.ServiceTimestamp = helper.DateTimestamps()
     traceInfo.ServiceDatetime = helper.DateTimeUTCStr()
-    traceInfo.ServiceDate = helper.DateUTCStr()
+    traceInfo.ServiceDateStr = helper.DateUTCStr()
     // 计算出来的属性
     // StaySeconds 查找最近的一次访问，时间差，就是最近一次访问的停留时间
     err = updatePreStaySeconds(dbName, collName, traceInfo.Uuid, traceInfo.ServiceTimestamp)
@@ -285,12 +292,14 @@ func SaveJsData(c *gin.Context){
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return
     }
+    
     // UuidFirstPage
-    if traceInfo.StaySeconds > 0 {
-        traceInfo.UuidFirstPage = 0
-    } else {
-        traceInfo.UuidFirstPage = 1
+    traceInfo.UuidFirstPage, err = getUuidFirstPage(dbName, collName, traceInfo.Uuid)
+    if err != nil {
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+        return
     }
+    
     // IpFirstPage
     traceInfo.IpFirstPage, err = getIpFirstPage(dbName, collName, ipStr)
     if err != nil {
@@ -323,8 +332,15 @@ func SaveJsData(c *gin.Context){
             c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
             return
         }
-        
     }
+    // FirstVisitThisUrl - first_visit_this_url
+    traceInfo.FirstVisitThisUrl, err = getFirstVisitThisUrl(dbName, collName, traceInfo.Uuid, traceInfo.UrlNew)
+    if err != nil {
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+        return
+    }
+
+    
     // 进行保存。
     
     err = mongodb.MDC(dbName, collName, func(coll *mgo.Collection) error {

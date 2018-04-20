@@ -65,7 +65,7 @@ type TraceApiDbInfo struct{
     ClActivity string `form:"cl_activity" json:"cl_activity" bson:"cl_activity"`
     ClActivityChild string `form:"cl_activity_child" json:"cl_activity_child" bson:"cl_activity_child"`
     FirstReferrerDomain string `form:"first_referrer_domain" json:"first_referrer_domain" bson:"first_referrer_domain"`
-    FirstPage string `form:"first_page" json:"first_page" bson:"first_page"`
+    FirstPage int `form:"first_page" json:"first_page" bson:"first_page"`
     FirstReferrerUrl string `form:"first_referrer_url" json:"first_referrer_url" bson:"first_referrer_url"`
     IsReturn string `form:"is_return" json:"is_return" bson:"is_return"`
     WebsiteId string `binding:"required" form:"website_id" json:"website_id" bson:"website_id"` 
@@ -96,7 +96,7 @@ type TraceApiDbInfo struct{
     // 服务器接收数据, 格式：Y-m-d H:i:s
     ServiceDatetime string `form:"service_datetime" json:"service_datetime" bson:"service_datetime"`
     // 服务器接收数据, 格式：Y-m-d
-    ServiceDate string `form:"service_date" json:"service_date" bson:"service_date"`
+    ServiceDateStr string `form:"service_date_str" json:"service_date_str" bson:"service_date_str"`
     // 页面停留时间
     StaySeconds float64 `form:"stay_seconds" json:"stay_seconds" bson:"stay_seconds"`
     // 由于按照时间分库，站点分表，查询当前表，是否存在uuid，如果不存在，则 uuid_first_page = 1，否则 uuid_first_page = 0
@@ -106,6 +106,28 @@ type TraceApiDbInfo struct{
     LoginEmail string `form:"login_email" json:"login_email" bson:"login_email"`
     RegisterEmail string `form:"register_email" json:"register_email" bson:"register_email"`
     Order OrderInfo `form:"order" json:"order" bson:"order"`
+    
+    Ip string `form:"ip" json:"ip" bson:"ip"`
+    CountryCode string `form:"country_code" json:"country_code" bson:"country_code"`
+    CountryName string `form:"country_name" json:"country_name" bson:"country_name"`
+    StateName string `form:"state_name" json:"state_name" bson:"state_name"`
+    CityName string `form:"city_name" json:"city_name" bson:"city_name"`
+    
+    Devide string `form:"devide" json:"devide" bson:"devide"`
+    UserAgent string `form:"user_agent" json:"user_agent" bson:"user_agent"`
+    BrowserName string `form:"browser_name" json:"browser_name" bson:"browser_name"`
+    BrowserVersion string `form:"browser_version" json:"browser_version" bson:"browser_version"`
+    BrowserDate string `form:"browser_date" json:"browser_date" bson:"browser_date"`
+    BrowserLang string `form:"browser_lang" json:"browser_lang" bson:"browser_lang"`
+    Operate string `form:"operate" json:"operate" bson:"operate"`
+    OperateRelase string `form:"operate_relase" json:"operate_relase" bson:"operate_relase"`
+    
+    Domain string `form:"domain" json:"domain" bson:"domain"`
+    ReferUrl string `form:"refer_url" json:"refer_url" bson:"refer_url"`
+
+    DevicePixelRatio string `form:"device_pixel_ratio" json:"device_pixel_ratio" bson:"device_pixel_ratio"`
+    Resolution string `form:"resolution" json:"resolution" bson:"resolution"`
+    ColorDepth string `form:"color_depth" json:"color_depth" bson:"color_depth"`
     
 }
 
@@ -188,55 +210,82 @@ func SaveApiData(c *gin.Context){
     // 得到collection name
     collName := helper.GetTraceDataCollName(traceApiInfo.WebsiteId)
     
-    // 除了订单状态更新，其他的都是插入数据，也就是下面的赋值
-    traceApiDbInfo.Id_ = bson.NewObjectId()
-    traceApiDbInfo.Uuid = traceApiInfo.Uuid
-    traceApiDbInfo.ClActivity = traceApiInfo.ClActivity
-    traceApiDbInfo.ClActivityChild = traceApiInfo.ClActivityChild
-    traceApiDbInfo.FirstReferrerDomain = traceApiInfo.FirstReferrerDomain
-    traceApiDbInfo.FirstPage = traceApiInfo.FirstPage
-    traceApiDbInfo.FirstReferrerUrl = traceApiInfo.FirstReferrerUrl
-    
-    traceApiDbInfo.IsReturn = traceApiInfo.IsReturn
-    traceApiDbInfo.WebsiteId = traceApiInfo.WebsiteId
-    traceApiDbInfo.Fid = traceApiInfo.Fid
-    traceApiDbInfo.FecSource = traceApiInfo.FecSource
-    traceApiDbInfo.FecMedium = traceApiInfo.FecMedium
-    traceApiDbInfo.FecCampaign = traceApiInfo.FecCampaign
-    traceApiDbInfo.FecContent = traceApiInfo.FecContent
-    traceApiDbInfo.FecDesign = traceApiInfo.FecDesign
-    
-    traceApiDbInfo.FecStore = traceApiInfo.FecStore
-    traceApiDbInfo.FecLang = traceApiInfo.FecLang
-    traceApiDbInfo.FecApp = traceApiInfo.FecApp
-    traceApiDbInfo.FecCurrency = traceApiInfo.FecCurrency
-    
-    
-    
-    traceApiDbInfo.LoginEmail = traceApiInfo.LoginEmail
-    traceApiDbInfo.RegisterEmail = traceApiInfo.RegisterEmail
-    traceApiDbInfo.Order = traceApiInfo.PaymentPendingOrder
-    
-    //  ##############
-    
-    traceApiDbInfo.ServiceTimestamp = helper.DateTimestamps()
-    traceApiDbInfo.ServiceDatetime = helper.DateTimeUTCStr()
-    traceApiDbInfo.ServiceDate = helper.DateUTCStr()
-    
-    // 计算出来的属性
-    // StaySeconds
-    err = updatePreStaySeconds(dbName, collName, traceApiDbInfo.Uuid, traceApiDbInfo.ServiceTimestamp)
-    if err != nil {
-        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
-        return
+    if traceApiInfo.Uuid != "" && traceApiInfo.PaymentSuccessOrder.Invoice == "" {
+        // 除了订单状态更新，其他的都是插入数据，也就是下面的赋值
+        traceApiDbInfo.Id_ = bson.NewObjectId()
+        traceApiDbInfo.Uuid = traceApiInfo.Uuid
+        traceApiDbInfo.ClActivity = traceApiInfo.ClActivity
+        traceApiDbInfo.ClActivityChild = traceApiInfo.ClActivityChild
+        traceApiDbInfo.FirstReferrerDomain = traceApiInfo.FirstReferrerDomain
+        firstPage := traceApiInfo.FirstPage
+        traceApiDbInfo.FirstPage, _ = helper.Int(firstPage)
+        
+        traceApiDbInfo.FirstReferrerUrl = traceApiInfo.FirstReferrerUrl
+        
+        traceApiDbInfo.IsReturn = traceApiInfo.IsReturn
+        traceApiDbInfo.WebsiteId = traceApiInfo.WebsiteId
+        traceApiDbInfo.Fid = traceApiInfo.Fid
+        traceApiDbInfo.FecSource = traceApiInfo.FecSource
+        traceApiDbInfo.FecMedium = traceApiInfo.FecMedium
+        traceApiDbInfo.FecCampaign = traceApiInfo.FecCampaign
+        traceApiDbInfo.FecContent = traceApiInfo.FecContent
+        traceApiDbInfo.FecDesign = traceApiInfo.FecDesign
+        
+        traceApiDbInfo.FecStore = traceApiInfo.FecStore
+        traceApiDbInfo.FecLang = traceApiInfo.FecLang
+        traceApiDbInfo.FecApp = traceApiInfo.FecApp
+        traceApiDbInfo.FecCurrency = traceApiInfo.FecCurrency
+        
+        traceApiDbInfo.LoginEmail = traceApiInfo.LoginEmail
+        traceApiDbInfo.RegisterEmail = traceApiInfo.RegisterEmail
+        traceApiDbInfo.Order = traceApiInfo.PaymentPendingOrder
+        
+        //  ##############
+        
+        traceApiDbInfo.ServiceTimestamp = helper.DateTimestamps()
+        traceApiDbInfo.ServiceDatetime = helper.DateTimeUTCStr()
+        traceApiDbInfo.ServiceDateStr = helper.DateUTCStr()
+        
+        // 计算出来的属性
+        // StaySeconds
+        preTraceInfo, err := updatePreStaySecondsAndReturn(dbName, collName, traceApiDbInfo.Uuid, traceApiDbInfo.ServiceTimestamp)
+        if err != nil {
+            c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+            return
+        }
+        
+        // UuidFirstPage
+        traceApiDbInfo.UuidFirstPage, err = getUuidFirstPage(dbName, collName, traceApiDbInfo.Uuid)
+        if err != nil {
+            c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+            return
+        }
+        
+        // 其他的字符，通过查询最近的数据，如果有数据，则将上一条的数据，附加到当前
+        if preTraceInfo.Uuid != "" {
+            // 不为空，则说明有数据，保存
+            traceApiDbInfo.Ip = preTraceInfo.Ip
+            traceApiDbInfo.CountryCode = preTraceInfo.CountryCode
+            traceApiDbInfo.CountryName = preTraceInfo.CountryName
+            traceApiDbInfo.StateName = preTraceInfo.StateName
+            traceApiDbInfo.CityName = preTraceInfo.CityName
+            traceApiDbInfo.Devide = preTraceInfo.Devide
+            traceApiDbInfo.UserAgent = preTraceInfo.UserAgent
+            traceApiDbInfo.BrowserName = preTraceInfo.BrowserName
+            traceApiDbInfo.BrowserVersion = preTraceInfo.BrowserVersion
+            traceApiDbInfo.BrowserDate = preTraceInfo.BrowserDate
+            traceApiDbInfo.BrowserLang = preTraceInfo.BrowserLang
+            traceApiDbInfo.Operate = preTraceInfo.Operate
+            traceApiDbInfo.OperateRelase = preTraceInfo.OperateRelase
+            traceApiDbInfo.Domain = preTraceInfo.Domain
+            traceApiDbInfo.ReferUrl = preTraceInfo.ReferUrl
+            traceApiDbInfo.FirstReferrerDomain = preTraceInfo.FirstReferrerDomain
+            traceApiDbInfo.FirstReferrerUrl = preTraceInfo.FirstReferrerUrl
+            traceApiDbInfo.DevicePixelRatio = preTraceInfo.DevicePixelRatio
+            traceApiDbInfo.Resolution = preTraceInfo.Resolution
+            traceApiDbInfo.ColorDepth = preTraceInfo.ColorDepth
+        }
     }
-    // UuidFirstPage
-    if traceApiDbInfo.StaySeconds > 0 {
-        traceApiDbInfo.UuidFirstPage = 0
-    } else {
-        traceApiDbInfo.UuidFirstPage = 1
-    }
-    
     
     //  ##############
     
@@ -280,3 +329,6 @@ func SaveApiData(c *gin.Context){
     // 返回json
     c.JSON(http.StatusOK, result)
 }
+
+
+

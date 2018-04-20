@@ -63,6 +63,56 @@ func updatePreStaySeconds(dbName string, collName string, uuid string, serviceTi
     return err
 } 
 
+
+
+// 得到停留时间
+func updatePreStaySecondsAndReturn(dbName string, collName string, uuid string, serviceTimestamp int64) (TraceInfo, error){
+    var staySeconds float64 = 0
+    var traceInfo TraceInfo
+    err := mongodb.MDC(dbName, collName, func(coll *mgo.Collection) error {
+        _ = coll.Find(bson.M{"uuid": uuid}).Sort("-service_timestamp").One(&traceInfo)
+        
+        // 如果查询不到，则
+        if traceInfo.ServiceTimestamp == 0 {
+            return nil
+        }
+        // 得到停留时间    
+        staySeconds = float64(serviceTimestamp - traceInfo.ServiceTimestamp)
+        if staySeconds <= 0 {
+            staySeconds = 0.1
+        // 当时间大于600秒，则取600秒，以免造成停留时间过长。
+        } else if staySeconds > 600 {
+            staySeconds = 600
+        }
+        // 更新 上一次访问的停留时间。
+        selector := bson.M{"_id": traceInfo.Id_}
+        updateData := bson.M{"$set": bson.M{"stay_seconds": staySeconds}}
+        _ = coll.Update(selector, updateData)
+        //return err
+        return nil
+    })
+    return traceInfo, err
+} 
+
+
+func getUuidFirstPage(dbName string, collName string, uuid string) (int, error) {
+    var uuidFirstPage int = 0
+    err := mongodb.MDC(dbName, collName, func(coll *mgo.Collection) error {
+        var traceInfo TraceMiddInfo
+        
+        _ = coll.Find(bson.M{"uuid": uuid}).One(&traceInfo)
+        
+        // 如果查询不到，则说明该ip为首次访问
+        if traceInfo.Uuid == "" {
+            uuidFirstPage = 1
+        } else {
+            return nil
+        }
+        return nil
+    })
+    return uuidFirstPage, err
+} 
+
 func getIpFirstPage(dbName string, collName string, ipStr string) (int, error) {
     var ipFirstPage int = 0
     err := mongodb.MDC(dbName, collName, func(coll *mgo.Collection) error {
@@ -140,6 +190,21 @@ func getSearchLoginEmail(dbName string, collName string, uuid string) (int, erro
     return searchLoginEmail, err
 }      
   
-/*
-
-*/
+func getFirstVisitThisUrl(dbName string, collName string, uuid string, urlNew string) (int, error) {
+    var firstVisitThisUrl int = 0
+    err := mongodb.MDC(dbName, collName, func(coll *mgo.Collection) error {
+        var traceInfo TraceMiddInfo
+        
+        _ = coll.Find(bson.M{"uuid": uuid, "url_new": urlNew}).One(&traceInfo)
+        
+        // 如果查询不到，则说明该URL为首次访问
+        if traceInfo.Uuid == "" {
+            firstVisitThisUrl = 1
+        } else {
+            return nil
+        }
+        return nil
+    })
+    return firstVisitThisUrl, err
+} 
+  

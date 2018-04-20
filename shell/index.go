@@ -10,9 +10,10 @@ import(
 func GoShell() { 
     // 初始化数据库以及索引
     InitDbIndex()
-    
-    InitElasticSearchMapping()
-    
+    // 初始化ElasticSearch Mapping
+    // InitElasticSearchMapping()
+    // 开始计算
+    MapReductAndSyncDataToEs()
 }
 
 
@@ -27,13 +28,14 @@ func InitDbIndex() {
     log.Println(helper.DateTimeUTCStr() + " - Init Db Index Complete ...")
 }
 
-
+/*
 func InitElasticSearchMapping() {
     log.Println(helper.DateTimeUTCStr() + " - Init ElasticSearch Mapping Begin ...")
     
     log.Println(helper.DateTimeUTCStr() + " - Init ElasticSearch Mapping Complete ...")
 
 }
+*/
 
 
 
