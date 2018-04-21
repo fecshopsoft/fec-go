@@ -144,12 +144,24 @@ func FilterList(){
 
 }
 
-// 同步数据
+/* 单个更新数据
+for j:=0; j<len(wholeBrowsers); j++ {
+    wholeBrowser := wholeBrowsers[j]
+    wholeBrowserValue := wholeBrowser.Value
+    // wholeBrowserValue.Devide = nil
+    // wholeBrowserValue.CountryCode = nil
+    ///wholeBrowserValue.Operate = nil
+    log.Println("ID_:" + wholeBrowser.Id_)
+    wholeBrowserValue.Id = wholeBrowser.Id_
+    err := esdb.UpsertType(esIndexName, esWholeBrowserTypeName, wholeBrowser.Id_, wholeBrowserValue)
+    
+    if err != nil {
+        log.Println("11111" + err.Error())
+        return err
+    }
+}
+*/
 func UpsertType(esIndexName string, esTypeName string, idStr string, bodyJson interface{}) error{
-    log.Println("5555" + esIndexName)
-    log.Println("555" + esTypeName)
-    log.Println("55" + idStr)
-    log.Println(bodyJson)
     var err error
     ctx := context.Background()
     client, err := Client()
@@ -164,6 +176,53 @@ func UpsertType(esIndexName string, esTypeName string, idStr string, bodyJson in
 	}
 	log.Printf("Indexed tweet %s to index %s, type %s\n", upsertResult.Id, upsertResult.Index, upsertResult.Type)
     return err
+}
+
+/**
+ * 批量操作
+ *
+    bulkRequest, err := esdb.Bulk()
+    if err != nil {
+        return err
+    }
+    for j:=0; j<len(wholeBrowsers); j++ {
+        wholeBrowser := wholeBrowsers[j]
+        wholeBrowserValue := wholeBrowser.Value
+        wholeBrowserValue.Id = wholeBrowser.Id_
+        req := esdb.BulkUpsertTypeDoc(esIndexName, esWholeBrowserTypeName, wholeBrowser.Id_, wholeBrowserValue)
+        bulkRequest = bulkRequest.Add(req)
+    }
+    bulkResponse, err := esdb.BulkRequestDo(bulkRequest)
+    // bulkResponse, err := bulkRequest.Do()
+    if err != nil {
+        return err
+    }
+    if bulkResponse != nil {
+        log.Println(bulkResponse)
+    }
+ *
+ */
+// 获取批量执行的bulk
+func Bulk() (*(elastic.BulkService), error){
+    client, err := Client()
+    return client.Bulk(), err
+}
+// 获取批量更新的doc
+func BulkUpsertTypeDoc(esIndexName string, esTypeName string, idStr string, docStruct interface{}) *(elastic.BulkUpdateRequest){
+
+    req := elastic.NewBulkUpdateRequest().
+            Index(esIndexName).
+            Type(esTypeName).
+            Id(idStr).
+            Doc(docStruct).
+            DocAsUpsert(true)
+    return req
+}
+// 批量执行
+func BulkRequestDo(bulkRequest *(elastic.BulkService)) (*(elastic.BulkResponse), error){
+    ctx := context.Background()
+    bulkResponse, err := bulkRequest.Do(ctx)
+    return bulkResponse, err
 }
 
 

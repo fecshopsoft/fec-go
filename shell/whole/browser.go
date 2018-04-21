@@ -414,6 +414,8 @@ func BrowserMapReduct(dbName string, collName string, outCollName string, esInde
             coll.Find(nil).Skip(i*pageNum).Limit(numPerPage).All(&wholeBrowsers)
             log.Println("wholeBrowsers length:")
             log.Println(len(wholeBrowsers))
+            
+            /* 这个代码是upsert单行数据
             for j:=0; j<len(wholeBrowsers); j++ {
                 wholeBrowser := wholeBrowsers[j]
                 wholeBrowserValue := wholeBrowser.Value
@@ -421,7 +423,7 @@ func BrowserMapReduct(dbName string, collName string, outCollName string, esInde
                 // wholeBrowserValue.CountryCode = nil
                 ///wholeBrowserValue.Operate = nil
                 log.Println("ID_:" + wholeBrowser.Id_)
-                
+                wholeBrowserValue.Id = wholeBrowser.Id_
                 err := esdb.UpsertType(esIndexName, esWholeBrowserTypeName, wholeBrowser.Id_, wholeBrowserValue)
                 
                 if err != nil {
@@ -429,6 +431,27 @@ func BrowserMapReduct(dbName string, collName string, outCollName string, esInde
                     return err
                 }
             }
+            */
+            bulkRequest, err := esdb.Bulk()
+            if err != nil {
+                return err
+            }
+            for j:=0; j<len(wholeBrowsers); j++ {
+                wholeBrowser := wholeBrowsers[j]
+                wholeBrowserValue := wholeBrowser.Value
+                wholeBrowserValue.Id = wholeBrowser.Id_
+                req := esdb.BulkUpsertTypeDoc(esIndexName, esWholeBrowserTypeName, wholeBrowser.Id_, wholeBrowserValue)
+                bulkRequest = bulkRequest.Add(req)
+            }
+            bulkResponse, err := esdb.BulkRequestDo(bulkRequest)
+            // bulkResponse, err := bulkRequest.Do()
+            if err != nil {
+                return err
+            }
+            if bulkResponse != nil {
+                log.Println(bulkResponse)
+            }
+              
             return err
         })
         

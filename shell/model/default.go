@@ -17,6 +17,7 @@ type WholeBrowser struct{
 }
 
 type WholeBrowserValue struct{
+    Id string `form:"id" json:"id" bson:"id"`
     BrowserName string `form:"browser_name" json:"browser_name" bson:"browser_name"`
     Pv int64 `form:"pv" json:"pv" bson:"pv"`
     Uv int64 `form:"uv" json:"uv" bson:"uv"`
