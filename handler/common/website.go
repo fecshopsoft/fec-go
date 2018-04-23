@@ -304,12 +304,12 @@ func GetWebsiteCreatedCustomerOps(websiteInfos []WebsiteInfo) ([]helper.VueSelec
 
 
 /**
- * 根据 market_group_ids 查询得到 WebsiteInfo
+ * 根据 Ids 查询得到 WebsiteInfo
  */
-func GetWebsiteByIds(market_group_ids []int64) ([]WebsiteInfo, error){
+func GetWebsiteByIds(Ids []int64) ([]WebsiteInfo, error){
     // 得到结果数据
     var websiteInfos []WebsiteInfo
-    err := engine.In("id", market_group_ids).Find(&websiteInfos) 
+    err := engine.In("id", Ids).Find(&websiteInfos) 
     if err != nil{
         return websiteInfos, err
     }
@@ -317,7 +317,21 @@ func GetWebsiteByIds(market_group_ids []int64) ([]WebsiteInfo, error){
 }
 
 /**
- * 根据 market_group_ids 查询得到 WebsiteInfo
+ * 根据 siteIds 查询得到 WebsiteInfo
+ */
+func GetWebsiteBySiteUids(siteIds []string) ([]WebsiteInfo, error){
+    // 得到结果数据
+    var websiteInfos []WebsiteInfo
+    err := engine.In("site_uid", siteIds).Find(&websiteInfos) 
+    if err != nil{
+        return websiteInfos, err
+    }
+    return websiteInfos, nil
+}
+
+
+/**
+ * 根据 own_id 查询得到 WebsiteInfo
  */
 func GetWebsiteByOwnId(own_id int64) ([]WebsiteInfo, error){
     // 得到结果数据

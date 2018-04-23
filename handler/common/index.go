@@ -17,5 +17,8 @@ func init(){
     log.Println("Base Info GetEngine complete")
 }
 
-
+type VueSelectOps struct{
+    Key string `form:"key" json:"key"`
+    DisplayName string `form:"display_name" json:"display_name"`
+}
 

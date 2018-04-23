@@ -23,8 +23,8 @@ type WholeBrowserValue struct{
     Uv int64 `form:"uv" json:"uv" bson:"uv"`
     RatePv float64 `form:"rate_pv" json:"rate_pv" bson:"rate_pv"`
     StaySeconds float64 `form:"stay_seconds" json:"stay_seconds" bson:"stay_seconds"`
-    JumpOutCount string `form:"jump_out_count" json:"jump_out_count" bson:"jump_out_count"`
-    DropOutCount string `form:"drop_out_count" json:"drop_out_count" bson:"drop_out_count"`
+    JumpOutCount int64 `form:"jump_out_count" json:"jump_out_count" bson:"jump_out_count"`
+    DropOutCount int64 `form:"drop_out_count" json:"drop_out_count" bson:"drop_out_count"`
     Devide map[string]int64 `form:"devide" json:"devide" bson:"devide"`
     CountryCode map[string]int64 `form:"country_code" json:"country_code" bson:"country_code"`
     CartCount int64 `form:"cart_count" json:"cart_count" bson:"cart_count"`

@@ -4,6 +4,7 @@ import (
     customerHandler "github.com/fecshopsoft/fec-go/handler/customer"
     commonHandler "github.com/fecshopsoft/fec-go/handler/common"
     // fecHandler "github.com/fecshopsoft/fec-go/handler/fec"
+    "log"
 )
 
 
@@ -19,12 +20,17 @@ type SiteInfo struct{
 type SiteInfos map[string]*SiteInfo  // string中存储的是websiteUid
 var WebsiteInfos SiteInfos = make(SiteInfos)
 
+// 统计后的记过，需要ownId和websiteId的对应关系
+// 将初始化关系保存带 OwnIdWithWebsiteId 中
+var OwnIdWithWebsiteId map[int64][]string = make(map[int64][]string)
+
+
 func init(){
     DaySiteCount  = make(DaySiteCountT)
 }
 // 初始化 WebsiteInfos
 func InitWebsiteInfo() error{
-    var WebInfos SiteInfos = make(SiteInfos)
+    var webInfos SiteInfos = make(SiteInfos)
 	customers, err:= customerHandler.GetPaymentActiveCustomers()
     if err != nil {
         return err
@@ -40,19 +46,20 @@ func InitWebsiteInfo() error{
         if err != nil {
             return err
         }
+        var websiteIds []string
         for j:=0; j<len(websites); j++ {
             website := websites[j]
             siteUid := website.SiteUid
             //WebsiteInfos[siteUid] = &siteInfo
-            WebInfos[siteUid] = &SiteInfo{website.PaymentEndTime, website.WebsiteDayMaxCount}
+            webInfos[siteUid] = &SiteInfo{website.PaymentEndTime, website.WebsiteDayMaxCount}
+            websiteIds = append(websiteIds, siteUid)
         }
+        OwnIdWithWebsiteId[own_id] = websiteIds
     }
-    WebsiteInfos = WebInfos
+    WebsiteInfos = webInfos
+    log.Println(OwnIdWithWebsiteId)
     return nil
 }
-
-
-
 
 
 

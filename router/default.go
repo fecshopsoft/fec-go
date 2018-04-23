@@ -7,6 +7,7 @@ import(
     fecHandler "github.com/fecshopsoft/fec-go/handler/fec"
     testHandler "github.com/fecshopsoft/fec-go/handler/test"
     cronHandler "github.com/fecshopsoft/fec-go/handler/cron"
+    wholeHandler "github.com/fecshopsoft/fec-go/handler/whole"
     "github.com/fecshopsoft/fec-go/middleware"
     "github.com/fecshopsoft/fec-go/config"
     "github.com/fecshopsoft/fec-go/initialization"
@@ -43,9 +44,9 @@ func Listen(listenIp string) {
     r.GET("/test/mgo", testHandler.MgoFind)
     r.GET("/test/es", testHandler.EsFind)
     r.GET("/test/mgo/mapreduce", testHandler.MgoMapReduce)
+    // 这个函数是为了更新上面的 initialization.InitWebsiteInfo()，需要在cron中1分钟调用一次刷新。
     r.GET("/fec/trace/cronssss", cronHandler.UpdateSite)
     
-        
     //mi := router.Group("/mi", handler.ApiGlobal, handler.AdminCheckLogin)
     // ##：【middleware.PermissionLoginToken】 验证是否有token，以及token是否有效
     // ##：【customerHandler.PermissionRole】 验证用户是否有权限访问该资源
@@ -180,7 +181,9 @@ func Listen(listenIp string) {
         // 得到 marketGroup 列表
         v1.GET("/common/website/jscode",           middleware.PermissionLoginToken, middleware.CommonAdminChildRole, commonHandler.WebsiteJsCode)
         
-        
+        // #### Basestics
+        v1.GET("/whole/browser/list",           middleware.PermissionLoginToken, middleware.CommonAdminChildRole, wholeHandler.BrowserList)
+       
         
         
         
