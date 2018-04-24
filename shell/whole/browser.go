@@ -93,7 +93,9 @@ func BrowserMapReduct(dbName string, collName string, outCollName string, esInde
                     one 		= cart[x];
                     if(one && one['qty']){
                         //$sku 		= one['sku'];
-                        cart_count += Number(one['qty']);
+                        var skuqty = Number(one['qty'])
+                        skuqty = isNaN(skuqty) ? 0 : skuqty
+                        cart_count += skuqty;
                     }
                 }
             }
@@ -108,6 +110,7 @@ func BrowserMapReduct(dbName string, collName string, outCollName string, esInde
                     one = products[x];
                     if(one && one['qty']){
                         qty = Number(one['qty']);
+                        qty = isNaN(qty) ? 0 : qty
                         order_count += qty;
                         if(payment_status == 'payment_confirmed'){
                             success_order_count += qty;
@@ -118,6 +121,10 @@ func BrowserMapReduct(dbName string, collName string, outCollName string, esInde
             }
             
             if(this.browser_name){
+                is_return = Number(is_return);
+                is_return = isNaN(is_return) ? 0 : is_return
+                first_page = Number(first_page);
+                first_page = isNaN(first_page) ? 0 : first_page
                 emit(this.browser_name+"_"+service_date_str,{
                     browser_name:browser_name,
                     pv:1,
@@ -136,8 +143,8 @@ func BrowserMapReduct(dbName string, collName string, outCollName string, esInde
                     success_order_no_count:success_order_no_count,
                     
                     operate:operate,
-                    is_return:Number(is_return),
-                    first_page:Number(first_page),
+                    is_return: is_return,
+                    first_page: first_page,
                     service_date_str:service_date_str
                     
                 });
@@ -384,10 +391,10 @@ func BrowserMapReduct(dbName string, collName string, outCollName string, esInde
     esWholeBrowserTypeName :=  helper.GetEsWholeBrowserTypeName()
     esWholeBrowserTypeMapping := helper.GetEsWholeBrowserTypeMapping()
     // 删除index
-    err =esdb.DeleteIndex(esIndexName)
-    if err != nil {
-        return err
-    }
+    // err =esdb.DeleteIndex(esIndexName)
+    //if err != nil {
+    //    return err
+    //}
     // 初始化mapping
     err = esdb.InitMapping(esIndexName, esWholeBrowserTypeName, esWholeBrowserTypeMapping)
     if err != nil {
@@ -432,26 +439,34 @@ func BrowserMapReduct(dbName string, collName string, outCollName string, esInde
                 }
             }
             */
-            bulkRequest, err := esdb.Bulk()
-            if err != nil {
-                return err
+            if len(wholeBrowsers) > 0 {
+                bulkRequest, err := esdb.Bulk()
+                if err != nil {
+                    log.Println("444" + err.Error())
+                    return err
+                }
+                for j:=0; j<len(wholeBrowsers); j++ {
+                    wholeBrowser := wholeBrowsers[j]
+                    wholeBrowserValue := wholeBrowser.Value
+                    wholeBrowserValue.Id = wholeBrowser.Id_
+                    log.Println("888")
+                    log.Println(esIndexName)
+                    log.Println(esWholeBrowserTypeName)
+                    log.Println(wholeBrowser.Id_)
+                    log.Println(wholeBrowserValue)
+                    req := esdb.BulkUpsertTypeDoc(esIndexName, esWholeBrowserTypeName, wholeBrowser.Id_, wholeBrowserValue)
+                    bulkRequest = bulkRequest.Add(req)
+                }
+                bulkResponse, err := esdb.BulkRequestDo(bulkRequest)
+                // bulkResponse, err := bulkRequest.Do()
+                if err != nil {
+                    log.Println("333" + err.Error())
+                    return err
+                }
+                if bulkResponse != nil {
+                    log.Println(bulkResponse)
+                }
             }
-            for j:=0; j<len(wholeBrowsers); j++ {
-                wholeBrowser := wholeBrowsers[j]
-                wholeBrowserValue := wholeBrowser.Value
-                wholeBrowserValue.Id = wholeBrowser.Id_
-                req := esdb.BulkUpsertTypeDoc(esIndexName, esWholeBrowserTypeName, wholeBrowser.Id_, wholeBrowserValue)
-                bulkRequest = bulkRequest.Add(req)
-            }
-            bulkResponse, err := esdb.BulkRequestDo(bulkRequest)
-            // bulkResponse, err := bulkRequest.Do()
-            if err != nil {
-                return err
-            }
-            if bulkResponse != nil {
-                log.Println(bulkResponse)
-            }
-              
             return err
         })
         

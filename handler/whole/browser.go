@@ -8,6 +8,7 @@ import(
     "github.com/fecshopsoft/fec-go/shell/model"
     "context"
     "strconv"
+    "log"
     // "reflect"
     "encoding/json"
     "github.com/olivere/elastic"
@@ -100,6 +101,12 @@ func BrowserList(c *gin.Context){
     //termQuery := elastic.NewTermQuery("browser_name", "Safari")
     // termQuery := elastic.NewRangeQuery("browser_name", "Safari")
     //rangeQuery := NewRangeQuery("pv").Gt(3)
+    log.Println(8888888888888)
+    log.Println(esIndexName)
+    log.Println(esWholeBrowserTypeName)
+    log.Println(page-1)
+    log.Println(limit)
+    log.Println(sort)
     search := client.Search().
         Index(esIndexName).        // search in index "twitter"
         Type(esWholeBrowserTypeName).
@@ -125,6 +132,7 @@ func BrowserList(c *gin.Context){
         Do(context.Background()) // execute
     */
     if err != nil{
+        log.Println(err.Error())
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return
     }

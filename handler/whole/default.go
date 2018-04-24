@@ -135,30 +135,28 @@ func ActiveOwnIdAndWebsite(c *gin.Context) (int64, string, []int64, []string, er
 
 func getOwnNames(c *gin.Context, selectOwnIds []int64) ([]customerH.VueSelectOps, error) {
     var ownNames []customerH.VueSelectOps
-    customerType := helper.GetCurrentCustomerType(c)
-    if customerType == helper.AdminSuperType {
-        customers, err := customerH.GetCustomerUsernameByIds(selectOwnIds)
-        if err != nil {
-            return ownNames, err
-        }
-        for _, customer := range customers {
-            ownNames = append(ownNames, customerH.VueSelectOps{Key:customer.Id, DisplayName: customer.Username})
-        }
+    //customerType := helper.GetCurrentCustomerType(c)
+    customers, err := customerH.GetCustomerUsernameByIds(selectOwnIds)
+    if err != nil {
+        return ownNames, err
+    }
+    for i:=0; i<len(customers); i++ {
+        customer := customers[i]
+        ownNames = append(ownNames, customerH.VueSelectOps{Key:customer.Id, DisplayName: customer.Username})
     }
     return ownNames, nil
 }
 
 func getSiteNames(c *gin.Context, selectWebsiteIds []string) ([]commonH.VueSelectOps, error) {
     var siteNames []commonH.VueSelectOps
-    customerType := helper.GetCurrentCustomerType(c)
-    if customerType == helper.AdminSuperType {
-        sites, err := commonH.GetWebsiteBySiteUids(selectWebsiteIds)
-        if err != nil {
-            return siteNames, err
-        }
-        for _, site := range sites {
-            siteNames = append(siteNames, commonH.VueSelectOps{Key:site.SiteUid, DisplayName: site.SiteName})
-        }
+    // customerType := helper.GetCurrentCustomerType(c)
+    sites, err := commonH.GetWebsiteBySiteUids(selectWebsiteIds)
+    if err != nil {
+        return siteNames, err
+    }
+    for i:=0; i<len(sites); i++ {
+        site := sites[i]
+        siteNames = append(siteNames, commonH.VueSelectOps{Key:site.SiteUid, DisplayName: site.SiteName})
     }
     return siteNames, nil
 }

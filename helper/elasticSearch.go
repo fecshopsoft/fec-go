@@ -34,6 +34,7 @@ func GetEsWholeBrowserTypeMapping() (string){
     return `{
 		"whole_browser_data":{
             "properties":{
+                "id":               {"type":"keyword"},
                 "browser_id":       {"type":"keyword"},
                 "browser_name":     {"type":"keyword"},
                 "pv":               {"type":"integer"},
