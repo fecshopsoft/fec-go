@@ -179,10 +179,11 @@ func Listen(listenIp string) {
         v1.DELETE("/common/website/deletebatch", middleware.PermissionLoginToken, middleware.CommonAdminChildRole, commonHandler.WebsiteDeleteByIds)
         
         // 得到 marketGroup 列表
-        v1.GET("/common/website/jscode",           middleware.PermissionLoginToken, middleware.CommonAdminChildRole, commonHandler.WebsiteJsCode)
+        v1.GET("/common/website/jscode",         middleware.PermissionLoginToken, middleware.CommonAdminChildRole, commonHandler.WebsiteJsCode)
         
         // #### Basestics
-        v1.GET("/whole/browser/list",           middleware.PermissionLoginToken, middleware.CommonAdminChildRole, wholeHandler.BrowserList)
+        v1.GET("/whole/browser/list",            middleware.PermissionLoginToken, middleware.CommonAdminChildRole, wholeHandler.BrowserList)
+        v1.GET("/whole/browser/fetchtrendinfo",  middleware.PermissionLoginToken, middleware.CommonAdminChildRole, wholeHandler.BrowserTrendInfo)
        
         
         

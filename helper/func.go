@@ -65,6 +65,7 @@ func IsValidUrl(toTest string) bool {
     }
 }
 
+    
 
 
 //截取字符串 start 起点下标 end 终点下标(不包括)
@@ -100,6 +101,16 @@ func GenerateAccessTokenBySiteId(siteUid string) (string, error){
 
 func GetSiteUIdByAccessToken(accessToken string) (string, error){
     return security.JwtParseAccessToken(accessToken)
+}
+// 通过字符串DateStr，得到时间戳
+func GetTimestampsByDate(dateStr string) int64 {
+    time, _ := time.Parse("2006-01-02", dateStr)
+    return time.Unix()
+}
+// 通过字符串dateTimeStr，得到时间戳
+func GetTimestampsByDateTime(dateTimeStr string) int64 {
+    time, _ := time.Parse("2006-01-02 03:04:05", dateTimeStr)
+    return time.Unix()
 }
 
 // 得到当前的时间戳

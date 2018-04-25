@@ -12,6 +12,7 @@ import(
 
 // 得到当前账户的可用的信息
 // 得到 chosen_own_id, chosen_website_id, selectOwnIds, selectWebsiteIds, err
+// 得到这些信息是为了在vue端做搜索部分使用。各个不同用户，看到的搜索内容不同。
 func ActiveOwnIdAndWebsite(c *gin.Context) (int64, string, []int64, []string, error) {
     // 选中的 own_id
     var chosen_own_id int64
@@ -162,3 +163,61 @@ func getSiteNames(c *gin.Context, selectWebsiteIds []string) ([]commonH.VueSelec
 }
 
 
+
+// 前台传递的websiteId是否是合法的。
+func GetReqWebsiteId(c *gin.Context) (string, error) {
+    
+    // 选中的 website_id
+    // var chosen_website_id string
+    // 可以在下拉条切换的所有 WebsiteIds
+    // var selectOwnIds []int64
+    // 可以在下拉条切换的所有 WebsiteIds
+    // var selectWebsiteIds []string
+    
+    // 当前账户的type
+    customerType := helper.GetCurrentCustomerType(c)
+    // 这个是系统启动时候初始化的变量，并且cron更新该变量
+    ownIdWithWebsiteId := initialization.OwnIdWithWebsiteId
+    
+    // 前端传递的website_id 是否为空，为空则返回
+    website_id_param := c.DefaultQuery("website_id", "")
+    if website_id_param == "" {
+        return "", errors.New(" request get website_id is empty")
+    }
+    // 如果是超级用户, 则直接返回。
+    if customerType == helper.AdminSuperType {
+        return website_id_param, nil
+    } else if customerType == helper.AdminCommonType {
+        chosen_own_id := helper.GetCurrentCustomerId(c)
+        for ownId, websiteIds := range ownIdWithWebsiteId {
+            // 找到当前的ownId对应的数据
+            if chosen_own_id == ownId {
+                for _, websiteId := range websiteIds {
+                    if website_id_param == websiteId {
+                        // 从合法的websiteIds中匹配，如果找到匹配项，则说明正确。
+                        return website_id_param, nil
+                    }
+                }
+            }
+        }
+    } else if customerType == helper.AdminChildType { // type == 3 的用户
+        customer_id := helper.GetCurrentCustomerId(c)
+        customer, err := customerH.GetCustomerOneById(customer_id)
+        if err != nil{
+            return "", err
+        }
+        chosen_own_id := customer.ParentId
+        for ownId, websiteIds := range ownIdWithWebsiteId {
+            // 找到当前的ownId对应的数据
+            if chosen_own_id == ownId {
+                for _, websiteId := range websiteIds {
+                    if website_id_param == websiteId {
+                        // 从合法的websiteIds中匹配，如果找到匹配项，则说明正确。
+                        return website_id_param, nil
+                    }
+                }
+            }
+        }
+    }
+    return "",errors.New("request get param website_id is not right") 
+}

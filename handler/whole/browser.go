@@ -181,8 +181,138 @@ func BrowserList(c *gin.Context){
     c.JSON(http.StatusOK, result)
 }
 
+// 得到 trend  info
+func BrowserTrendInfo(c *gin.Context){
+    browser_name := c.DefaultQuery("browser_name", "")
+    if browser_name == ""{
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("request get param browser_name can not empty"))
+        return
+    }
+    service_date_str := c.DefaultQuery("service_date_str", "")
+    if service_date_str == ""{
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("request get param service_date_str can not empty"))
+        return
+    }
+    endtimestamps := helper.GetTimestampsByDate(service_date_str)
+    //timestamps := helper.DateTimestamps()
+    begintimestamps := endtimestamps - 86400 * 30
+    preMonthDateStr := helper.GetDateTimeUtcByTimestamps(begintimestamps)
+    
+    // 搜索条件
+    q := elastic.NewBoolQuery()
+    // 加入时间
+    newRangeQuery := elastic.NewRangeQuery("service_date_str")
+    newRangeQuery.Gte(preMonthDateStr)
+    newRangeQuery.Lte(service_date_str)
+    log.Println(preMonthDateStr)
+    log.Println(service_date_str)
+    q = q.Must(newRangeQuery)
+    // 加入浏览器
+    q = q.Must(elastic.NewTermQuery("browser_name", browser_name))
+    website_id, err := GetReqWebsiteId(c)
+    if err != nil{
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+        return
+    }
+    esIndexName := helper.GetEsIndexName(website_id)
+    esWholeBrowserTypeName :=  helper.GetEsWholeBrowserTypeName()
+    client, err := esdb.Client()
+    if err != nil{
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+        return
+    }
+    search := client.Search().
+        Index(esIndexName).        // search in index "twitter"
+        Type(esWholeBrowserTypeName).
+        Query(q).
+        From(0).Size(9999).
+        Pretty(true)
+    searchResult, err := search.Do(context.Background())   
+    
+    if err != nil{
+        log.Println(err.Error())
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+        return
+    }
+    
+    pvTrend := make(map[string]int64)
+    uvTrend := make(map[string]int64)
+    staySecondsTrend := make(map[string]float64)
+    staySecondsRateTrend := make(map[string]float64)
+    PvRateTrend := make(map[string]float64)
+    JumpOutCountTrend := make(map[string]int64)
+    DropOutCountTrend := make(map[string]int64)
+    JumpOutRateTrend := make(map[string]float64)
+    DropOutRateTrend := make(map[string]float64)
+    CartCountTrend := make(map[string]int64)
+    OrderCountTrend := make(map[string]int64)
+    SuccessOrderCountTrend := make(map[string]int64)
+    SuccessOrderNoCountTrend := make(map[string]int64)
+    IsReturnTrend := make(map[string]int64)
+    IsReturnRateTrend := make(map[string]float64)
+    SkuSaleRateTrend := make(map[string]float64)
+    
+    if searchResult.Hits.TotalHits > 0 {
+        // Iterate through results
+        for _, hit := range searchResult.Hits.Hits {
+            // hit.Index contains the name of the index
 
-
+            // Deserialize hit.Source into a Tweet (could also be just a map[string]interface{}).
+            var wholeBrowser model.WholeBrowserValue
+            err := json.Unmarshal(*hit.Source, &wholeBrowser)
+            if err != nil{
+                c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+                return
+            }
+            serviceDateStr := wholeBrowser.ServiceDateStr
+            // pvTrend
+            pvTrend[serviceDateStr] = wholeBrowser.Pv
+            // uvTrend
+            uvTrend[serviceDateStr] = wholeBrowser.Uv
+            // staySecondsTrend
+            staySecondsTrend[serviceDateStr] = wholeBrowser.StaySeconds
+            // staySecondsRateTrend
+            staySecondsRateTrend[serviceDateStr] = wholeBrowser.StaySecondsRate
+            PvRateTrend[serviceDateStr] = wholeBrowser.PvRate
+            JumpOutCountTrend[serviceDateStr] = wholeBrowser.JumpOutCount
+            DropOutCountTrend[serviceDateStr] = wholeBrowser.DropOutCount
+            JumpOutRateTrend[serviceDateStr] = wholeBrowser.JumpOutRate
+            DropOutRateTrend[serviceDateStr] = wholeBrowser.DropOutRate
+            CartCountTrend[serviceDateStr] = wholeBrowser.CartCount
+            OrderCountTrend[serviceDateStr] = wholeBrowser.OrderCount
+            SuccessOrderCountTrend[serviceDateStr] = wholeBrowser.SuccessOrderCount
+            SuccessOrderNoCountTrend[serviceDateStr] = wholeBrowser.SuccessOrderNoCount
+            IsReturnTrend[serviceDateStr] = wholeBrowser.IsReturn
+            IsReturnRateTrend[serviceDateStr] = wholeBrowser.IsReturnRate
+            SkuSaleRateTrend[serviceDateStr] = wholeBrowser.SkuSaleRate
+        }
+    }
+    // 生成返回结果
+    result := util.BuildSuccessResult(gin.H{
+        "success": "success",
+        "trend": gin.H{
+            "pv": pvTrend,
+            "uv": uvTrend,
+            "stay_seconds": staySecondsTrend,
+            "stay_seconds_rate": staySecondsRateTrend,
+            "pv_rate": PvRateTrend,
+            "jump_out_count": JumpOutCountTrend,
+            "drop_out_count": DropOutCountTrend,
+            "jump_out_rate": JumpOutRateTrend,
+            "drop_out_rate": DropOutRateTrend,
+            "cart_count": CartCountTrend,
+            "order_count": OrderCountTrend,
+            "success_order_count": SuccessOrderCountTrend,
+            "success_order_no_count": SuccessOrderNoCountTrend,
+            "is_return": IsReturnTrend,
+            "is_return_rate": IsReturnRateTrend,
+            "sku_sale_rate": SkuSaleRateTrend,
+        },
+    })
+    // 返回json
+    c.JSON(http.StatusOK, result)
+    
+}
 
 
 
