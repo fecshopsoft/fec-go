@@ -15,7 +15,7 @@ import(
 )
 
 // 浏览器统计计算部分
-func BrowserMapReduct(dbName string, collName string, outCollName string, esIndexName string) error {
+func BrowserMapReduct(dbName string, collName string, outCollName string, website_id string) error {
     var err error
     mapStr := `
         function() {  
@@ -366,19 +366,21 @@ func BrowserMapReduct(dbName string, collName string, outCollName string, esInde
             //reducedVal.browser_name = this_browser_name;
             //reducedVal.operate 		= this_operate;
             reducedVal.pv_rate		= this_pv_rate;
+            reducedVal.website_id   = "` + website_id + `"
+            
             return reducedVal;
         }
     `
-    
+    // 结果输出的 mongodb collection
     outDoc := bson.M{"replace": outCollName}
-    
+    // 执行mapreduce的job struct
     job := &mgo.MapReduce{
         Map:      mapStr,
         Reduce:   reduceStr,
         Finalize: finalizeStr,
         Out:      outDoc,
     }
-    
+    // 开始执行map reduce
     err = mongodb.MDC(dbName, collName, func(coll *mgo.Collection) error {
         _, err := coll.Find(nil).MapReduce(job, nil)
         return err
@@ -386,12 +388,14 @@ func BrowserMapReduct(dbName string, collName string, outCollName string, esInde
     if err != nil {
         return err
     }
-    
-    // esIndexName
+    // 上面mongodb maoreduce处理完的数据，需要存储到es中
+    // 得到 type 以及 index name
     esWholeBrowserTypeName :=  helper.GetEsWholeBrowserTypeName()
+    esIndexName := helper.GetEsIndexNameByType(esWholeBrowserTypeName)
+    // es index 的type mapping
     esWholeBrowserTypeMapping := helper.GetEsWholeBrowserTypeMapping()
-    // 删除index
-    // err =esdb.DeleteIndex(esIndexName)
+    // 删除index，如果mapping建立的不正确，可以执行下面的语句删除重建mapping
+    //err = esdb.DeleteIndex(esIndexName)
     //if err != nil {
     //    return err
     //}
@@ -401,9 +405,9 @@ func BrowserMapReduct(dbName string, collName string, outCollName string, esInde
         return err
     }
     // 同步mongo数据到ES
-    // 得到数据总数
+    // mongodb中的数据总数
     mCount := 0
-    
+    // 得到总数
     err = mongodb.MDC(dbName, outCollName, func(coll *mgo.Collection) error {
         var err error
         mCount, err = coll.Count() 
@@ -412,7 +416,7 @@ func BrowserMapReduct(dbName string, collName string, outCollName string, esInde
     if err != nil {
         return err
     }
-    numPerPage := 10
+    numPerPage := helper.BulkSyncCount
     pageNum := int(math.Ceil(float64(mCount) / float64(numPerPage)))
     for i:=0; i<pageNum; i++ {
         err = mongodb.MDC(dbName, outCollName, func(coll *mgo.Collection) error {
@@ -440,6 +444,7 @@ func BrowserMapReduct(dbName string, collName string, outCollName string, esInde
             }
             */
             if len(wholeBrowsers) > 0 {
+                // 使用bulk的方式，将数据批量插入到elasticSearch
                 bulkRequest, err := esdb.Bulk()
                 if err != nil {
                     log.Println("444" + err.Error())
@@ -460,10 +465,12 @@ func BrowserMapReduct(dbName string, collName string, outCollName string, esInde
                 bulkResponse, err := esdb.BulkRequestDo(bulkRequest)
                 // bulkResponse, err := bulkRequest.Do()
                 if err != nil {
+                    log.Println("#############3")
                     log.Println("333" + err.Error())
                     return err
                 }
                 if bulkResponse != nil {
+                    log.Println("#############4")
                     log.Println(bulkResponse)
                 }
             }
@@ -471,12 +478,12 @@ func BrowserMapReduct(dbName string, collName string, outCollName string, esInde
         })
         
         if err != nil {
-            log.Println("2222" + err.Error())
+            log.Println("##############5" + err.Error())
             return err
         }
     }
     if err != nil {
-        log.Println("3333" + err.Error())
+        log.Println("#############6" + err.Error())
     }
     
     return err

@@ -17,7 +17,7 @@ func MapReductAndSyncDataToEs(){
     }
     
 }
-
+// 处理某一天的数据
 func mapReduceByDate(dateStr string) error{
     var err error
     // 通过时间，得到数据库name
@@ -29,24 +29,22 @@ func mapReduceByDate(dateStr string) error{
     for i:=0; i<len(websiteInfos); i++ {
         websiteInfo := websiteInfos[i]
         websiteId := websiteInfo.SiteUid
-        esIndexName := helper.GetEsIndexName(websiteId)
+        //esIndexName := helper.GetEsIndexName(websiteId)
         collName := helper.GetTraceDataCollName(websiteId)
         
-        // Whole Browser
+        // 处理：Whole Browser
         OutWholeBrowserCollName := helper.GetOutWholeBrowserCollName(websiteId)
-        err = whole.BrowserMapReduct(dbName, collName, OutWholeBrowserCollName, esIndexName)
+        err = whole.BrowserMapReduct(dbName, collName, OutWholeBrowserCollName, websiteId)
         if err != nil {
             return err
         }
         
-        /*
         // Whole All
         OutWholeAllCollName := helper.GetOutWholeAllCollName(websiteId)
-        err = whole.AllMapReduct(dbName, collName, OutWholeAllCollName, esIndexName)
+        err = whole.AllMapReduct(dbName, collName, OutWholeAllCollName, websiteId)
         if err != nil {
             return err
         }
-        */
         
     }
     return err

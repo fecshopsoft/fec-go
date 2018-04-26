@@ -7,10 +7,16 @@ import (
 
 var numberOfShards string   = "10"
 var numberOfReplicas string = "1"
+// 将mongodb数据同步到es，批量插入的数据条数
+var BulkSyncCount = 200
 
-// 得到当前时间对应的 Es   的 Index Name
+// 废弃：得到当前时间对应的 Es   的 Index Name
 func GetEsIndexName(websiteId string) (string){
     return "trace_" + websiteId
+}
+// 通过typename，得到index，现在是一个type，一个index。
+func GetEsIndexNameByType(typeName string) (string){
+    return "trace_" + typeName     //+ "_" + websiteId
 }
 
 func GetEsIndexMapping() string {
@@ -35,6 +41,7 @@ func GetEsWholeBrowserTypeMapping() (string){
 		"whole_browser_data":{
             "properties":{
                 "id":               {"type":"keyword"},
+                "website_id":       {"type":"keyword"},
                 "browser_id":       {"type":"keyword"},
                 "browser_name":     {"type":"keyword"},
                 "pv":               {"type":"integer"},
@@ -106,65 +113,41 @@ func GetEsWholeAllTypeName() (string){
 
 // Whole All Type Mapping
 func GetEsWholeAllTypeMapping() (string){
-    return `
-        {
-            "settings":{
-                "number_of_shards": ` + numberOfShards + `,
-                "number_of_replicas": ` + numberOfReplicas + `
-            },
-            "mappings":{
-                "whole_all_data":{
-                    "properties":{
-                        "all_id":           {"type":"keyword"},
-                        "pv":               {"type":"integer"},
-                        "uv":               {"type":"integer"},
-                        "ip_count":         {"type":"integer"},
-                        
-                        "jump_out_count":   {"type":"integer"},
-                        "drop_out_count":   {"type":"integer"},
-                        "stay_seconds":     {"type":"integer"},
-                        
-                        "devide":           {"type":"keyword"},
-                        "country_code":     {"type":"keyword"},
-                        "browser_name":     {"type":"keyword"},
-                        "operate":          {"type":"keyword"},
-                        
-                        "is_return":        {"type":"integer"},
-                        "first_page":       {"type":"integer"},
-                        
-                        "service_date_str": {"type":"date"},
-                        "stay_seconds_rate":{"type":"float"},
-                        "jump_out_rate":    {"type":"float"},
-                        "drop_out_rate":    {"type":"float"},
-                        "is_return_rate":   {"type":"float"},
-                        "pv_rate":          {"type":"float"},
-                        
-                        "uv_is_return":         {"type":"integer"},
-                        "uv_is_return_rate":    {"type":"float"},
-                        "resolution":           {"type":"keyword"},
-                        "color_depth":          {"type":"keyword"},
-                        "language":             {"type":"keyword"},
-                        "login_email_count":    {"type":"integer"},
-                        
-                        "register_email_count": {"type":"integer"},
-                        "cart_count":           {"type":"integer"},
-                        "order_count":          {"type":"integer"},
-                        "success_order_count":  {"type":"integer"},
-                        
-                        
-                        "order_amount":         {"type":"float"},
-                        "success_order_amount": {"type":"float"},
-                        
-                        "category_count":       {"type":"integer"},
-                        "product_count":        {"type":"integer"},
-                        "search_count":         {"type":"integer"},
-                        "sale_rate":            {"type":"float"},
-                        
-                    }
-                }
+    return `{
+		"whole_all_data":{
+            "properties":{
+                "id":               {"type":"keyword"},
+                "website_id":       {"type":"keyword"},
+                "pv":               {"type":"integer"},
+                "uv":               {"type":"integer"},
+                "jump_out_count":   {"type":"integer"},
+                "drop_out_count":   {"type":"integer"},
+                "stay_seconds":     {"type":"integer"},
+                "is_return":        {"type":"integer"},
+                "first_page":       {"type":"integer"},
+                "service_date_str": {"type":"date"},
+                "stay_seconds_rate":{"type":"float"},
+                "jump_out_rate":    {"type":"float"},
+                "drop_out_rate":    {"type":"float"},
+                "is_return_rate":   {"type":"float"},
+                "pv_rate":          {"type":"float"},
+                "sku_sale_rate":    {"type":"float"},
+                "cart_count":               {"type":"integer"},
+                "order_count":              {"type":"integer"},
+                "success_order_count":      {"type":"integer"},
+                "success_order_no_count":   {"type":"integer"},
+                
+                "ip_count":             {"type":"integer"},
+                "login_email_count":    {"type":"integer"},
+                "register_email_count": {"type":"integer"},
+                "order_amount":         {"type":"float"},
+                "success_order_amount": {"type":"float"},
+                "category_count":       {"type":"integer"},
+                "product_count":        {"type":"integer"},
+                "search_count":         {"type":"integer"}
             }
         }
-    `
+	}`
 }
 
 

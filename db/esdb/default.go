@@ -102,7 +102,7 @@ func InitMapping(esIndexName string, esTypeName string, typeMapping string) erro
     // 新建 mapping
     //indicesCreateResult, err := elastic.NewIndicesCreateService(client).Index(esIndexName).BodyString(mapping).Do(ctx)
     if err != nil {
-        log.Println("NewIndicesCreateService" + err.Error())
+        log.Println("NewIndicesCreateService:" + esIndexName +"##"+ esTypeName + "||" + err.Error())
         return err
     }
     if !putresp.Acknowledged {

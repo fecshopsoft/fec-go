@@ -86,9 +86,16 @@ func BrowserList(c *gin.Context){
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return
     }
+    if chosen_website_id == "" {
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("website id is empty"))
+        return
+    }
+    // 添加website_id 搜索条件
+    q = q.Must(elastic.NewTermQuery("website_id", chosen_website_id))
     
-    esIndexName := helper.GetEsIndexName(chosen_website_id)
+    // esIndexName := helper.GetEsIndexName(chosen_website_id)
     esWholeBrowserTypeName :=  helper.GetEsWholeBrowserTypeName()
+    esIndexName := helper.GetEsIndexNameByType(esWholeBrowserTypeName)
     client, err := esdb.Client()
     if err != nil{
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
@@ -214,8 +221,10 @@ func BrowserTrendInfo(c *gin.Context){
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return
     }
-    esIndexName := helper.GetEsIndexName(website_id)
+    q = q.Must(elastic.NewTermQuery("website_id", website_id))
+    // esIndexName := helper.GetEsIndexName(website_id)
     esWholeBrowserTypeName :=  helper.GetEsWholeBrowserTypeName()
+    esIndexName := helper.GetEsIndexNameByType(esWholeBrowserTypeName)
     client, err := esdb.Client()
     if err != nil{
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))

@@ -22,6 +22,7 @@ func InitDbIndex() {
     // 创建 索引
     err := fecHander.InitTraceDataCollIndex()
     if err != nil {
+        log.Println("################11")
         log.Println(err.Error())
     }
     
