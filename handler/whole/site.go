@@ -35,7 +35,7 @@ import(
  *   websiteIds 和 选择的websiteId 发送给vue。vue进行刷新
  */
 
-func BrowserList(c *gin.Context){
+func SiteList(c *gin.Context){
     
     defaultPageNum:= c.GetString("defaultPageNum")
     defaultPageCount := c.GetString("defaultPageCount")
@@ -47,7 +47,7 @@ func BrowserList(c *gin.Context){
     
     service_date_str_begin := c.DefaultQuery("service_date_str_begin", "")
     service_date_str_end := c.DefaultQuery("service_date_str_end", "")
-    browser_name := c.DefaultQuery("browser_name", "")
+    // browser_name := c.DefaultQuery("browser_name", "")
     uv_begin := c.DefaultQuery("uv_begin", "")
     uv_end := c.DefaultQuery("uv_end", "")
     // 搜索条件
@@ -64,9 +64,9 @@ func BrowserList(c *gin.Context){
         q = q.Must(newRangeQuery)
     }
     // browser_name 搜索
-    if browser_name != "" {
-        q = q.Must(elastic.NewTermQuery("browser_name", browser_name))
-    }
+    // if browser_name != "" {
+    //    q = q.Must(elastic.NewTermQuery("browser_name", browser_name))
+    // }
     // uv 范围搜索
     if uv_begin != "" || uv_end != "" {
         newRangeQuery := elastic.NewRangeQuery("uv")
@@ -91,11 +91,24 @@ func BrowserList(c *gin.Context){
         return
     }
     // 添加website_id 搜索条件
-    q = q.Must(elastic.NewTermQuery("website_id", chosen_website_id))
-    
+    website_id_param := c.DefaultQuery("website_id", "")
+    if website_id_param != "" {
+        q = q.Must(elastic.NewTermQuery("website_id", chosen_website_id))
+        
+    } else {
+        // 如果传递的request param website_id为空，则返回该用户所有的website_id
+        s := make([]interface{}, len(selectWebsiteIds))
+        for i, v := range selectWebsiteIds {
+            s[i] = v
+        }
+        q = q.Must(elastic.NewTermsQuery("website_id", s...))
+        // site的不同在于，是可以显示多个站点的数据，因此，没有传递request param website_id
+        // 则代表显示所有站点的数据。
+        chosen_website_id = ""
+    }
     // esIndexName := helper.GetEsIndexName(chosen_website_id)
-    esWholeBrowserTypeName :=  helper.GetEsWholeBrowserTypeName()
-    esIndexName := helper.GetEsIndexNameByType(esWholeBrowserTypeName)
+    esWholeAllTypeName :=  helper.GetEsWholeAllTypeName()
+    esIndexName := helper.GetEsIndexNameByType(esWholeAllTypeName)
     client, err := esdb.Client()
     if err != nil{
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
@@ -110,13 +123,13 @@ func BrowserList(c *gin.Context){
     //rangeQuery := NewRangeQuery("pv").Gt(3)
     log.Println(8888888888888)
     log.Println(esIndexName)
-    log.Println(esWholeBrowserTypeName)
+    log.Println(esWholeAllTypeName)
     log.Println(page-1)
     log.Println(limit)
     log.Println(sort)
     search := client.Search().
         Index(esIndexName).        // search in index "twitter"
-        Type(esWholeBrowserTypeName).
+        Type(esWholeAllTypeName).
         Query(q).
         From(page-1).Size(limit).
         Pretty(true)
@@ -131,7 +144,7 @@ func BrowserList(c *gin.Context){
     /*
     searchResult, err := client.Search().
         Index(esIndexName).        // search in index "twitter"
-        Type(esWholeBrowserTypeName).
+        Type(esWholeAllTypeName).
         Query(q).        // specify the query
         //Sort("user", true).      // sort by "user" field, ascending
         From(0).Size(10).        // take documents 0-9
@@ -145,20 +158,20 @@ func BrowserList(c *gin.Context){
     }
     
     
-    var ts []model.WholeBrowserValue
+    var ts []model.WholeAllValue
     if searchResult.Hits.TotalHits > 0 {
         // Iterate through results
         for _, hit := range searchResult.Hits.Hits {
             // hit.Index contains the name of the index
 
             // Deserialize hit.Source into a Tweet (could also be just a map[string]interface{}).
-            var wholeBrowser model.WholeBrowserValue
-            err := json.Unmarshal(*hit.Source, &wholeBrowser)
+            var wholeAll model.WholeAllValue
+            err := json.Unmarshal(*hit.Source, &wholeAll)
             if err != nil{
                 c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
                 return
             }
-            ts = append(ts, wholeBrowser)
+            ts = append(ts, wholeAll)
         }
     }
     ownNameOptions, err := getOwnNames(c, selectOwnIds)
@@ -171,6 +184,7 @@ func BrowserList(c *gin.Context){
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return
     }
+    
     // 生成返回结果
     result := util.BuildSuccessResult(gin.H{
         "success": "success",
@@ -189,12 +203,8 @@ func BrowserList(c *gin.Context){
 }
 
 // 得到 trend  info
-func BrowserTrendInfo(c *gin.Context){
-    browser_name := c.DefaultQuery("browser_name", "")
-    if browser_name == ""{
-        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("request get param browser_name can not empty"))
-        return
-    }
+func SiteTrendInfo(c *gin.Context){
+   
     service_date_str := c.DefaultQuery("service_date_str", "")
     if service_date_str == ""{
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("request get param service_date_str can not empty"))
@@ -214,8 +224,7 @@ func BrowserTrendInfo(c *gin.Context){
     log.Println(preMonthDateStr)
     log.Println(service_date_str)
     q = q.Must(newRangeQuery)
-    // 加入浏览器
-    q = q.Must(elastic.NewTermQuery("browser_name", browser_name))
+    
     website_id, err := GetReqWebsiteId(c)
     if err != nil{
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
@@ -223,8 +232,8 @@ func BrowserTrendInfo(c *gin.Context){
     }
     q = q.Must(elastic.NewTermQuery("website_id", website_id))
     // esIndexName := helper.GetEsIndexName(website_id)
-    esWholeBrowserTypeName :=  helper.GetEsWholeBrowserTypeName()
-    esIndexName := helper.GetEsIndexNameByType(esWholeBrowserTypeName)
+    esWholeAllTypeName :=  helper.GetEsWholeAllTypeName()
+    esIndexName := helper.GetEsIndexNameByType(esWholeAllTypeName)
     client, err := esdb.Client()
     if err != nil{
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
@@ -232,7 +241,7 @@ func BrowserTrendInfo(c *gin.Context){
     }
     search := client.Search().
         Index(esIndexName).        // search in index "twitter"
-        Type(esWholeBrowserTypeName).
+        Type(esWholeAllTypeName).
         Query(q).
         From(0).Size(9999).
         Pretty(true)
@@ -267,33 +276,33 @@ func BrowserTrendInfo(c *gin.Context){
             // hit.Index contains the name of the index
 
             // Deserialize hit.Source into a Tweet (could also be just a map[string]interface{}).
-            var wholeBrowser model.WholeBrowserValue
-            err := json.Unmarshal(*hit.Source, &wholeBrowser)
+            var wholeAll model.WholeAllValue
+            err := json.Unmarshal(*hit.Source, &wholeAll)
             if err != nil{
                 c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
                 return
             }
-            serviceDateStr := wholeBrowser.ServiceDateStr
+            serviceDateStr := wholeAll.ServiceDateStr
             // pvTrend
-            pvTrend[serviceDateStr] = wholeBrowser.Pv
+            pvTrend[serviceDateStr] = wholeAll.Pv
             // uvTrend
-            uvTrend[serviceDateStr] = wholeBrowser.Uv
+            uvTrend[serviceDateStr] = wholeAll.Uv
             // staySecondsTrend
-            staySecondsTrend[serviceDateStr] = wholeBrowser.StaySeconds
+            staySecondsTrend[serviceDateStr] = wholeAll.StaySeconds
             // staySecondsRateTrend
-            staySecondsRateTrend[serviceDateStr] = wholeBrowser.StaySecondsRate
-            PvRateTrend[serviceDateStr] = wholeBrowser.PvRate
-            JumpOutCountTrend[serviceDateStr] = wholeBrowser.JumpOutCount
-            DropOutCountTrend[serviceDateStr] = wholeBrowser.DropOutCount
-            JumpOutRateTrend[serviceDateStr] = wholeBrowser.JumpOutRate
-            DropOutRateTrend[serviceDateStr] = wholeBrowser.DropOutRate
-            CartCountTrend[serviceDateStr] = wholeBrowser.CartCount
-            OrderCountTrend[serviceDateStr] = wholeBrowser.OrderCount
-            SuccessOrderCountTrend[serviceDateStr] = wholeBrowser.SuccessOrderCount
-            SuccessOrderNoCountTrend[serviceDateStr] = wholeBrowser.SuccessOrderNoCount
-            IsReturnTrend[serviceDateStr] = wholeBrowser.IsReturn
-            IsReturnRateTrend[serviceDateStr] = wholeBrowser.IsReturnRate
-            SkuSaleRateTrend[serviceDateStr] = wholeBrowser.SkuSaleRate
+            staySecondsRateTrend[serviceDateStr] = wholeAll.StaySecondsRate
+            PvRateTrend[serviceDateStr] = wholeAll.PvRate
+            JumpOutCountTrend[serviceDateStr] = wholeAll.JumpOutCount
+            DropOutCountTrend[serviceDateStr] = wholeAll.DropOutCount
+            JumpOutRateTrend[serviceDateStr] = wholeAll.JumpOutRate
+            DropOutRateTrend[serviceDateStr] = wholeAll.DropOutRate
+            CartCountTrend[serviceDateStr] = wholeAll.CartCount
+            OrderCountTrend[serviceDateStr] = wholeAll.OrderCount
+            SuccessOrderCountTrend[serviceDateStr] = wholeAll.SuccessOrderCount
+            SuccessOrderNoCountTrend[serviceDateStr] = wholeAll.SuccessOrderNoCount
+            IsReturnTrend[serviceDateStr] = wholeAll.IsReturn
+            IsReturnRateTrend[serviceDateStr] = wholeAll.IsReturnRate
+            SkuSaleRateTrend[serviceDateStr] = wholeAll.SkuSaleRate
         }
     }
     // 生成返回结果

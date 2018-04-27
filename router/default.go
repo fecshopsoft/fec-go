@@ -181,7 +181,10 @@ func Listen(listenIp string) {
         // 得到 marketGroup 列表
         v1.GET("/common/website/jscode",         middleware.PermissionLoginToken, middleware.CommonAdminChildRole, commonHandler.WebsiteJsCode)
         
-        // #### Basestics
+        // #### Whole Site
+        v1.GET("/whole/site/list",              middleware.PermissionLoginToken, middleware.CommonAdminChildRole, wholeHandler.SiteList)
+        v1.GET("/whole/site/fetchtrendinfo",    middleware.PermissionLoginToken, middleware.CommonAdminChildRole, wholeHandler.SiteTrendInfo)
+        // #### Whole Browser
         v1.GET("/whole/browser/list",            middleware.PermissionLoginToken, middleware.CommonAdminChildRole, wholeHandler.BrowserList)
         v1.GET("/whole/browser/fetchtrendinfo",  middleware.PermissionLoginToken, middleware.CommonAdminChildRole, wholeHandler.BrowserTrendInfo)
        

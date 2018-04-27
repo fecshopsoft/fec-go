@@ -21,7 +21,7 @@ func AllMapReduct(dbName string, collName string, outCollName string, website_id
         function() {  
             // browser_name = this.browser_name ? this.browser_name : null;
             // login_email 	= this.login_email ? [this.login_email] : null;
-            
+            website_id = "` + website_id + `"
             stay_seconds = this.stay_seconds ? this.stay_seconds : 0;
             
             // 跳出个数和退出个数
@@ -190,7 +190,7 @@ func AllMapReduct(dbName string, collName string, outCollName string, website_id
             is_return = isNaN(is_return) ? 0 : is_return
             first_page = Number(first_page);
             first_page = isNaN(first_page) ? 0 : first_page
-            emit(service_date_str,{
+            emit(service_date_str+"_"+website_id,{
                 browser_name:browser_name,
                 pv:1,
                 uv:uv,

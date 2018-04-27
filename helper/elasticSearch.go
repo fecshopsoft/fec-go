@@ -9,6 +9,8 @@ var numberOfShards string   = "10"
 var numberOfReplicas string = "1"
 // 将mongodb数据同步到es，批量插入的数据条数
 var BulkSyncCount = 200
+// 在vue中趋势数据展示多少天的数据
+var TrendDays int64 = 30
 
 // 废弃：得到当前时间对应的 Es   的 Index Name
 func GetEsIndexName(websiteId string) (string){

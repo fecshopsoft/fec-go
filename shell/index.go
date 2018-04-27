@@ -13,7 +13,7 @@ func GoShell() {
     // 初始化ElasticSearch Mapping
     // InitElasticSearchMapping()
     // 开始计算
-    MapReductAndSyncDataToEs()
+    MapReductAndSyncDataToEsMutilDay()
 }
 
 

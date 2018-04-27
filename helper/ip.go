@@ -4,11 +4,14 @@ import (
     "github.com/oschwald/geoip2-golang"
     "log"
     "net"
-   
+    "errors"
 )
 
 
-func GetIpInfo(ipStr string) (string, string, string, string){
+func GetIpInfo(ipStr string) (string, string, string, string, error){
+    if ipStr == "" {
+        return "", "", "", "", errors.New("ip str is empty")
+    }
     ipDb, err := geoip2.Open("/www/test/ip/GeoLite2-City_20180327/GeoLite2-City.mmdb")
     if err != nil {
             log.Fatal(err)
@@ -19,8 +22,10 @@ func GetIpInfo(ipStr string) (string, string, string, string){
     record, err := ipDb.City(ip)
     if err != nil {
         log.Fatal(err)
+        return "", "", "", "", err
     }
-    return record.Country.IsoCode, record.Country.Names["en"], record.Subdivisions[0].Names["en"], record.City.Names["en"]
+    log.Println("Ip:"+ipStr)
+    return record.Country.IsoCode, record.Country.Names["en"], record.Subdivisions[0].Names["en"], record.City.Names["en"], nil
     /*
     fmt.Printf("Portuguese (BR) city name: %v\n", record.City.Names["en-US"])
     fmt.Printf("English subdivision name: %v\n", record.Subdivisions[0].Names["en"])

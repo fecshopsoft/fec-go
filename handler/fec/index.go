@@ -272,12 +272,16 @@ func SaveJsData(c *gin.Context){
     traceInfo.FecCurrency, _ = url.QueryUnescape(traceGetInfo.FecCurrency)
     
     ipStr := c.ClientIP()
-    countryCode, countryName, stateName, cityName := helper.GetIpInfo(ipStr) 
+    countryCode, countryName, stateName, cityName, err := helper.GetIpInfo(ipStr) 
+    if err == nil {
+        // 如果获取国家报错，仅仅丢弃这几个字段，其它的还是要接收
+        traceInfo.CountryCode = countryCode
+        traceInfo.CountryName = countryName
+        traceInfo.StateName   = stateName
+        traceInfo.CityName    = cityName
+    }
     traceInfo.Ip = ipStr
-    traceInfo.CountryCode = countryCode
-    traceInfo.CountryName = countryName
-    traceInfo.StateName   = stateName
-    traceInfo.CityName    = cityName
+    
     // 得到 dbName 和 collName
     dbName := helper.GetTraceDbName()
     collName := helper.GetTraceDataCollName(traceInfo.WebsiteId)

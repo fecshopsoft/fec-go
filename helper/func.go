@@ -127,8 +127,8 @@ func DateTimeUTCStr() string {
     
 }
 
-// 通过时间戳，得到字符串，如果传递的时间戳为0，则取当前时间
-// 时间格式为 Y-m-d 
+// 
+// 当前时间字符串时间格式，时间格式为 Y-m-d 
 func DateUTCStr() string {
     dateTimeStr := DateTimeUTCStr()
     return dateTimeStr[0:10]
@@ -160,11 +160,11 @@ func Int64(str string) (int64, error) {
     return 0, err
 }
 // 数字转换成字符串
-func str(c int) (string) {
+func Str(c int) (string) {
     return strconv.Itoa(c)
 }
 // 数字int64 转换成字符串
-func str64(c int64) (string) {
+func Str64(c int64) (string) {
     return strconv.Itoa(int(c))
 }
 

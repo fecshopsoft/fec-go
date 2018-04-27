@@ -19,6 +19,7 @@ func BrowserMapReduct(dbName string, collName string, outCollName string, websit
     var err error
     mapStr := `
         function() {  
+            website_id = "` + website_id + `"
             browser_name = this.browser_name ? this.browser_name : null;
             // login_email 	= this.login_email ? [this.login_email] : null;
             
@@ -125,7 +126,7 @@ func BrowserMapReduct(dbName string, collName string, outCollName string, websit
                 is_return = isNaN(is_return) ? 0 : is_return
                 first_page = Number(first_page);
                 first_page = isNaN(first_page) ? 0 : first_page
-                emit(this.browser_name+"_"+service_date_str,{
+                emit(this.browser_name+"_"+service_date_str+"_"+website_id,{
                     browser_name:browser_name,
                     pv:1,
                     uv:uv,

@@ -76,7 +76,6 @@ type WholeAllValue struct{
     DropOutRate float64 `form:"drop_out_rate" json:"drop_out_rate" bson:"drop_out_rate"`
     SkuSaleRate float64 `form:"sku_sale_rate" json:"sku_sale_rate" bson:"sku_sale_rate"`
     PvRate float64 `form:"pv_rate" json:"pv_rate" bson:"pv_rate"`
-    
     BrowserName map[string]int64 `form:"browser_name" json:"browser_name" bson:"browser_name"`
     
     IpCount int64 `form:"ip_count" json:"ip_count" bson:"ip_count"`
