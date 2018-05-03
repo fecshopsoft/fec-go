@@ -79,6 +79,15 @@ func AllMapReduct(dbName string, collName string, outCollName string, website_id
             }else{
                 operate = null;
             }
+            // fec_app
+            fec_app 		= this.fec_app ;
+            if(fec_app){
+                b= {};
+                b[fec_app] = 1;
+                fec_app 	= b;
+            }else{
+                fec_app = null;
+            }
             
             resolution 		= this.resolution ;
             if(resolution){
@@ -142,6 +151,7 @@ func AllMapReduct(dbName string, collName string, outCollName string, website_id
             
             cart_count = 0;
             order_count = 0;
+            order_no_count = 0;
             success_order_count = 0;
             success_order_no_count = 0;
             order_amount = 0;
@@ -159,13 +169,14 @@ func AllMapReduct(dbName string, collName string, outCollName string, website_id
                 }
             }
             
-            if(order && order['products']){
+            if(order && order['invoice'] && order['products']){
                 products = order['products'];
                 payment_status = order['payment_status'];
                 amount = order['amount'];
                 if(amount){
                     order_amount = amount;
                 }
+                order_no_count = 1;
                 if(payment_status == 'payment_confirmed'){
                     success_order_no_count = 1;
                     if(amount){
@@ -202,6 +213,7 @@ func AllMapReduct(dbName string, collName string, outCollName string, website_id
                 devide:devide,
                 country_code:country_code,
                 operate:operate,
+                fec_app:fec_app,
                 is_return: is_return,
                 first_page: first_page,
                 resolution:resolution,
@@ -213,6 +225,7 @@ func AllMapReduct(dbName string, collName string, outCollName string, website_id
                 order_count:order_count,
                 success_order_count:success_order_count,
                 success_order_no_count:success_order_no_count,
+                order_no_count:order_no_count,
                 order_amount:order_amount,
                 success_order_amount:success_order_amount,
                 category_count:category_count ,	
@@ -240,6 +253,7 @@ func AllMapReduct(dbName string, collName string, outCollName string, website_id
             this_country_code		= {};
             this_browser_name		= {};
             this_operate			= {};
+            this_fec_app      		= {};
             this_is_return			= 0;
             this_first_page			= 0;
             this_resolution			= {};
@@ -253,6 +267,7 @@ func AllMapReduct(dbName string, collName string, outCollName string, website_id
             this_order_amount			= 0;
             this_success_order_amount	= 0;
             this_success_order_no_count	= 0;
+            this_order_no_count	        = 0;
             this_category_count 		= 0;	
             this_product_count			= 0; 
             this_search_count			= 0;
@@ -329,6 +344,18 @@ func AllMapReduct(dbName string, collName string, outCollName string, website_id
                         }
                     }
                 }
+                if(emits[i].fec_app){
+                    fec_app = emits[i].fec_app;
+                    for(brower_ne in fec_app){
+                        
+                        count = fec_app[brower_ne];
+                        if(!this_fec_app[brower_ne]){
+                            this_fec_app[brower_ne] = count;
+                        }else{
+                            this_fec_app[brower_ne] += count;
+                        }
+                    }
+                }
                 if(emits[i].resolution){
                     resolution = emits[i].resolution;
                     for(brower_ne in resolution){
@@ -388,6 +415,9 @@ func AllMapReduct(dbName string, collName string, outCollName string, website_id
                 if(emits[i].success_order_no_count){
                     this_success_order_no_count 	+= emits[i].success_order_no_count;
                 }
+                if(emits[i].order_no_count){
+                    this_order_no_count += emits[i].order_no_count;
+                }
                 if(emits[i].is_return){
                     this_is_return 			+= emits[i].is_return;
                 }
@@ -417,6 +447,7 @@ func AllMapReduct(dbName string, collName string, outCollName string, website_id
                 country_code:this_country_code,
                 browser_name:this_browser_name,
                 operate:this_operate,
+                fec_app:this_fec_app,
                 is_return:this_is_return,
                 first_page:this_first_page,
                 resolution:this_resolution,
@@ -431,6 +462,7 @@ func AllMapReduct(dbName string, collName string, outCollName string, website_id
                 order_amount:this_order_amount,
                 success_order_amount:this_success_order_amount,
                 success_order_no_count:this_success_order_no_count,
+                order_no_count:this_order_no_count,
                 category_count:this_category_count ,	
                 product_count:this_product_count, 
                 search_count:this_search_count,
@@ -463,7 +495,17 @@ func AllMapReduct(dbName string, collName string, outCollName string, website_id
             }else{
                 this_sku_sale_rate = 0;
             }
-            
+            // 订单支付率
+            order_no_count = reducedVal.order_no_count;
+            if(order_no_count){
+                this_success_order_no_count = reducedVal.success_order_no_count;
+                this_order_payment_rate = this_success_order_no_count/order_no_count;
+                this_order_payment_rate = this_order_payment_rate*10000;
+                this_order_payment_rate = Math.ceil(this_order_payment_rate);
+                this_order_payment_rate = this_order_payment_rate/10000;
+            }else{
+                this_order_payment_rate = 0;
+            }
             // 跳出率
             if(uv){
                 this_jump_out_count = reducedVal.jump_out_count;
@@ -507,13 +549,13 @@ func AllMapReduct(dbName string, collName string, outCollName string, website_id
             }else{
                 stay_seconds_rate = 0;
             }
-            reducedVal.stay_seconds_rate = stay_seconds_rate;
-            reducedVal.jump_out_rate= this_jump_out_rate;
-            reducedVal.drop_out_rate= this_drop_out_rate;
-            reducedVal.sku_sale_rate= this_sku_sale_rate;
-            
-            reducedVal.pv_rate		= this_pv_rate;
-            reducedVal.website_id   = "` + website_id + `"
+            reducedVal.stay_seconds_rate    = stay_seconds_rate;
+            reducedVal.jump_out_rate        = this_jump_out_rate;
+            reducedVal.drop_out_rate        = this_drop_out_rate;
+            reducedVal.sku_sale_rate        = this_sku_sale_rate;
+            reducedVal.order_payment_rate   = this_order_payment_rate;
+            reducedVal.pv_rate		        = this_pv_rate;
+            reducedVal.website_id           = "` + website_id + `"
             return reducedVal;
         }
     `

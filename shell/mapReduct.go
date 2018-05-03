@@ -21,10 +21,13 @@ func MapReductAndSyncDataToEs(){
 
 // 计算数据，以及把数据同步到ES
 func MapReductAndSyncDataToEsMutilDay(){
-    day, err := helper.Int(os.Args[1])
-    if err != nil {
-        log.Println(err.Error())
-        return 
+    var day int
+    if len(os.Args) > 1 {
+        var err error
+        day, err = helper.Int(os.Args[1])
+        if err != nil {
+            log.Println(err.Error())
+        }
     }
     if day == 0 {
         day = 1
@@ -77,6 +80,19 @@ func mapReduceByDate(dateStr string) error{
             return err
         }
         
+        // 处理：Whole Refer
+        OutWholeReferCollName := helper.GetOutWholeReferCollName(websiteId)
+        err = whole.ReferMapReduct(dbName, collName, OutWholeReferCollName, websiteId)
+        if err != nil {
+            return err
+        }
+        
+        // 处理：Whole Country
+        OutWholeCountryCollName := helper.GetOutWholeCountryCollName(websiteId)
+        err = whole.CountryMapReduct(dbName, collName, OutWholeCountryCollName, websiteId)
+        if err != nil {
+            return err
+        }
     }
     return err
 

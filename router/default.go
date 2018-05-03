@@ -52,9 +52,6 @@ func Listen(listenIp string) {
     // ##：【customerHandler.PermissionRole】 验证用户是否有权限访问该资源
     v1 := r.Group("/v1")
     {
-        
-        
-        
         // #### customer login ####
         // 登录账户 - 权限：1,2,3
         v1.POST("/customer/account/login",  customerHandler.CustomerAccountLogin)
@@ -187,6 +184,12 @@ func Listen(listenIp string) {
         // #### Whole Browser
         v1.GET("/whole/browser/list",            middleware.PermissionLoginToken, middleware.CommonAdminChildRole, wholeHandler.BrowserList)
         v1.GET("/whole/browser/fetchtrendinfo",  middleware.PermissionLoginToken, middleware.CommonAdminChildRole, wholeHandler.BrowserTrendInfo)
+        // #### Whole Refer
+        v1.GET("/whole/refer/list",            middleware.PermissionLoginToken, middleware.CommonAdminChildRole, wholeHandler.ReferList)
+        v1.GET("/whole/refer/fetchtrendinfo",  middleware.PermissionLoginToken, middleware.CommonAdminChildRole, wholeHandler.ReferTrendInfo)
+        // #### Whole Country
+        v1.GET("/whole/country/list",            middleware.PermissionLoginToken, middleware.CommonAdminChildRole, wholeHandler.CountryList)
+        v1.GET("/whole/country/fetchtrendinfo",  middleware.PermissionLoginToken, middleware.CommonAdminChildRole, wholeHandler.CountryTrendInfo)
        
         
         

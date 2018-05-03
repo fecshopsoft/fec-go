@@ -15,12 +15,14 @@ import(
 )
 
 // 浏览器统计计算部分
-func BrowserMapReduct(dbName string, collName string, outCollName string, website_id string) error {
+func ReferMapReduct(dbName string, collName string, outCollName string, website_id string) error {
     var err error
+    
     mapStr := `
         function() {  
             website_id = "` + website_id + `";
-            browser_name = this.browser_name ? this.browser_name : null;
+            // browser_name = this.browser_name ? this.browser_name : null;
+            first_referrer_domain = this.first_referrer_domain ? this.first_referrer_domain : null;
             // login_email 	= this.login_email ? [this.login_email] : null;
             
             stay_seconds = this.stay_seconds ? this.stay_seconds : 0;
@@ -48,6 +50,15 @@ func BrowserMapReduct(dbName string, collName string, outCollName string, websit
                 devide 	= b;
             }else{
                 devide = null;
+            }
+            
+            browser_name 			= this.browser_name;
+            if(browser_name){
+                b= {};
+                b[browser_name] = 1;
+                browser_name 	= b;
+            }else{
+                browser_name = null;
             }
             
             // country_code
@@ -176,13 +187,14 @@ func BrowserMapReduct(dbName string, collName string, outCollName string, websit
                 }
             }
             
-            if(this.browser_name){
+            if(this.first_referrer_domain){
                 is_return = Number(is_return);
                 is_return = isNaN(is_return) ? 0 : is_return
                 first_page = Number(first_page);
                 first_page = isNaN(first_page) ? 0 : first_page
-                emit(this.browser_name+"_"+service_date_str+"_"+website_id,{
+                emit(this.first_referrer_domain+"_"+service_date_str+"_"+website_id,{
                     browser_name:browser_name,
+                    first_referrer_domain:first_referrer_domain,
                     pv:1,
                     uv:uv,
                     ip_count:ip_count,
@@ -201,6 +213,7 @@ func BrowserMapReduct(dbName string, collName string, outCollName string, websit
                     order_no_count:order_no_count,
                     order_amount:order_amount,
                     success_order_amount:success_order_amount,
+                    operate:operate,
                     operate:operate,
                     fec_app:fec_app,
                     resolution:resolution,
@@ -228,7 +241,8 @@ func BrowserMapReduct(dbName string, collName string, outCollName string, websit
             this_service_date_str 	= null;
             this_devide				= {};
             this_country_code		= {};
-            this_browser_name		= null;
+            this_browser_name		= {};
+            this_first_referrer_domain = null;
             this_operate			= {};
             this_fec_app      			= {};
             this_is_return			= 0;
@@ -245,7 +259,9 @@ func BrowserMapReduct(dbName string, collName string, outCollName string, websit
             this_order_no_count	= 0;
             
             for(var i in emits){
-                
+                if(emits[i].first_referrer_domain){
+                    this_first_referrer_domain = emits[i].first_referrer_domain;
+                }
                 if(emits[i].cart_count){
                     this_cart_count 			+= emits[i].cart_count;
                 }
@@ -267,9 +283,7 @@ func BrowserMapReduct(dbName string, collName string, outCollName string, websit
                 if(emits[i].success_order_amount){
                     this_success_order_amount 	+= emits[i].success_order_amount;
                 }
-                if(emits[i].browser_name){
-                    this_browser_name = emits[i].browser_name;
-                }
+                
                 if(emits[i].pv){
                     this_pv 			+= emits[i].pv;
                 }
@@ -323,6 +337,17 @@ func BrowserMapReduct(dbName string, collName string, outCollName string, websit
                     }
                 }
                 
+                if(emits[i].browser_name){
+                    browser_name = emits[i].browser_name;
+                    for(brower_ne in browser_name){
+                        count = browser_name[brower_ne];
+                        if(!this_browser_name[brower_ne]){
+                            this_browser_name[brower_ne] = count;
+                        }else{
+                            this_browser_name[brower_ne] += count;
+                        }
+                    }
+                }
                 if(emits[i].operate){
                     operate = emits[i].operate;
                     for(brower_ne in operate){
@@ -395,6 +420,7 @@ func BrowserMapReduct(dbName string, collName string, outCollName string, websit
             
             return {	
                 browser_name:this_browser_name,
+                first_referrer_domain:this_first_referrer_domain,
                 pv:this_pv,
                 uv:this_uv,
                 rate_pv:this_rate_pv,
@@ -535,17 +561,17 @@ func BrowserMapReduct(dbName string, collName string, outCollName string, websit
     }
     // 上面mongodb maoreduce处理完的数据，需要存储到es中
     // 得到 type 以及 index name
-    esWholeBrowserTypeName :=  helper.GetEsWholeBrowserTypeName()
-    esIndexName := helper.GetEsIndexNameByType(esWholeBrowserTypeName)
+    esWholeReferTypeName :=  helper.GetEsWholeReferTypeName()
+    esIndexName := helper.GetEsIndexNameByType(esWholeReferTypeName)
     // es index 的type mapping
-    esWholeBrowserTypeMapping := helper.GetEsWholeBrowserTypeMapping()
+    esWholeReferTypeMapping := helper.GetEsWholeReferTypeMapping()
     // 删除index，如果mapping建立的不正确，可以执行下面的语句删除重建mapping
     //err = esdb.DeleteIndex(esIndexName)
     //if err != nil {
     //    return err
     //}
     // 初始化mapping
-    err = esdb.InitMapping(esIndexName, esWholeBrowserTypeName, esWholeBrowserTypeMapping)
+    err = esdb.InitMapping(esIndexName, esWholeReferTypeName, esWholeReferTypeMapping)
     if err != nil {
         return err
     }
@@ -566,21 +592,21 @@ func BrowserMapReduct(dbName string, collName string, outCollName string, websit
     for i:=0; i<pageNum; i++ {
         err = mongodb.MDC(dbName, outCollName, func(coll *mgo.Collection) error {
             var err error
-            var wholeBrowsers []model.WholeBrowser
-            coll.Find(nil).Skip(i*pageNum).Limit(numPerPage).All(&wholeBrowsers)
-            log.Println("wholeBrowsers length:")
-            log.Println(len(wholeBrowsers))
+            var wholeRefers []model.WholeRefer
+            coll.Find(nil).Skip(i*pageNum).Limit(numPerPage).All(&wholeRefers)
+            log.Println("wholeRefers length:")
+            log.Println(len(wholeRefers))
             
             /* 这个代码是upsert单行数据
-            for j:=0; j<len(wholeBrowsers); j++ {
-                wholeBrowser := wholeBrowsers[j]
+            for j:=0; j<len(wholeRefers); j++ {
+                wholeBrowser := wholeRefers[j]
                 wholeBrowserValue := wholeBrowser.Value
                 // wholeBrowserValue.Devide = nil
                 // wholeBrowserValue.CountryCode = nil
                 ///wholeBrowserValue.Operate = nil
                 log.Println("ID_:" + wholeBrowser.Id_)
                 wholeBrowserValue.Id = wholeBrowser.Id_
-                err := esdb.UpsertType(esIndexName, esWholeBrowserTypeName, wholeBrowser.Id_, wholeBrowserValue)
+                err := esdb.UpsertType(esIndexName, esWholeReferTypeName, wholeBrowser.Id_, wholeBrowserValue)
                 
                 if err != nil {
                     log.Println("11111" + err.Error())
@@ -588,23 +614,23 @@ func BrowserMapReduct(dbName string, collName string, outCollName string, websit
                 }
             }
             */
-            if len(wholeBrowsers) > 0 {
+            if len(wholeRefers) > 0 {
                 // 使用bulk的方式，将数据批量插入到elasticSearch
                 bulkRequest, err := esdb.Bulk()
                 if err != nil {
                     log.Println("444" + err.Error())
                     return err
                 }
-                for j:=0; j<len(wholeBrowsers); j++ {
-                    wholeBrowser := wholeBrowsers[j]
-                    wholeBrowserValue := wholeBrowser.Value
-                    wholeBrowserValue.Id = wholeBrowser.Id_
+                for j:=0; j<len(wholeRefers); j++ {
+                    wholeRefer := wholeRefers[j]
+                    wholeReferValue := wholeRefer.Value
+                    wholeReferValue.Id = wholeRefer.Id_
                     log.Println("888")
                     log.Println(esIndexName)
-                    log.Println(esWholeBrowserTypeName)
-                    log.Println(wholeBrowser.Id_)
-                    log.Println(wholeBrowserValue)
-                    req := esdb.BulkUpsertTypeDoc(esIndexName, esWholeBrowserTypeName, wholeBrowser.Id_, wholeBrowserValue)
+                    log.Println(esWholeReferTypeName)
+                    log.Println(wholeRefer.Id_)
+                    log.Println(wholeReferValue)
+                    req := esdb.BulkUpsertTypeDoc(esIndexName, esWholeReferTypeName, wholeRefer.Id_, wholeReferValue)
                     bulkRequest = bulkRequest.Add(req)
                 }
                 bulkResponse, err := esdb.BulkRequestDo(bulkRequest)

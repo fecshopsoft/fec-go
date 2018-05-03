@@ -44,9 +44,15 @@ func GetOutWholeAllCollName(websiteId string) (string){
     return GetCollName("trace_whole_all_data", websiteId)
 }
 
+// 得到Refer统计后的数据输出的collection
+func GetOutWholeReferCollName(websiteId string) (string){
+    return GetCollName("trace_whole_refer_data", websiteId)
+}
 
-
-
+// 得到 country 统计后的数据输出的collection
+func GetOutWholeCountryCollName(websiteId string) (string){
+    return GetCollName("trace_whole_country_data", websiteId)
+}
 
 
 

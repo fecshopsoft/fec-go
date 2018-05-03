@@ -48,6 +48,7 @@ func GetEsWholeBrowserTypeMapping() (string){
                 "browser_name":     {"type":"keyword"},
                 "pv":               {"type":"integer"},
                 "uv":               {"type":"integer"},
+                "ip_count":         {"type":"integer"},
                 "jump_out_count":   {"type":"integer"},
                 "drop_out_count":   {"type":"integer"},
                 "stay_seconds":     {"type":"integer"},
@@ -63,7 +64,9 @@ func GetEsWholeBrowserTypeMapping() (string){
                 "cart_count":               {"type":"integer"},
                 "order_count":              {"type":"integer"},
                 "success_order_count":      {"type":"integer"},
-                "success_order_no_count":   {"type":"integer"}
+                "success_order_no_count":   {"type":"integer"},
+                "order_amount":             {"type":"float"},
+                "success_order_amount":     {"type":"float"}
             }
         }
 	}`
@@ -138,12 +141,12 @@ func GetEsWholeAllTypeMapping() (string){
                 "order_count":              {"type":"integer"},
                 "success_order_count":      {"type":"integer"},
                 "success_order_no_count":   {"type":"integer"},
+                "order_amount":         {"type":"float"},
+                "success_order_amount": {"type":"float"},
                 
                 "ip_count":             {"type":"integer"},
                 "login_email_count":    {"type":"integer"},
                 "register_email_count": {"type":"integer"},
-                "order_amount":         {"type":"float"},
-                "success_order_amount": {"type":"float"},
                 "category_count":       {"type":"integer"},
                 "product_count":        {"type":"integer"},
                 "search_count":         {"type":"integer"}
@@ -153,10 +156,84 @@ func GetEsWholeAllTypeMapping() (string){
 }
 
 
+// Whole Refer Type Name
+func GetEsWholeReferTypeName() (string){
+    return "whole_refer_data"
+}
+// Whole Refer Type Mapping
+func GetEsWholeReferTypeMapping() (string){
+    return `{
+		"whole_refer_data":{
+            "properties":{
+                "id":               {"type":"keyword"},
+                "website_id":       {"type":"keyword"},
+                "first_referrer_domain":     {"type":"keyword"},
+                "pv":               {"type":"integer"},
+                "uv":               {"type":"integer"},
+                "ip_count":         {"type":"integer"},
+                "jump_out_count":   {"type":"integer"},
+                "drop_out_count":   {"type":"integer"},
+                "stay_seconds":     {"type":"integer"},
+                "is_return":        {"type":"integer"},
+                "first_page":       {"type":"integer"},
+                "service_date_str": {"type":"date"},
+                "stay_seconds_rate":{"type":"float"},
+                "jump_out_rate":    {"type":"float"},
+                "drop_out_rate":    {"type":"float"},
+                "is_return_rate":   {"type":"float"},
+                "pv_rate":          {"type":"float"},
+                "sku_sale_rate":    {"type":"float"},
+                "cart_count":               {"type":"integer"},
+                "order_count":              {"type":"integer"},
+                "success_order_count":      {"type":"integer"},
+                "success_order_no_count":   {"type":"integer"},
+                "order_amount":             {"type":"float"},
+                "success_order_amount":     {"type":"float"}
+            }
+        }
+	}`
+}
 
 
 
-
+// Whole Refer Type Name
+func GetEsWholeCountryTypeName() (string){
+    return "whole_country_data"
+}
+// Whole Country Type Mapping
+func GetEsWholeCountryTypeMapping() (string){
+    return `{
+		"whole_country_data":{
+            "properties":{
+                "id":               {"type":"keyword"},
+                "website_id":       {"type":"keyword"},
+                "country_code":     {"type":"keyword"},
+                "country_name":     {"type":"keyword"},
+                "pv":               {"type":"integer"},
+                "uv":               {"type":"integer"},
+                "ip_count":         {"type":"integer"},
+                "jump_out_count":   {"type":"integer"},
+                "drop_out_count":   {"type":"integer"},
+                "stay_seconds":     {"type":"integer"},
+                "is_return":        {"type":"integer"},
+                "first_page":       {"type":"integer"},
+                "service_date_str": {"type":"date"},
+                "stay_seconds_rate":{"type":"float"},
+                "jump_out_rate":    {"type":"float"},
+                "drop_out_rate":    {"type":"float"},
+                "is_return_rate":   {"type":"float"},
+                "pv_rate":          {"type":"float"},
+                "sku_sale_rate":    {"type":"float"},
+                "cart_count":               {"type":"integer"},
+                "order_count":              {"type":"integer"},
+                "success_order_count":      {"type":"integer"},
+                "success_order_no_count":   {"type":"integer"},
+                "order_amount":             {"type":"float"},
+                "success_order_amount":     {"type":"float"}
+            }
+        }
+	}`
+}
 
 
 

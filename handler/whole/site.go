@@ -255,6 +255,7 @@ func SiteTrendInfo(c *gin.Context){
     
     pvTrend := make(map[string]int64)
     uvTrend := make(map[string]int64)
+    ipCountTrend := make(map[string]int64)
     staySecondsTrend := make(map[string]float64)
     staySecondsRateTrend := make(map[string]float64)
     PvRateTrend := make(map[string]float64)
@@ -266,6 +267,12 @@ func SiteTrendInfo(c *gin.Context){
     OrderCountTrend := make(map[string]int64)
     SuccessOrderCountTrend := make(map[string]int64)
     SuccessOrderNoCountTrend := make(map[string]int64)
+    OrderNoCountTrend := make(map[string]int64)
+    OrderPaymentRateTrend := make(map[string]float64)
+    
+    OrderAmountTrend := make(map[string]float64)
+    SuccessOrderAmountTrend := make(map[string]float64)
+    
     IsReturnTrend := make(map[string]int64)
     IsReturnRateTrend := make(map[string]float64)
     SkuSaleRateTrend := make(map[string]float64)
@@ -287,6 +294,8 @@ func SiteTrendInfo(c *gin.Context){
             pvTrend[serviceDateStr] = wholeAll.Pv
             // uvTrend
             uvTrend[serviceDateStr] = wholeAll.Uv
+            ipCountTrend[serviceDateStr] = wholeAll.IpCount
+            
             // staySecondsTrend
             staySecondsTrend[serviceDateStr] = wholeAll.StaySeconds
             // staySecondsRateTrend
@@ -300,6 +309,12 @@ func SiteTrendInfo(c *gin.Context){
             OrderCountTrend[serviceDateStr] = wholeAll.OrderCount
             SuccessOrderCountTrend[serviceDateStr] = wholeAll.SuccessOrderCount
             SuccessOrderNoCountTrend[serviceDateStr] = wholeAll.SuccessOrderNoCount
+            OrderNoCountTrend[serviceDateStr] = wholeAll.OrderNoCount
+            OrderPaymentRateTrend[serviceDateStr] = wholeAll.OrderPaymentRate
+            
+            OrderAmountTrend[serviceDateStr] = wholeAll.OrderAmount
+            SuccessOrderAmountTrend[serviceDateStr] = wholeAll.SuccessOrderAmount
+            
             IsReturnTrend[serviceDateStr] = wholeAll.IsReturn
             IsReturnRateTrend[serviceDateStr] = wholeAll.IsReturnRate
             SkuSaleRateTrend[serviceDateStr] = wholeAll.SkuSaleRate
@@ -311,6 +326,7 @@ func SiteTrendInfo(c *gin.Context){
         "trend": gin.H{
             "pv": pvTrend,
             "uv": uvTrend,
+            "ip_count": ipCountTrend,
             "stay_seconds": staySecondsTrend,
             "stay_seconds_rate": staySecondsRateTrend,
             "pv_rate": PvRateTrend,
@@ -322,6 +338,11 @@ func SiteTrendInfo(c *gin.Context){
             "order_count": OrderCountTrend,
             "success_order_count": SuccessOrderCountTrend,
             "success_order_no_count": SuccessOrderNoCountTrend,
+            "order_no_count": OrderNoCountTrend,
+            "order_payment_rate": OrderPaymentRateTrend,
+            "order_amount": OrderAmountTrend,
+            "success_order_amount": SuccessOrderAmountTrend,
+            
             "is_return": IsReturnTrend,
             "is_return_rate": IsReturnRateTrend,
             "sku_sale_rate": SkuSaleRateTrend,

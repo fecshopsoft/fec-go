@@ -35,7 +35,7 @@ import(
  *   websiteIds 和 选择的websiteId 发送给vue。vue进行刷新
  */
 
-func BrowserList(c *gin.Context){
+func ReferList(c *gin.Context){
     
     defaultPageNum:= c.GetString("defaultPageNum")
     defaultPageCount := c.GetString("defaultPageCount")
@@ -47,7 +47,7 @@ func BrowserList(c *gin.Context){
     
     service_date_str_begin := c.DefaultQuery("service_date_str_begin", "")
     service_date_str_end := c.DefaultQuery("service_date_str_end", "")
-    browser_name := c.DefaultQuery("browser_name", "")
+    first_referrer_domain := c.DefaultQuery("first_referrer_domain", "")
     uv_begin := c.DefaultQuery("uv_begin", "")
     uv_end := c.DefaultQuery("uv_end", "")
     // 搜索条件
@@ -63,9 +63,9 @@ func BrowserList(c *gin.Context){
         }
         q = q.Must(newRangeQuery)
     }
-    // browser_name 搜索
-    if browser_name != "" {
-        q = q.Must(elastic.NewTermQuery("browser_name", browser_name))
+    // first_referrer_domain 搜索
+    if first_referrer_domain != "" {
+        q = q.Must(elastic.NewTermQuery("first_referrer_domain", first_referrer_domain))
     }
     // uv 范围搜索
     if uv_begin != "" || uv_end != "" {
@@ -94,29 +94,29 @@ func BrowserList(c *gin.Context){
     q = q.Must(elastic.NewTermQuery("website_id", chosen_website_id))
     
     // esIndexName := helper.GetEsIndexName(chosen_website_id)
-    esWholeBrowserTypeName :=  helper.GetEsWholeBrowserTypeName()
-    esIndexName := helper.GetEsIndexNameByType(esWholeBrowserTypeName)
+    esWholeReferTypeName :=  helper.GetEsWholeReferTypeName()
+    esIndexName := helper.GetEsIndexNameByType(esWholeReferTypeName)
     client, err := esdb.Client()
     if err != nil{
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return
     }
     
-    // q = q.Must(elastic.NewTermQuery("browser_name", "Safari"))
+    // q = q.Must(elastic.NewTermQuery("first_referrer_domain", "Safari"))
     // q = q.Must(elastic.NewRangeQuery("pv").From(3).To(60))
     // q = q.Must(elastic.NewRangeQuery("service_date_str").Gt("2018-04-20").Lt("2018-04-21"))
-    //termQuery := elastic.NewTermQuery("browser_name", "Safari")
-    // termQuery := elastic.NewRangeQuery("browser_name", "Safari")
+    //termQuery := elastic.NewTermQuery("first_referrer_domain", "Safari")
+    // termQuery := elastic.NewRangeQuery("first_referrer_domain", "Safari")
     //rangeQuery := NewRangeQuery("pv").Gt(3)
     log.Println(8888888888888)
     log.Println(esIndexName)
-    log.Println(esWholeBrowserTypeName)
+    log.Println(esWholeReferTypeName)
     log.Println(page-1)
     log.Println(limit)
     log.Println(sort)
     search := client.Search().
         Index(esIndexName).        // search in index "twitter"
-        Type(esWholeBrowserTypeName).
+        Type(esWholeReferTypeName).
         Query(q).
         From(page-1).Size(limit).
         Pretty(true)
@@ -131,7 +131,7 @@ func BrowserList(c *gin.Context){
     /*
     searchResult, err := client.Search().
         Index(esIndexName).        // search in index "twitter"
-        Type(esWholeBrowserTypeName).
+        Type(esWholeReferTypeName).
         Query(q).        // specify the query
         //Sort("user", true).      // sort by "user" field, ascending
         From(0).Size(10).        // take documents 0-9
@@ -144,21 +144,20 @@ func BrowserList(c *gin.Context){
         return
     }
     
-    
-    var ts []model.WholeBrowserValue
+    var ts []model.WholeReferValue
     if searchResult.Hits.TotalHits > 0 {
         // Iterate through results
         for _, hit := range searchResult.Hits.Hits {
             // hit.Index contains the name of the index
 
             // Deserialize hit.Source into a Tweet (could also be just a map[string]interface{}).
-            var wholeBrowser model.WholeBrowserValue
-            err := json.Unmarshal(*hit.Source, &wholeBrowser)
+            var wholeRefer model.WholeReferValue
+            err := json.Unmarshal(*hit.Source, &wholeRefer)
             if err != nil{
                 c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
                 return
             }
-            ts = append(ts, wholeBrowser)
+            ts = append(ts, wholeRefer)
         }
     }
     ownNameOptions, err := getOwnNames(c, selectOwnIds)
@@ -189,10 +188,10 @@ func BrowserList(c *gin.Context){
 }
 
 // 得到 trend  info
-func BrowserTrendInfo(c *gin.Context){
-    browser_name := c.DefaultQuery("browser_name", "")
-    if browser_name == ""{
-        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("request get param browser_name can not empty"))
+func ReferTrendInfo(c *gin.Context){
+    first_referrer_domain := c.DefaultQuery("first_referrer_domain", "")
+    if first_referrer_domain == ""{
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("request get param first_referrer_domain can not empty"))
         return
     }
     service_date_str := c.DefaultQuery("service_date_str", "")
@@ -214,8 +213,8 @@ func BrowserTrendInfo(c *gin.Context){
     log.Println(preMonthDateStr)
     log.Println(service_date_str)
     q = q.Must(newRangeQuery)
-    // 加入浏览器
-    q = q.Must(elastic.NewTermQuery("browser_name", browser_name))
+    // 加入Refer
+    q = q.Must(elastic.NewTermQuery("first_referrer_domain", first_referrer_domain))
     website_id, err := GetReqWebsiteId(c)
     if err != nil{
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
@@ -223,8 +222,8 @@ func BrowserTrendInfo(c *gin.Context){
     }
     q = q.Must(elastic.NewTermQuery("website_id", website_id))
     // esIndexName := helper.GetEsIndexName(website_id)
-    esWholeBrowserTypeName :=  helper.GetEsWholeBrowserTypeName()
-    esIndexName := helper.GetEsIndexNameByType(esWholeBrowserTypeName)
+    esWholeReferTypeName :=  helper.GetEsWholeReferTypeName()
+    esIndexName := helper.GetEsIndexNameByType(esWholeReferTypeName)
     client, err := esdb.Client()
     if err != nil{
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
@@ -232,7 +231,7 @@ func BrowserTrendInfo(c *gin.Context){
     }
     search := client.Search().
         Index(esIndexName).        // search in index "twitter"
-        Type(esWholeBrowserTypeName).
+        Type(esWholeReferTypeName).
         Query(q).
         From(0).Size(9999).
         Pretty(true)
@@ -275,39 +274,39 @@ func BrowserTrendInfo(c *gin.Context){
             // hit.Index contains the name of the index
 
             // Deserialize hit.Source into a Tweet (could also be just a map[string]interface{}).
-            var wholeBrowser model.WholeBrowserValue
-            err := json.Unmarshal(*hit.Source, &wholeBrowser)
+            var wholeRefer model.WholeReferValue
+            err := json.Unmarshal(*hit.Source, &wholeRefer)
             if err != nil{
                 c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
                 return
             }
-            serviceDateStr := wholeBrowser.ServiceDateStr
+            serviceDateStr := wholeRefer.ServiceDateStr
             // pvTrend
-            pvTrend[serviceDateStr] = wholeBrowser.Pv
+            pvTrend[serviceDateStr] = wholeRefer.Pv
             // uvTrend
-            uvTrend[serviceDateStr] = wholeBrowser.Uv
-            ipCountTrend[serviceDateStr] = wholeBrowser.IpCount
+            uvTrend[serviceDateStr] = wholeRefer.Uv
+            ipCountTrend[serviceDateStr] = wholeRefer.IpCount
             // staySecondsTrend
-            staySecondsTrend[serviceDateStr] = wholeBrowser.StaySeconds
+            staySecondsTrend[serviceDateStr] = wholeRefer.StaySeconds
             // staySecondsRateTrend
-            staySecondsRateTrend[serviceDateStr] = wholeBrowser.StaySecondsRate
-            PvRateTrend[serviceDateStr] = wholeBrowser.PvRate
-            JumpOutCountTrend[serviceDateStr] = wholeBrowser.JumpOutCount
-            DropOutCountTrend[serviceDateStr] = wholeBrowser.DropOutCount
-            JumpOutRateTrend[serviceDateStr] = wholeBrowser.JumpOutRate
-            DropOutRateTrend[serviceDateStr] = wholeBrowser.DropOutRate
-            CartCountTrend[serviceDateStr] = wholeBrowser.CartCount
-            OrderCountTrend[serviceDateStr] = wholeBrowser.OrderCount
-            SuccessOrderCountTrend[serviceDateStr] = wholeBrowser.SuccessOrderCount
-            SuccessOrderNoCountTrend[serviceDateStr] = wholeBrowser.SuccessOrderNoCount
-            OrderNoCountTrend[serviceDateStr] = wholeBrowser.OrderNoCount
-            OrderPaymentRateTrend[serviceDateStr] = wholeBrowser.OrderPaymentRate
-            OrderAmountTrend[serviceDateStr] = wholeBrowser.OrderAmount
-            SuccessOrderAmountTrend[serviceDateStr] = wholeBrowser.SuccessOrderAmount
+            staySecondsRateTrend[serviceDateStr] = wholeRefer.StaySecondsRate
+            PvRateTrend[serviceDateStr] = wholeRefer.PvRate
+            JumpOutCountTrend[serviceDateStr] = wholeRefer.JumpOutCount
+            DropOutCountTrend[serviceDateStr] = wholeRefer.DropOutCount
+            JumpOutRateTrend[serviceDateStr] = wholeRefer.JumpOutRate
+            DropOutRateTrend[serviceDateStr] = wholeRefer.DropOutRate
+            CartCountTrend[serviceDateStr] = wholeRefer.CartCount
+            OrderCountTrend[serviceDateStr] = wholeRefer.OrderCount
+            SuccessOrderCountTrend[serviceDateStr] = wholeRefer.SuccessOrderCount
+            SuccessOrderNoCountTrend[serviceDateStr] = wholeRefer.SuccessOrderNoCount
+            OrderNoCountTrend[serviceDateStr] = wholeRefer.OrderNoCount
+            OrderPaymentRateTrend[serviceDateStr] = wholeRefer.OrderPaymentRate
+            OrderAmountTrend[serviceDateStr] = wholeRefer.OrderAmount
+            SuccessOrderAmountTrend[serviceDateStr] = wholeRefer.SuccessOrderAmount
             
-            IsReturnTrend[serviceDateStr] = wholeBrowser.IsReturn
-            IsReturnRateTrend[serviceDateStr] = wholeBrowser.IsReturnRate
-            SkuSaleRateTrend[serviceDateStr] = wholeBrowser.SkuSaleRate
+            IsReturnTrend[serviceDateStr] = wholeRefer.IsReturn
+            IsReturnRateTrend[serviceDateStr] = wholeRefer.IsReturnRate
+            SkuSaleRateTrend[serviceDateStr] = wholeRefer.SkuSaleRate
         }
     }
     // 生成返回结果
