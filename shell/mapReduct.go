@@ -93,6 +93,31 @@ func mapReduceByDate(dateStr string) error{
         if err != nil {
             return err
         }
+        
+        // 处理：Whole Devide
+        OutWholeDevideCollName := helper.GetOutWholeDevideCollName(websiteId)
+        err = whole.DevideMapReduct(dbName, collName, OutWholeDevideCollName, websiteId)
+        if err != nil {
+            return err
+        }
+        
+        // 处理：Whole Sku
+        OutWholeSkuCollName := helper.GetOutWholeSkuCollName(websiteId)
+        err = whole.SkuMapReduct(dbName, collName, OutWholeSkuCollName, websiteId)
+        if err != nil {
+            return err
+        }
+        
+        // 处理：Whole Sku Refer
+        OutWholeSkuReferCollName := helper.GetOutWholeSkuReferCollName(websiteId)
+        err = whole.SkuReferMapReduct(dbName, collName, OutWholeSkuReferCollName, websiteId)
+        if err != nil {
+            return err
+        }
+        
+        
+        
+        
     }
     return err
 

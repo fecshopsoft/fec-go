@@ -1,7 +1,7 @@
 package helper
 
 import(
-    "regexp"
+    // "regexp"
     "net/url"
     "time"
     "strconv"
@@ -51,8 +51,16 @@ func SliceInt64Unique(slc []int64) []int64 {
 
 
 func IsValidDomain(domain string) bool {
-    RegExp := regexp.MustCompile(`^(([a-zA-Z]{1})|([a-zA-Z]{1}[a-zA-Z]{1})|([a-zA-Z]{1}[0-9]{1})|([0-9]{1}[a-zA-Z]{1})|([a-zA-Z0-9][a-zA-Z0-9-_]{1,61}[a-zA-Z0-9]))\.([a-zA-Z]{2,6}|[a-zA-Z0-9-]{2,30}\.[a-zA-Z]{2,3})$`)
-    return RegExp.MatchString(domain)
+    // RegExp := regexp.MustCompile(`^(([a-zA-Z]{1})|([a-zA-Z]{1}[a-zA-Z]{1})|([a-zA-Z]{1}[0-9]{1})|([0-9]{1}[a-zA-Z]{1})|([a-zA-Z0-9][a-zA-Z0-9-_]{1,61}[a-zA-Z0-9]))\.([a-zA-Z]{2,6}|[a-zA-Z0-9-]{2,30}\.[a-zA-Z]{2,3})$`)
+    // return RegExp.MatchString(domain)
+    return true
+    /*
+    _, err := url.ParseRequestURI("http://"+domain)
+    if err == nil {
+       return true
+    }
+    return false
+    */
 }
 
 

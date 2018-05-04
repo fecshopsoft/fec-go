@@ -190,6 +190,15 @@ func Listen(listenIp string) {
         // #### Whole Country
         v1.GET("/whole/country/list",            middleware.PermissionLoginToken, middleware.CommonAdminChildRole, wholeHandler.CountryList)
         v1.GET("/whole/country/fetchtrendinfo",  middleware.PermissionLoginToken, middleware.CommonAdminChildRole, wholeHandler.CountryTrendInfo)
+        // #### Whole Devide
+        v1.GET("/whole/devide/list",            middleware.PermissionLoginToken, middleware.CommonAdminChildRole, wholeHandler.DevideList)
+        v1.GET("/whole/devide/fetchtrendinfo",  middleware.PermissionLoginToken, middleware.CommonAdminChildRole, wholeHandler.DevideTrendInfo)
+        // #### Whole Sku
+        v1.GET("/whole/sku/list",            middleware.PermissionLoginToken, middleware.CommonAdminChildRole, wholeHandler.SkuList)
+        v1.GET("/whole/sku/fetchtrendinfo",  middleware.PermissionLoginToken, middleware.CommonAdminChildRole, wholeHandler.SkuTrendInfo)
+        // #### Whole Sku Refer
+        v1.GET("/whole/skurefer/list",            middleware.PermissionLoginToken, middleware.CommonAdminChildRole, wholeHandler.SkuReferList)
+        v1.GET("/whole/skurefer/fetchtrendinfo",  middleware.PermissionLoginToken, middleware.CommonAdminChildRole, wholeHandler.SkuReferTrendInfo)
        
         
         

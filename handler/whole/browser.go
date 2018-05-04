@@ -118,7 +118,7 @@ func BrowserList(c *gin.Context){
         Index(esIndexName).        // search in index "twitter"
         Type(esWholeBrowserTypeName).
         Query(q).
-        From(page-1).Size(limit).
+        From((page-1)*limit).Size(limit).
         Pretty(true)
     if sort != "" {
         if sort_dir == "ascending" {

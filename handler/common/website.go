@@ -31,6 +31,7 @@ type WebsiteInfo struct {
     
     PaymentEndTime int64 `xorm:"payment_end_time" form:"payment_end_time" json:"payment_end_time"`
     WebsiteDayMaxCount int64 `xorm:"website_day_max_count" form:"website_day_max_count" json:"website_day_max_count"`
+    SkuImageApiUrl string `form:"sku_image_api_url" json:"sku_image_api_url" binding:"required"`
     
 }
 
@@ -53,6 +54,11 @@ func WebsiteAddOne(c *gin.Context){
     domain := websiteInfo.Domain
     if helper.IsValidDomain(domain) == false {
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("domain [right format is: www.fecshop.com] is not a domain format, "))
+        return
+    }
+    SkuImageApiUrl := websiteInfo.SkuImageApiUrl
+    if helper.IsValidDomain(SkuImageApiUrl) == false {
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("SkuImageApiUrl [right format is: www.fecshop.com] is not a url format, "))
         return
     }
     // 处理own_id
@@ -123,6 +129,11 @@ func WebsiteUpdateById(c *gin.Context){
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("domain [right format is: www.fecshop.com] is not a domain format, "))
         return
     }
+    SkuImageApiUrl := websiteInfo.SkuImageApiUrl
+    if helper.IsValidDomain(SkuImageApiUrl) == false {
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("SkuImageApiUrl [right format is: www.fecshop.com] is not a url format, "))
+        return
+    }
     // 处理own_id
     own_id, err := customer.Get3SaveDataOwnId(c, websiteInfo.OwnId)
     if err != nil {
@@ -130,7 +141,7 @@ func WebsiteUpdateById(c *gin.Context){
         return
     }
     websiteInfo.OwnId = own_id
-    cols := "site_name,domain,trace_js_url,status,own_id,updated_at"
+    cols := "site_name,domain,sku_image_api_url,trace_js_url,status,own_id,updated_at"
     // 处理   PaymentEndTime WebsiteDayMaxCount, 如果是超级用户，才可以修改这个字段
     if helper.IsSuperAdmin(c) == true {
         cols += ",payment_end_time,website_day_max_count"

@@ -14,16 +14,14 @@ import(
     
 )
 
-// Refer统计计算部分
-func ReferMapReduct(dbName string, collName string, outCollName string, website_id string) error {
+// Devide统计计算部分
+func DevideMapReduct(dbName string, collName string, outCollName string, website_id string) error {
     var err error
     
     mapStr := `
         function() {  
             website_id = "` + website_id + `";
-            // browser_name = this.browser_name ? this.browser_name : null;
-            first_referrer_domain = this.first_referrer_domain ? this.first_referrer_domain : null;
-            // login_email 	= this.login_email ? [this.login_email] : null;
+            devide = this.devide ? this.devide : null;
             
             stay_seconds = this.stay_seconds ? this.stay_seconds : 0;
             
@@ -41,15 +39,6 @@ func ReferMapReduct(dbName string, collName string, outCollName string, website_
                 }
             }else{
                 rate_pv = 1;
-            }
-            
-            devide 			= this.devide;
-            if(devide){
-                b= {};
-                b[devide] = 1;
-                devide 	= b;
-            }else{
-                devide = null;
             }
             
             browser_name 			= this.browser_name;
@@ -187,14 +176,14 @@ func ReferMapReduct(dbName string, collName string, outCollName string, website_
                 }
             }
             
-            if(this.first_referrer_domain){
+            if(this.devide){
                 is_return = Number(is_return);
                 is_return = isNaN(is_return) ? 0 : is_return
                 first_page = Number(first_page);
                 first_page = isNaN(first_page) ? 0 : first_page
-                emit(this.first_referrer_domain+"_"+service_date_str+"_"+website_id,{
+                emit(this.devide+"_"+service_date_str+"_"+website_id,{
                     browser_name:browser_name,
-                    first_referrer_domain:first_referrer_domain,
+                    devide:devide,
                     pv:1,
                     uv:uv,
                     ip_count:ip_count,
@@ -203,7 +192,6 @@ func ReferMapReduct(dbName string, collName string, outCollName string, website_
                     //customer_id:customer_id,
                     jump_out_count:jump_out_count,
                     drop_out_count:drop_out_count,
-                    devide:devide,
                     country_code:country_code,
                     
                     cart_count:cart_count,
@@ -213,6 +201,7 @@ func ReferMapReduct(dbName string, collName string, outCollName string, website_
                     order_no_count:order_no_count,
                     order_amount:order_amount,
                     success_order_amount:success_order_amount,
+                    operate:operate,
                     operate:operate,
                     fec_app:fec_app,
                     resolution:resolution,
@@ -238,10 +227,9 @@ func ReferMapReduct(dbName string, collName string, outCollName string, website_
             this_jump_out_count		= 0;
             this_drop_out_count		= 0 ;
             this_service_date_str 	= null;
-            this_devide				= {};
             this_country_code		= {};
             this_browser_name		= {};
-            this_first_referrer_domain = null;
+            this_devide             = null;
             this_operate			= {};
             this_fec_app      			= {};
             this_is_return			= 0;
@@ -258,8 +246,8 @@ func ReferMapReduct(dbName string, collName string, outCollName string, website_
             this_order_no_count	= 0;
             
             for(var i in emits){
-                if(emits[i].first_referrer_domain){
-                    this_first_referrer_domain = emits[i].first_referrer_domain;
+                if(emits[i].devide){
+                    this_devide = emits[i].devide;
                 }
                 if(emits[i].cart_count){
                     this_cart_count 			+= emits[i].cart_count;
@@ -308,19 +296,6 @@ func ReferMapReduct(dbName string, collName string, outCollName string, website_
                 
                 if(emits[i].rate_pv){
                     this_rate_pv 		+= emits[i].rate_pv;
-                }
-                
-                if(emits[i].devide){
-                    devide = emits[i].devide;
-                    for(brower_ne in devide){
-                        
-                        count = devide[brower_ne];
-                        if(!this_devide[brower_ne]){
-                            this_devide[brower_ne] = count;
-                        }else{
-                            this_devide[brower_ne] += count;
-                        }
-                    }
                 }
                 
                 if(emits[i].country_code){
@@ -419,7 +394,6 @@ func ReferMapReduct(dbName string, collName string, outCollName string, website_
             
             return {	
                 browser_name:this_browser_name,
-                first_referrer_domain:this_first_referrer_domain,
                 pv:this_pv,
                 uv:this_uv,
                 rate_pv:this_rate_pv,
@@ -560,17 +534,17 @@ func ReferMapReduct(dbName string, collName string, outCollName string, website_
     }
     // 上面mongodb maoreduce处理完的数据，需要存储到es中
     // 得到 type 以及 index name
-    esWholeReferTypeName :=  helper.GetEsWholeReferTypeName()
-    esIndexName := helper.GetEsIndexNameByType(esWholeReferTypeName)
+    esWholeDevideTypeName :=  helper.GetEsWholeDevideTypeName()
+    esIndexName := helper.GetEsIndexNameByType(esWholeDevideTypeName)
     // es index 的type mapping
-    esWholeReferTypeMapping := helper.GetEsWholeReferTypeMapping()
+    esWholeDevideTypeMapping := helper.GetEsWholeDevideTypeMapping()
     // 删除index，如果mapping建立的不正确，可以执行下面的语句删除重建mapping
     //err = esdb.DeleteIndex(esIndexName)
     //if err != nil {
     //    return err
     //}
     // 初始化mapping
-    err = esdb.InitMapping(esIndexName, esWholeReferTypeName, esWholeReferTypeMapping)
+    err = esdb.InitMapping(esIndexName, esWholeDevideTypeName, esWholeDevideTypeMapping)
     if err != nil {
         return err
     }
@@ -591,21 +565,21 @@ func ReferMapReduct(dbName string, collName string, outCollName string, website_
     for i:=0; i<pageNum; i++ {
         err = mongodb.MDC(dbName, outCollName, func(coll *mgo.Collection) error {
             var err error
-            var wholeRefers []model.WholeRefer
-            coll.Find(nil).Skip(i*pageNum).Limit(numPerPage).All(&wholeRefers)
-            log.Println("wholeRefers length:")
-            log.Println(len(wholeRefers))
+            var wholeDevides []model.WholeDevide
+            coll.Find(nil).Skip(i*pageNum).Limit(numPerPage).All(&wholeDevides)
+            log.Println("wholeDevides length:")
+            log.Println(len(wholeDevides))
             
             /* 这个代码是upsert单行数据
-            for j:=0; j<len(wholeRefers); j++ {
-                wholeBrowser := wholeRefers[j]
+            for j:=0; j<len(wholeDevides); j++ {
+                wholeBrowser := wholeDevides[j]
                 wholeBrowserValue := wholeBrowser.Value
                 // wholeBrowserValue.Devide = nil
                 // wholeBrowserValue.CountryCode = nil
                 ///wholeBrowserValue.Operate = nil
                 log.Println("ID_:" + wholeBrowser.Id_)
                 wholeBrowserValue.Id = wholeBrowser.Id_
-                err := esdb.UpsertType(esIndexName, esWholeReferTypeName, wholeBrowser.Id_, wholeBrowserValue)
+                err := esdb.UpsertType(esIndexName, esWholeDevideTypeName, wholeDevide.Id_, wholeDevideValue)
                 
                 if err != nil {
                     log.Println("11111" + err.Error())
@@ -613,23 +587,23 @@ func ReferMapReduct(dbName string, collName string, outCollName string, website_
                 }
             }
             */
-            if len(wholeRefers) > 0 {
+            if len(wholeDevides) > 0 {
                 // 使用bulk的方式，将数据批量插入到elasticSearch
                 bulkRequest, err := esdb.Bulk()
                 if err != nil {
                     log.Println("444" + err.Error())
                     return err
                 }
-                for j:=0; j<len(wholeRefers); j++ {
-                    wholeRefer := wholeRefers[j]
-                    wholeReferValue := wholeRefer.Value
-                    wholeReferValue.Id = wholeRefer.Id_
+                for j:=0; j<len(wholeDevides); j++ {
+                    wholeDevide := wholeDevides[j]
+                    wholeDevideValue := wholeDevide.Value
+                    wholeDevideValue.Id = wholeDevide.Id_
                     log.Println("888")
                     log.Println(esIndexName)
-                    log.Println(esWholeReferTypeName)
-                    log.Println(wholeRefer.Id_)
-                    log.Println(wholeReferValue)
-                    req := esdb.BulkUpsertTypeDoc(esIndexName, esWholeReferTypeName, wholeRefer.Id_, wholeReferValue)
+                    log.Println(esWholeDevideTypeName)
+                    log.Println(wholeDevide.Id_)
+                    log.Println(wholeDevideValue)
+                    req := esdb.BulkUpsertTypeDoc(esIndexName, esWholeDevideTypeName, wholeDevide.Id_, wholeDevideValue)
                     bulkRequest = bulkRequest.Add(req)
                 }
                 bulkResponse, err := esdb.BulkRequestDo(bulkRequest)
@@ -658,25 +632,3 @@ func ReferMapReduct(dbName string, collName string, outCollName string, website_
     
     return err
 }
-
-/*
-type MapReduce struct {
-    Map      string      // Map Javascript function code (required)
-    Reduce   string      // Reduce Javascript function code (required)
-    Finalize string      // Finalize Javascript function code (optional)
-    Out      interface{} // Output collection name or document. If nil, results are inlined into the result parameter.
-    Scope    interface{} // Optional global scope for Javascript functions
-    Verbose  bool
-}
-*/
-
-/*
-type resultValue struct{
-    BrowserNameCount int64 `browser_name`
-}
-
-var result []struct { 
-    Id string `_id`
-    Value resultValue 
-} dbName string, collName string, outCollName
-*/

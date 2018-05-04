@@ -15,10 +15,6 @@ import(
     "github.com/fecshopsoft/fec-go/db/esdb"
 )
 
-
-
-
-
 /**
  * 1.对于common，需要价格websiteId的权限，给下面的用户，通过设置权限，来限制type==3的用户查看的websiteId
  * 2.在router部分加一个middleware，如果type==3，通过用户的parent_id，然后查看相应
@@ -35,7 +31,7 @@ import(
  *   websiteIds 和 选择的websiteId 发送给vue。vue进行刷新
  */
 
-func SiteList(c *gin.Context){
+func CountryList(c *gin.Context){
     
     defaultPageNum:= c.GetString("defaultPageNum")
     defaultPageCount := c.GetString("defaultPageCount")
@@ -44,10 +40,9 @@ func SiteList(c *gin.Context){
     sort     := c.DefaultQuery("sort", "")
     sort_dir := c.DefaultQuery("sort_dir", "")
     
-    
     service_date_str_begin := c.DefaultQuery("service_date_str_begin", "")
     service_date_str_end := c.DefaultQuery("service_date_str_end", "")
-    // browser_name := c.DefaultQuery("browser_name", "")
+    country_code := c.DefaultQuery("country_code", "")
     uv_begin := c.DefaultQuery("uv_begin", "")
     uv_end := c.DefaultQuery("uv_end", "")
     // 搜索条件
@@ -63,10 +58,10 @@ func SiteList(c *gin.Context){
         }
         q = q.Must(newRangeQuery)
     }
-    // browser_name 搜索
-    // if browser_name != "" {
-    //    q = q.Must(elastic.NewTermQuery("browser_name", browser_name))
-    // }
+    // country_code 搜索
+    if country_code != "" {
+        q = q.Must(elastic.NewTermQuery("country_code", country_code))
+    }
     // uv 范围搜索
     if uv_begin != "" || uv_end != "" {
         newRangeQuery := elastic.NewRangeQuery("uv")
@@ -91,45 +86,32 @@ func SiteList(c *gin.Context){
         return
     }
     // 添加website_id 搜索条件
-    website_id_param := c.DefaultQuery("website_id", "")
-    if website_id_param != "" {
-        q = q.Must(elastic.NewTermQuery("website_id", chosen_website_id))
-        
-    } else {
-        // 如果传递的request param website_id为空，则返回该用户所有的website_id
-        s := make([]interface{}, len(selectWebsiteIds))
-        for i, v := range selectWebsiteIds {
-            s[i] = v
-        }
-        q = q.Must(elastic.NewTermsQuery("website_id", s...))
-        // site的不同在于，是可以显示多个站点的数据，因此，没有传递request param website_id
-        // 则代表显示所有站点的数据。
-        chosen_website_id = ""
-    }
+    q = q.Must(elastic.NewTermQuery("website_id", chosen_website_id))
+    
     // esIndexName := helper.GetEsIndexName(chosen_website_id)
-    esWholeAllTypeName :=  helper.GetEsWholeAllTypeName()
-    esIndexName := helper.GetEsIndexNameByType(esWholeAllTypeName)
+    esWholeCountryTypeName :=  helper.GetEsWholeCountryTypeName()
+    esIndexName := helper.GetEsIndexNameByType(esWholeCountryTypeName)
     client, err := esdb.Client()
     if err != nil{
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return
     }
     
-    // q = q.Must(elastic.NewTermQuery("browser_name", "Safari"))
+    // q = q.Must(elastic.NewTermQuery("country_code", "Safari"))
     // q = q.Must(elastic.NewRangeQuery("pv").From(3).To(60))
     // q = q.Must(elastic.NewRangeQuery("service_date_str").Gt("2018-04-20").Lt("2018-04-21"))
-    //termQuery := elastic.NewTermQuery("browser_name", "Safari")
-    // termQuery := elastic.NewRangeQuery("browser_name", "Safari")
+    //termQuery := elastic.NewTermQuery("country_code", "Safari")
+    // termQuery := elastic.NewRangeQuery("country_code", "Safari")
     //rangeQuery := NewRangeQuery("pv").Gt(3)
     log.Println(8888888888888)
     log.Println(esIndexName)
-    log.Println(esWholeAllTypeName)
+    log.Println(esWholeCountryTypeName)
     log.Println(page-1)
     log.Println(limit)
     log.Println(sort)
     search := client.Search().
         Index(esIndexName).        // search in index "twitter"
-        Type(esWholeAllTypeName).
+        Type(esWholeCountryTypeName).
         Query(q).
         From((page-1)*limit).Size(limit).
         Pretty(true)
@@ -144,7 +126,7 @@ func SiteList(c *gin.Context){
     /*
     searchResult, err := client.Search().
         Index(esIndexName).        // search in index "twitter"
-        Type(esWholeAllTypeName).
+        Type(esWholeCountryTypeName).
         Query(q).        // specify the query
         //Sort("user", true).      // sort by "user" field, ascending
         From(0).Size(10).        // take documents 0-9
@@ -158,20 +140,20 @@ func SiteList(c *gin.Context){
     }
     
     
-    var ts []model.WholeAllValue
+    var ts []model.WholeCountryValue
     if searchResult.Hits.TotalHits > 0 {
         // Iterate through results
         for _, hit := range searchResult.Hits.Hits {
             // hit.Index contains the name of the index
 
             // Deserialize hit.Source into a Tweet (could also be just a map[string]interface{}).
-            var wholeAll model.WholeAllValue
-            err := json.Unmarshal(*hit.Source, &wholeAll)
+            var wholeCountry model.WholeCountryValue
+            err := json.Unmarshal(*hit.Source, &wholeCountry)
             if err != nil{
                 c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
                 return
             }
-            ts = append(ts, wholeAll)
+            ts = append(ts, wholeCountry)
         }
     }
     ownNameOptions, err := getOwnNames(c, selectOwnIds)
@@ -184,7 +166,6 @@ func SiteList(c *gin.Context){
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return
     }
-    
     // 生成返回结果
     result := util.BuildSuccessResult(gin.H{
         "success": "success",
@@ -203,8 +184,12 @@ func SiteList(c *gin.Context){
 }
 
 // 得到 trend  info
-func SiteTrendInfo(c *gin.Context){
-   
+func CountryTrendInfo(c *gin.Context){
+    country_code := c.DefaultQuery("country_code", "")
+    if country_code == ""{
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("request get param country_code can not empty"))
+        return
+    }
     service_date_str := c.DefaultQuery("service_date_str", "")
     if service_date_str == ""{
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("request get param service_date_str can not empty"))
@@ -224,7 +209,8 @@ func SiteTrendInfo(c *gin.Context){
     log.Println(preMonthDateStr)
     log.Println(service_date_str)
     q = q.Must(newRangeQuery)
-    
+    // 加入浏览器
+    q = q.Must(elastic.NewTermQuery("country_code", country_code))
     website_id, err := GetReqWebsiteId(c)
     if err != nil{
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
@@ -232,8 +218,8 @@ func SiteTrendInfo(c *gin.Context){
     }
     q = q.Must(elastic.NewTermQuery("website_id", website_id))
     // esIndexName := helper.GetEsIndexName(website_id)
-    esWholeAllTypeName :=  helper.GetEsWholeAllTypeName()
-    esIndexName := helper.GetEsIndexNameByType(esWholeAllTypeName)
+    esWholeCountryTypeName :=  helper.GetEsWholeCountryTypeName()
+    esIndexName := helper.GetEsIndexNameByType(esWholeCountryTypeName)
     client, err := esdb.Client()
     if err != nil{
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
@@ -241,7 +227,7 @@ func SiteTrendInfo(c *gin.Context){
     }
     search := client.Search().
         Index(esIndexName).        // search in index "twitter"
-        Type(esWholeAllTypeName).
+        Type(esWholeCountryTypeName).
         Query(q).
         From(0).Size(9999).
         Pretty(true)
@@ -272,10 +258,11 @@ func SiteTrendInfo(c *gin.Context){
     
     OrderAmountTrend := make(map[string]float64)
     SuccessOrderAmountTrend := make(map[string]float64)
-    
+
     IsReturnTrend := make(map[string]int64)
     IsReturnRateTrend := make(map[string]float64)
     SkuSaleRateTrend := make(map[string]float64)
+    
     
     if searchResult.Hits.TotalHits > 0 {
         // Iterate through results
@@ -283,41 +270,39 @@ func SiteTrendInfo(c *gin.Context){
             // hit.Index contains the name of the index
 
             // Deserialize hit.Source into a Tweet (could also be just a map[string]interface{}).
-            var wholeAll model.WholeAllValue
-            err := json.Unmarshal(*hit.Source, &wholeAll)
+            var wholeCountry model.WholeCountryValue
+            err := json.Unmarshal(*hit.Source, &wholeCountry)
             if err != nil{
                 c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
                 return
             }
-            serviceDateStr := wholeAll.ServiceDateStr
+            serviceDateStr := wholeCountry.ServiceDateStr
             // pvTrend
-            pvTrend[serviceDateStr] = wholeAll.Pv
+            pvTrend[serviceDateStr] = wholeCountry.Pv
             // uvTrend
-            uvTrend[serviceDateStr] = wholeAll.Uv
-            ipCountTrend[serviceDateStr] = wholeAll.IpCount
-            
+            uvTrend[serviceDateStr] = wholeCountry.Uv
+            ipCountTrend[serviceDateStr] = wholeCountry.IpCount
             // staySecondsTrend
-            staySecondsTrend[serviceDateStr] = wholeAll.StaySeconds
+            staySecondsTrend[serviceDateStr] = wholeCountry.StaySeconds
             // staySecondsRateTrend
-            staySecondsRateTrend[serviceDateStr] = wholeAll.StaySecondsRate
-            PvRateTrend[serviceDateStr] = wholeAll.PvRate
-            JumpOutCountTrend[serviceDateStr] = wholeAll.JumpOutCount
-            DropOutCountTrend[serviceDateStr] = wholeAll.DropOutCount
-            JumpOutRateTrend[serviceDateStr] = wholeAll.JumpOutRate
-            DropOutRateTrend[serviceDateStr] = wholeAll.DropOutRate
-            CartCountTrend[serviceDateStr] = wholeAll.CartCount
-            OrderCountTrend[serviceDateStr] = wholeAll.OrderCount
-            SuccessOrderCountTrend[serviceDateStr] = wholeAll.SuccessOrderCount
-            SuccessOrderNoCountTrend[serviceDateStr] = wholeAll.SuccessOrderNoCount
-            OrderNoCountTrend[serviceDateStr] = wholeAll.OrderNoCount
-            OrderPaymentRateTrend[serviceDateStr] = wholeAll.OrderPaymentRate
+            staySecondsRateTrend[serviceDateStr] = wholeCountry.StaySecondsRate
+            PvRateTrend[serviceDateStr] = wholeCountry.PvRate
+            JumpOutCountTrend[serviceDateStr] = wholeCountry.JumpOutCount
+            DropOutCountTrend[serviceDateStr] = wholeCountry.DropOutCount
+            JumpOutRateTrend[serviceDateStr] = wholeCountry.JumpOutRate
+            DropOutRateTrend[serviceDateStr] = wholeCountry.DropOutRate
+            CartCountTrend[serviceDateStr] = wholeCountry.CartCount
+            OrderCountTrend[serviceDateStr] = wholeCountry.OrderCount
+            SuccessOrderCountTrend[serviceDateStr] = wholeCountry.SuccessOrderCount
+            SuccessOrderNoCountTrend[serviceDateStr] = wholeCountry.SuccessOrderNoCount
+            OrderNoCountTrend[serviceDateStr] = wholeCountry.OrderNoCount
+            OrderPaymentRateTrend[serviceDateStr] = wholeCountry.OrderPaymentRate
+            OrderAmountTrend[serviceDateStr] = wholeCountry.OrderAmount
+            SuccessOrderAmountTrend[serviceDateStr] = wholeCountry.SuccessOrderAmount
             
-            OrderAmountTrend[serviceDateStr] = wholeAll.OrderAmount
-            SuccessOrderAmountTrend[serviceDateStr] = wholeAll.SuccessOrderAmount
-            
-            IsReturnTrend[serviceDateStr] = wholeAll.IsReturn
-            IsReturnRateTrend[serviceDateStr] = wholeAll.IsReturnRate
-            SkuSaleRateTrend[serviceDateStr] = wholeAll.SkuSaleRate
+            IsReturnTrend[serviceDateStr] = wholeCountry.IsReturn
+            IsReturnRateTrend[serviceDateStr] = wholeCountry.IsReturnRate
+            SkuSaleRateTrend[serviceDateStr] = wholeCountry.SkuSaleRate
         }
     }
     // 生成返回结果
@@ -342,7 +327,6 @@ func SiteTrendInfo(c *gin.Context){
             "order_payment_rate": OrderPaymentRateTrend,
             "order_amount": OrderAmountTrend,
             "success_order_amount": SuccessOrderAmountTrend,
-            
             "is_return": IsReturnTrend,
             "is_return_rate": IsReturnRateTrend,
             "sku_sale_rate": SkuSaleRateTrend,

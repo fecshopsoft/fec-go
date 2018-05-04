@@ -162,7 +162,22 @@ func getSiteNames(c *gin.Context, selectWebsiteIds []string) ([]commonH.VueSelec
     return siteNames, nil
 }
 
-
+func getSiteNameAndImgUrls(c *gin.Context, selectWebsiteIds []string) ([]commonH.VueSelectOps, map[string]string, error) {
+    var siteNames []commonH.VueSelectOps
+    siteImgUrls := make(map[string]string)
+    // customerType := helper.GetCurrentCustomerType(c)
+    sites, err := commonH.GetWebsiteBySiteUids(selectWebsiteIds)
+    if err != nil {
+        return siteNames, siteImgUrls, err
+    }
+    for i:=0; i<len(sites); i++ {
+        site := sites[i]
+        siteNames = append(siteNames, commonH.VueSelectOps{Key:site.SiteUid, DisplayName: site.SiteName})
+        siteImgUrls[site.SiteUid] = site.SkuImageApiUrl
+        // siteImgUrls = append(siteImgUrls, commonH.VueSelectOps{Key:site.SiteUid, DisplayName: site.SkuImageApiUrl})
+    }
+    return siteNames, siteImgUrls, nil
+}
 
 // 前台传递的websiteId是否是合法的。
 func GetReqWebsiteId(c *gin.Context) (string, error) {

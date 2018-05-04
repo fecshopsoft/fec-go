@@ -14,15 +14,15 @@ import(
     
 )
 
-// Refer统计计算部分
-func ReferMapReduct(dbName string, collName string, outCollName string, website_id string) error {
+// Sku 统计计算部分
+func SkuMapReduct(dbName string, collName string, outCollName string, website_id string) error {
     var err error
     
     mapStr := `
         function() {  
             website_id = "` + website_id + `";
             // browser_name = this.browser_name ? this.browser_name : null;
-            first_referrer_domain = this.first_referrer_domain ? this.first_referrer_domain : null;
+            sku = this.sku ? this.sku : null;
             // login_email 	= this.login_email ? [this.login_email] : null;
             
             stay_seconds = this.stay_seconds ? this.stay_seconds : 0;
@@ -125,14 +125,13 @@ func ReferMapReduct(dbName string, collName string, outCollName string, website_
             // 该处进行了更正，不应该 first_visit_this_url ，而应该使用 uuid_first_page
             is_return = 0;
             uv = 0;
-            if(this.uuid_first_page == 1){
+            ip_count = 0;
+            if(this.first_visit_this_url == 1){
                 uv = 1;
-                is_return = this.is_return ? this.is_return : 0;
-            }
-            if(this.ip_first_page == 1){
+                is_return 		= this.is_return ? this.is_return : 0;
                 ip_count = 1;
             }else{
-                ip_count = 0;
+                uv = 0;
             }
             service_date_str = this.service_date_str ? this.service_date_str : null;
             
@@ -147,54 +146,15 @@ func ReferMapReduct(dbName string, collName string, outCollName string, website_
             order_amount = 0;
             success_order_amount = 0;
             
-            if(cart){
-                for(x in cart){
-                    one 		= cart[x];
-                    if(one && one['qty']){
-                        //$sku 		= one['sku'];
-                        var skuqty = Number(one['qty'])
-                        skuqty = isNaN(skuqty) ? 0 : skuqty
-                        cart_count += skuqty;
-                    }
-                }
-            }
+            is_return = Number(is_return);
+            is_return = isNaN(is_return) ? 0 : is_return
+            first_page = Number(first_page);
+            first_page = isNaN(first_page) ? 0 : first_page
             
-            if(order && order['invoice'] && order['products']){
-                products = order['products'];
-                payment_status = order['payment_status'];
-                amount = order['amount'];
-                if(amount){
-                    order_amount = amount;
-                }
-                order_no_count = 1;
-                if(payment_status == 'payment_confirmed'){
-                    success_order_no_count = 1;
-                    if(amount){
-                        success_order_amount = amount;
-                    }
-                }
-                for(x in products){
-                    one = products[x];
-                    if(one && one['qty']){
-                        qty = Number(one['qty']);
-                        qty = isNaN(qty) ? 0 : qty
-                        order_count += qty;
-                        if(payment_status == 'payment_confirmed'){
-                            success_order_count += qty;
-                            
-                        }
-                    }
-                }
-            }
-            
-            if(this.first_referrer_domain){
-                is_return = Number(is_return);
-                is_return = isNaN(is_return) ? 0 : is_return
-                first_page = Number(first_page);
-                first_page = isNaN(first_page) ? 0 : first_page
-                emit(this.first_referrer_domain+"_"+service_date_str+"_"+website_id,{
+            if (sku) {
+                emit(sku+"_"+service_date_str+"_"+website_id,{
                     browser_name:browser_name,
-                    first_referrer_domain:first_referrer_domain,
+                    sku:sku,
                     pv:1,
                     uv:uv,
                     ip_count:ip_count,
@@ -223,8 +183,109 @@ func ReferMapReduct(dbName string, collName string, outCollName string, website_
                     service_date_str:service_date_str
                     
                 });
+            } else if (cart) {
+                for(x in cart){
+                    one = cart[x];
+                    if(one && one['qty']){
+                        sku = one['sku'];
+                        sku_qty = Number(one['qty'])
+                        cart_count = isNaN(sku_qty) ? 0 : sku_qty
+                        emit(sku+"_"+service_date_str+"_"+website_id,{
+                            browser_name:null,
+                            sku:sku,
+                            pv:0,
+                            uv:0,
+                            ip_count:0,
+                            rate_pv:0,
+                            stay_seconds:0,
+                            jump_out_count:0,
+                            drop_out_count:0,
+                            devide:null,
+                            country_code:null,
+                            
+                            cart_count:cart_count,
+                            order_count:order_count,
+                            success_order_count:success_order_count,
+                            success_order_no_count:success_order_no_count,
+                            order_no_count:order_no_count,
+                            order_amount:order_amount,
+                            success_order_amount:success_order_amount,
+                            operate: null,
+                            fec_app: null,
+                            resolution: null,
+                            color_depth: null,
+                            language: null,
+                            is_return: 0,
+                            first_page: 0,
+                            service_date_str:service_date_str
+                        });
+                    }
+                }
+            } else if( order && order['invoice'] && order['products'] ){
+                products = order['products'];
+                payment_status = order['payment_status'];
+                amount = order['amount'];
+                if(amount){
+                    order_amount = amount;
+                }
+                order_no_count = 1;
+                if(payment_status == 'payment_confirmed'){
+                    success_order_no_count = 1;
+                    if(amount){
+                        success_order_amount = amount;
+                    }
+                }
+                for(x in products){
+                    one = products[x];
+                    if(one && one['qty']){
+                        qty = Number(one['qty']);
+                        qty = isNaN(qty) ? 0 : qty
+                        order_count += qty;
+                        sku = one['sku'];
+                        price =one['price'];
+                        cart_count = 0;
+                        order_count = qty;
+                        success_order_count = 0;
+                        success_order_amount = 0;
+                        success_order_no_count = 0;
+                        if(payment_status == 'payment_confirmed'){
+                            success_order_count = qty;
+                            success_order_no_count = 1;
+                            success_order_amount = qty * price;
+                        }
+                        emit(sku+"_"+service_date_str+"_"+website_id,{
+                            browser_name:null,
+                            sku:sku,
+                            pv:0,
+                            uv:0,
+                            ip_count:0,
+                            rate_pv:0,
+                            stay_seconds:0,
+                            jump_out_count:0,
+                            drop_out_count:0,
+                            devide:null,
+                            country_code:null,
+                            
+                            cart_count:cart_count,
+                            order_count:order_count,
+                            success_order_count:success_order_count,
+                            success_order_no_count:success_order_no_count,
+                            order_no_count:order_no_count,
+                            order_amount:order_amount,
+                            success_order_amount:success_order_amount,
+                            operate: null,
+                            fec_app: null,
+                            resolution: null,
+                            color_depth: null,
+                            language: null,
+                            is_return: 0,
+                            first_page: 0,
+                            service_date_str:service_date_str
+                            
+                        });
+                    }
+                }
             }
-            
         }
     `
     
@@ -241,7 +302,7 @@ func ReferMapReduct(dbName string, collName string, outCollName string, website_
             this_devide				= {};
             this_country_code		= {};
             this_browser_name		= {};
-            this_first_referrer_domain = null;
+            this_sku                = null;
             this_operate			= {};
             this_fec_app      			= {};
             this_is_return			= 0;
@@ -258,8 +319,8 @@ func ReferMapReduct(dbName string, collName string, outCollName string, website_
             this_order_no_count	= 0;
             
             for(var i in emits){
-                if(emits[i].first_referrer_domain){
-                    this_first_referrer_domain = emits[i].first_referrer_domain;
+                if(emits[i].sku){
+                    this_sku = emits[i].sku;
                 }
                 if(emits[i].cart_count){
                     this_cart_count 			+= emits[i].cart_count;
@@ -419,7 +480,7 @@ func ReferMapReduct(dbName string, collName string, outCollName string, website_
             
             return {	
                 browser_name:this_browser_name,
-                first_referrer_domain:this_first_referrer_domain,
+                sku:this_sku,
                 pv:this_pv,
                 uv:this_uv,
                 rate_pv:this_rate_pv,
@@ -560,17 +621,17 @@ func ReferMapReduct(dbName string, collName string, outCollName string, website_
     }
     // 上面mongodb maoreduce处理完的数据，需要存储到es中
     // 得到 type 以及 index name
-    esWholeReferTypeName :=  helper.GetEsWholeReferTypeName()
-    esIndexName := helper.GetEsIndexNameByType(esWholeReferTypeName)
+    esWholeSkuTypeName :=  helper.GetEsWholeSkuTypeName()
+    esIndexName := helper.GetEsIndexNameByType(esWholeSkuTypeName)
     // es index 的type mapping
-    esWholeReferTypeMapping := helper.GetEsWholeReferTypeMapping()
+    esWholeSkuTypeMapping := helper.GetEsWholeSkuTypeMapping()
     // 删除index，如果mapping建立的不正确，可以执行下面的语句删除重建mapping
     //err = esdb.DeleteIndex(esIndexName)
     //if err != nil {
     //    return err
     //}
     // 初始化mapping
-    err = esdb.InitMapping(esIndexName, esWholeReferTypeName, esWholeReferTypeMapping)
+    err = esdb.InitMapping(esIndexName, esWholeSkuTypeName, esWholeSkuTypeMapping)
     if err != nil {
         return err
     }
@@ -591,21 +652,21 @@ func ReferMapReduct(dbName string, collName string, outCollName string, website_
     for i:=0; i<pageNum; i++ {
         err = mongodb.MDC(dbName, outCollName, func(coll *mgo.Collection) error {
             var err error
-            var wholeRefers []model.WholeRefer
-            coll.Find(nil).Skip(i*pageNum).Limit(numPerPage).All(&wholeRefers)
-            log.Println("wholeRefers length:")
-            log.Println(len(wholeRefers))
+            var wholeSkus []model.WholeSku
+            coll.Find(nil).Skip(i*pageNum).Limit(numPerPage).All(&wholeSkus)
+            log.Println("wholeSkus length:")
+            log.Println(len(wholeSkus))
             
             /* 这个代码是upsert单行数据
-            for j:=0; j<len(wholeRefers); j++ {
-                wholeBrowser := wholeRefers[j]
+            for j:=0; j<len(wholeSkus); j++ {
+                wholeBrowser := wholeSkus[j]
                 wholeBrowserValue := wholeBrowser.Value
                 // wholeBrowserValue.Devide = nil
                 // wholeBrowserValue.CountryCode = nil
                 ///wholeBrowserValue.Operate = nil
                 log.Println("ID_:" + wholeBrowser.Id_)
                 wholeBrowserValue.Id = wholeBrowser.Id_
-                err := esdb.UpsertType(esIndexName, esWholeReferTypeName, wholeBrowser.Id_, wholeBrowserValue)
+                err := esdb.UpsertType(esIndexName, esWholeSkuTypeName, wholeBrowser.Id_, wholeBrowserValue)
                 
                 if err != nil {
                     log.Println("11111" + err.Error())
@@ -613,23 +674,23 @@ func ReferMapReduct(dbName string, collName string, outCollName string, website_
                 }
             }
             */
-            if len(wholeRefers) > 0 {
+            if len(wholeSkus) > 0 {
                 // 使用bulk的方式，将数据批量插入到elasticSearch
                 bulkRequest, err := esdb.Bulk()
                 if err != nil {
                     log.Println("444" + err.Error())
                     return err
                 }
-                for j:=0; j<len(wholeRefers); j++ {
-                    wholeRefer := wholeRefers[j]
-                    wholeReferValue := wholeRefer.Value
-                    wholeReferValue.Id = wholeRefer.Id_
+                for j:=0; j<len(wholeSkus); j++ {
+                    wholeSku := wholeSkus[j]
+                    wholeSkuValue := wholeSku.Value
+                    wholeSkuValue.Id = wholeSku.Id_
                     log.Println("888")
                     log.Println(esIndexName)
-                    log.Println(esWholeReferTypeName)
-                    log.Println(wholeRefer.Id_)
-                    log.Println(wholeReferValue)
-                    req := esdb.BulkUpsertTypeDoc(esIndexName, esWholeReferTypeName, wholeRefer.Id_, wholeReferValue)
+                    log.Println(esWholeSkuTypeName)
+                    log.Println(wholeSku.Id_)
+                    log.Println(wholeSkuValue)
+                    req := esdb.BulkUpsertTypeDoc(esIndexName, esWholeSkuTypeName, wholeSku.Id_, wholeSkuValue)
                     bulkRequest = bulkRequest.Add(req)
                 }
                 bulkResponse, err := esdb.BulkRequestDo(bulkRequest)
@@ -658,25 +719,3 @@ func ReferMapReduct(dbName string, collName string, outCollName string, website_
     
     return err
 }
-
-/*
-type MapReduce struct {
-    Map      string      // Map Javascript function code (required)
-    Reduce   string      // Reduce Javascript function code (required)
-    Finalize string      // Finalize Javascript function code (optional)
-    Out      interface{} // Output collection name or document. If nil, results are inlined into the result parameter.
-    Scope    interface{} // Optional global scope for Javascript functions
-    Verbose  bool
-}
-*/
-
-/*
-type resultValue struct{
-    BrowserNameCount int64 `browser_name`
-}
-
-var result []struct { 
-    Id string `_id`
-    Value resultValue 
-} dbName string, collName string, outCollName
-*/

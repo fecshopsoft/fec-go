@@ -54,10 +54,20 @@ func GetOutWholeCountryCollName(websiteId string) (string){
     return GetCollName("trace_whole_country_data", websiteId)
 }
 
+// 得到 devide 统计后的数据输出的collection
+func GetOutWholeDevideCollName(websiteId string) (string){
+    return GetCollName("trace_whole_devide_data", websiteId)
+}
 
+// 得到 sku 统计后的数据输出的collection
+func GetOutWholeSkuCollName(websiteId string) (string){
+    return GetCollName("trace_whole_sku_data", websiteId)
+}
 
-
-
+// 得到 sku refer 统计后的数据输出的collection
+func GetOutWholeSkuReferCollName(websiteId string) (string){
+    return GetCollName("trace_whole_sku_refer_data", websiteId)
+}
 
 
 
