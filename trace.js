@@ -872,6 +872,7 @@
     //广告流量部分代码 - 开始
     // 设置  fid   如果新的 fid 访问，那么 fid 将会被覆盖。
     fid = getParameterByName("fid");
+    fid = params.fid ? params.fid : fid
     var cookie_fid = Get_Cookie("fid");
 
     if(fid){
@@ -887,6 +888,11 @@
     fec_campaign 	= getParameterByName("fec_campaign");
     fec_content 	= getParameterByName("fec_content");
     fec_design 		= getParameterByName("fec_design");
+    fec_source      = params.fec_source ? params.fec_source : fec_source
+    fec_medium      = params.fec_medium ? params.fec_medium : fec_medium
+    fec_campaign    = params.fec_campaign ? params.fec_campaign : fec_campaign
+    fec_content     = params.fec_content ? params.fec_content : fec_content
+    fec_design      = params.fec_design ? params.fec_design : fec_design
     if(fid || ((!cookie_fid) && (fec_source || fec_medium || fec_campaign || fec_content || fec_design))){ //存在 fid，不管 fec 的各个参数是否存在，强制覆盖cookie
         if(fec_source){
             //set fid cookie.
@@ -992,8 +998,9 @@
     params.domain = domain;
     if(document) {
         params.title = document.title || '';   //当前title
-        params.refer_url = document.referrer || '';  //来源referrer
-
+        if (!params.hasOwnProperty('refer_url') ||  !params.refer_url) {
+            params.refer_url = document.referrer || '';  //来源referrer
+        }
 
         //thisrefer =  document.referrer || '';
         //refer_fta_cookie = Get_Cookie( '_fta' );

@@ -343,7 +343,9 @@ func SaveJsData(c *gin.Context){
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return
     }
-
+    // 如果是产品页面，
+    
+    
     
     // 进行保存。
     
