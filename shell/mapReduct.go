@@ -115,7 +115,12 @@ func mapReduceByDate(dateStr string) error{
             return err
         }
         
-        
+        // 处理：Whole Search
+        OutWholeSearchCollName := helper.GetOutWholeSearchCollName(websiteId)
+        err = whole.SearchMapReduct(dbName, collName, OutWholeSearchCollName, websiteId)
+        if err != nil {
+            return err
+        }
         
         
     }

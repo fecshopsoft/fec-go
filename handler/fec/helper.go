@@ -4,6 +4,7 @@ import(
     "github.com/fecshopsoft/fec-go/db/mongodb"
     "github.com/globalsign/mgo"
     "github.com/globalsign/mgo/bson"
+    fecHelper "github.com/fecshopsoft/fec-go/helper"
 )
 
 
@@ -65,6 +66,7 @@ func updatePreStaySeconds(dbName string, collName string, uuid string, serviceTi
 
 
 
+
 // 得到停留时间
 func updatePreStaySecondsAndReturn(dbName string, collName string, uuid string, serviceTimestamp int64) (TraceInfo, error){
     var staySeconds float64 = 0
@@ -112,6 +114,34 @@ func getUuidFirstPage(dbName string, collName string, uuid string) (int, error) 
     })
     return uuidFirstPage, err
 } 
+
+
+func getBeforeSearchOne(dbName string, collName string, uuid string, url string) (SearchInfo, error) {
+    var traceInfo TraceMiddInfo
+    err := mongodb.MDC(dbName, collName, func(coll *mgo.Collection) error {
+        _ = coll.Find(bson.M{"uuid": uuid, "url":url}).Sort("-_id").One(&traceInfo)
+        
+        return nil
+    })
+    return traceInfo.Search, err
+} 
+
+func getBeforeCartOne(dbName string, collName string, uuid string, sku string) (SearchInfo, error) {
+    var traceInfo TraceMiddInfo
+    err := mongodb.MDC(dbName, collName, func(coll *mgo.Collection) error {
+        _ = coll.Find(bson.M{"uuid": uuid, "sku":sku, "search_sku_click":1}).Sort("-_id").One(&traceInfo)
+        
+        return nil
+    })
+    return traceInfo.Search, err
+} 
+
+// 去掉特殊字符
+func ClearDianChar(searchText string) string {
+    searchText = fecHelper.StrReplace(searchText, ".","#")
+    searchText = fecHelper.StrReplace(searchText, "$","#")
+    return searchText
+}
 
 func getIpFirstPage(dbName string, collName string, ipStr string) (int, error) {
     var ipFirstPage int = 0

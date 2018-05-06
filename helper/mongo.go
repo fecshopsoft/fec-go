@@ -69,6 +69,9 @@ func GetOutWholeSkuReferCollName(websiteId string) (string){
     return GetCollName("trace_whole_sku_refer_data", websiteId)
 }
 
-
+// 得到 search 统计后的数据输出的collection
+func GetOutWholeSearchCollName(websiteId string) (string){
+    return GetCollName("trace_whole_search_data", websiteId)
+}
 
 

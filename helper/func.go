@@ -4,6 +4,7 @@ import(
     // "regexp"
     "net/url"
     "time"
+    "strings"
     "strconv"
     uuid "github.com/satori/go.uuid"
     "github.com/fecshopsoft/fec-go/security"
@@ -73,7 +74,11 @@ func IsValidUrl(toTest string) bool {
     }
 }
 
-    
+// 字符串全部替换
+func StrReplace(str string, oldStr string, newStr string) string {
+    return strings.Replace(str, oldStr, newStr, -1)
+}
+ 
 
 
 //截取字符串 start 起点下标 end 终点下标(不包括)
@@ -90,6 +95,12 @@ func Substr(str string, start int, end int) string {
     }
     return string(rs[start:end])
 }
+
+// 字符串包含  strings.Contains("widuu", "wi")
+func StrContains(strFull string, strContains string) bool {
+    return strings.Contains(strFull, strContains)
+} 
+
 // 得到随机uuid
 func RandomUUID() string{
     u := uuid.Must(uuid.NewV4())

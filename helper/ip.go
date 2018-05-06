@@ -25,7 +25,20 @@ func GetIpInfo(ipStr string) (string, string, string, string, error){
         return "", "", "", "", err
     }
     log.Println("Ip:"+ipStr)
-    return record.Country.IsoCode, record.Country.Names["en"], record.Subdivisions[0].Names["en"], record.City.Names["en"], nil
+    iosCountryCode := record.Country.IsoCode
+    log.Println("iosCode:"+iosCountryCode)
+    countryName := record.Country.Names["en"]
+    log.Println("countryName:"+countryName)
+    log.Println(record.Subdivisions)
+    stateName := ""
+    if len(record.Subdivisions) > 0 {
+        s := record.Subdivisions[0]
+        stateName = s.Names["en"]
+    }
+    log.Println("stateName:"+stateName)
+    cityName := record.City.Names["en"]
+    log.Println("cityName:"+cityName)
+    return iosCountryCode, countryName, stateName, cityName, nil
     /*
     fmt.Printf("Portuguese (BR) city name: %v\n", record.City.Names["en-US"])
     fmt.Printf("English subdivision name: %v\n", record.Subdivisions[0].Names["en"])

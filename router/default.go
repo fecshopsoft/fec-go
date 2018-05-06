@@ -199,7 +199,10 @@ func Listen(listenIp string) {
         // #### Whole Sku Refer
         v1.GET("/whole/skurefer/list",            middleware.PermissionLoginToken, middleware.CommonAdminChildRole, wholeHandler.SkuReferList)
         v1.GET("/whole/skurefer/fetchtrendinfo",  middleware.PermissionLoginToken, middleware.CommonAdminChildRole, wholeHandler.SkuReferTrendInfo)
-       
+        // #### Whole Search
+        v1.GET("/whole/search/list",            middleware.PermissionLoginToken, middleware.CommonAdminChildRole, wholeHandler.SearchList)
+        v1.GET("/whole/search/fetchtrendinfo",  middleware.PermissionLoginToken, middleware.CommonAdminChildRole, wholeHandler.SearchTrendInfo)
+        
         
         
         

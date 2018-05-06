@@ -7,7 +7,7 @@ import(
     "net/http"
     "net/url"
     // "errors"
-    // "log"
+    "log"
     "encoding/json"
     "github.com/globalsign/mgo"
     "github.com/globalsign/mgo/bson"
@@ -69,9 +69,13 @@ type TraceGetInfo struct{
     Sku string `form:"sku" json:"sku" bson:"sku"`
     
     
+    
     Cart string `form:"cart" json:"cart" bson:"cart"`
     Search string `form:"search" json:"search" bson:"search"`
 }
+
+
+
 
 // trace info 用于将数据保存到数据库
 type TraceInfo struct{
@@ -153,6 +157,8 @@ type TraceInfo struct{
     
     Category string `form:"category" json:"category" bson:"category"`
     Sku string `form:"sku" json:"sku" bson:"sku"`
+    SearchSkuClick int `form:"search_sku_click" json:"search_sku_click" bson:"search_sku_click"`
+    SearchSkuCart map[string]map[string]int  `form:"search_sku_cart" json:"search_sku_cart" bson:"search_sku_cart"`
     
     Cart []CartItem `form:"cart" json:"cart" bson:"cart"`
     Search SearchInfo `form:"search" json:"search" bson:"search"`
@@ -186,7 +192,10 @@ type TraceMiddInfo struct{
     SearchLoginEmail int `form:"search_login_email" json:"search_login_email" bson:"search_login_email"`
     // 首次访问某个url的时候，标记为1
     FirstVisitThisUrl int `form:"first_visit_this_url" json:"first_visit_this_url" bson:"first_visit_this_url"`
-    
+    Url string `form:"url" json:"url" bson:"url"`
+    Search SearchInfo `form:"search" json:"search" bson:"search"`
+    SearchSkuClick int `form:"search_sku_click" json:"search_sku_click" bson:"search_sku_click"`
+    Sku string `form:"sku" json:"sku" bson:"sku"`
 }
 
 // cart
@@ -344,9 +353,45 @@ func SaveJsData(c *gin.Context){
         return
     }
     // 如果是产品页面，
-    
-    
-    
+    if traceInfo.Sku != "" {
+        referUrl := traceInfo.ReferUrl
+        log.Println("referUrl:" + referUrl)
+        if (referUrl != "" && helper.StrContains(referUrl, "/catalogsearch/index?q=")) || (referUrl !="" && helper.StrContains(referUrl, "/#/search/")) {
+            log.Println("if success")
+            searchInfo, _ := getBeforeSearchOne(dbName, collName, traceInfo.Uuid, traceInfo.ReferUrl)
+            log.Println("if success searchInfo")
+            log.Println(searchInfo.Text)
+            if searchInfo.Text != "" {
+                log.Println("if success searchInfo ###")
+                log.Println(searchInfo)
+                
+                traceInfo.Search = searchInfo
+                traceInfo.SearchSkuClick = 1
+            }
+        }
+    }
+    // 如果是购物车页面
+    if len(traceInfo.Cart) > 0 {
+        cartData := traceInfo.Cart
+        searchSkuCart := make(map[string]map[string]int)
+        for i:=0; i<len(cartData); i++ {
+            item := cartData[i]
+            sku := item.Sku
+            searchInfo, _ := getBeforeCartOne(dbName, collName, traceInfo.Uuid, sku)
+            if searchInfo.Text != "" {
+                var skuQ  map[string]int
+                searchText := ClearDianChar(searchInfo.Text)
+                if _,ok := searchSkuCart[searchText]; ok {
+                    skuQ = searchSkuCart[searchText]
+                } else {
+                    skuQ = make(map[string]int)
+                }
+                skuQ[sku] = 1
+                searchSkuCart[searchText] = skuQ
+            }
+        }
+        traceInfo.SearchSkuCart = searchSkuCart
+    }
     // 进行保存。
     
     err = mongodb.MDC(dbName, collName, func(coll *mgo.Collection) error {

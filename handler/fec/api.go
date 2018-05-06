@@ -129,6 +129,9 @@ type TraceApiDbInfo struct{
     Resolution string `form:"resolution" json:"resolution" bson:"resolution"`
     ColorDepth string `form:"color_depth" json:"color_depth" bson:"color_depth"`
     
+    SearchSkuOrder map[string]map[string]int  `form:"search_sku_order" json:"search_sku_order" bson:"search_sku_order"`
+    // SearchSkuOrderSuccess map[string]map[string]int  `form:"search_sku_order_success" json:"search_sku_order_success" bson:"search_sku_order_success"`
+    
 }
 
 // 对于api传递的 payment_pending_order 和 payment_success_order ，来设定支付状态
@@ -285,6 +288,32 @@ func SaveApiData(c *gin.Context){
             traceApiDbInfo.Resolution = preTraceInfo.Resolution
             traceApiDbInfo.ColorDepth = preTraceInfo.ColorDepth
         }
+        // 如果是订单数据，那么更新 SearchSkuOrder
+        
+        if traceApiDbInfo.Order.Invoice != "" &&  len(traceApiDbInfo.Order.Products) > 0 {
+            products := traceApiDbInfo.Order.Products
+            searchSkuOrder := make(map[string]map[string]int)
+            for i:=0; i<len(products); i++ {
+                product := products[i]
+                sku := product.Sku
+                searchInfo, _ := getBeforeCartOne(dbName, collName, traceApiDbInfo.Uuid, sku)
+                if searchInfo.Text != "" {
+                    skuQ := make(map[string]int)
+                    searchText := ClearDianChar(searchInfo.Text)
+                    
+                    if _,ok := searchSkuOrder[searchText]; ok {
+                        skuQ = searchSkuOrder[searchText]
+                    } else {
+                        skuQ = make(map[string]int)
+                    }
+                    skuQ[sku] = 1
+                    searchSkuOrder[searchText] = skuQ
+                    
+                }
+            }
+            traceApiDbInfo.SearchSkuOrder = searchSkuOrder
+        }
+        
     }
     
     //  ##############
