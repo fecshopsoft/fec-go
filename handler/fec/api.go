@@ -52,6 +52,14 @@ type TraceApiInfo struct{
     PaymentPendingOrder OrderInfo `form:"payment_pending_order" json:"payment_pending_order" bson:"payment_pending_order"`
     PaymentSuccessOrder OrderInfo `form:"payment_success_order" json:"payment_success_order" bson:"payment_success_order"`
     
+    Cart []CartItem `form:"cart" json:"cart" bson:"cart"`
+}
+
+// cart
+type CartItem struct{
+    Sku string `form:"sku" json:"sku" bson:"sku"`
+    Qty int64 `form:"qty" json:"qty" bson:"qty"`
+    Price float64 `form:"price" json:"price" bson:"price"`
 }
 
 func (traceApiDbInfo TraceApiDbInfo) TableName() string {
@@ -106,7 +114,7 @@ type TraceApiDbInfo struct{
     LoginEmail string `form:"login_email" json:"login_email" bson:"login_email"`
     RegisterEmail string `form:"register_email" json:"register_email" bson:"register_email"`
     Order OrderInfo `form:"order" json:"order" bson:"order"`
-    
+    Cart []CartItem `form:"cart" json:"cart" bson:"cart"`
     Ip string `form:"ip" json:"ip" bson:"ip"`
     CountryCode string `form:"country_code" json:"country_code" bson:"country_code"`
     CountryName string `form:"country_name" json:"country_name" bson:"country_name"`
@@ -129,6 +137,7 @@ type TraceApiDbInfo struct{
     Resolution string `form:"resolution" json:"resolution" bson:"resolution"`
     ColorDepth string `form:"color_depth" json:"color_depth" bson:"color_depth"`
     
+    SearchSkuCart map[string]map[string]int  `form:"search_sku_cart" json:"search_sku_cart" bson:"search_sku_cart"`
     SearchSkuOrder map[string]map[string]int  `form:"search_sku_order" json:"search_sku_order" bson:"search_sku_order"`
     // SearchSkuOrderSuccess map[string]map[string]int  `form:"search_sku_order_success" json:"search_sku_order_success" bson:"search_sku_order_success"`
     
@@ -242,6 +251,7 @@ func SaveApiData(c *gin.Context){
         traceApiDbInfo.LoginEmail = traceApiInfo.LoginEmail
         traceApiDbInfo.RegisterEmail = traceApiInfo.RegisterEmail
         traceApiDbInfo.Order = traceApiInfo.PaymentPendingOrder
+        traceApiDbInfo.Cart = traceApiInfo.Cart
         
         //  ##############
         
@@ -314,6 +324,28 @@ func SaveApiData(c *gin.Context){
             traceApiDbInfo.SearchSkuOrder = searchSkuOrder
         }
         
+        // 如果是购物车页面
+        if len(traceApiDbInfo.Cart) > 0 {
+            cartData := traceApiDbInfo.Cart
+            searchSkuCart := make(map[string]map[string]int)
+            for i:=0; i<len(cartData); i++ {
+                item := cartData[i]
+                sku := item.Sku
+                searchInfo, _ := getBeforeCartOne(dbName, collName, traceApiDbInfo.Uuid, sku)
+                if searchInfo.Text != "" {
+                    var skuQ  map[string]int
+                    searchText := ClearDianChar(searchInfo.Text)
+                    if _,ok := searchSkuCart[searchText]; ok {
+                        skuQ = searchSkuCart[searchText]
+                    } else {
+                        skuQ = make(map[string]int)
+                    }
+                    skuQ[sku] = 1
+                    searchSkuCart[searchText] = skuQ
+                }
+            }
+            traceApiDbInfo.SearchSkuCart = searchSkuCart
+        }
     }
     
     //  ##############

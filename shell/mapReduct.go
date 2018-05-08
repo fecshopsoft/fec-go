@@ -122,6 +122,26 @@ func mapReduceByDate(dateStr string) error{
             return err
         }
         
+        // 处理：Whole Search Lang
+        OutWholeSearchLangCollName := helper.GetOutWholeSearchLangCollName(websiteId)
+        err = whole.SearchLangMapReduct(dbName, collName, OutWholeSearchLangCollName, websiteId)
+        if err != nil {
+            return err
+        }
+        
+        // 处理：Whole Url
+        OutWholeUrlCollName := helper.GetOutWholeUrlCollName(websiteId)
+        err = whole.UrlMapReduct(dbName, collName, OutWholeUrlCollName, websiteId)
+        if err != nil {
+            return err
+        }
+        
+        // 处理：Whole First Url
+        OutWholeFirstUrlCollName := helper.GetOutWholeFirstUrlCollName(websiteId)
+        err = whole.FirstUrlMapReduct(dbName, collName, OutWholeFirstUrlCollName, websiteId)
+        if err != nil {
+            return err
+        }
         
     }
     return err

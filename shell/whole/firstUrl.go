@@ -14,19 +14,15 @@ import(
     
 )
 
-// Sku 统计计算部分
-func SkuMapReduct(dbName string, collName string, outCollName string, website_id string) error {
+// First Url 统计计算部分
+func FirstUrlMapReduct(dbName string, collName string, outCollName string, website_id string) error {
     var err error
     
     mapStr := `
         function() {  
             website_id = "` + website_id + `";
-            // browser_name = this.browser_name ? this.browser_name : null;
-            sku = this.sku ? this.sku : null;
-            // login_email 	= this.login_email ? [this.login_email] : null;
-            
+            url = this.url_new ? this.url_new : null;
             stay_seconds = this.stay_seconds ? this.stay_seconds : 0;
-            
             // 跳出个数和退出个数
             jump_out_count = 0;   //跳出
             drop_out_count = 0;		//退出
@@ -135,26 +131,14 @@ func SkuMapReduct(dbName string, collName string, outCollName string, website_id
             }
             service_date_str = this.service_date_str ? this.service_date_str : null;
             
-            cart = this.cart ? this.cart : null;
-            order = this.order ? this.order : null;
-            
-            cart_count = 0;
-            order_count = 0;
-            order_no_count = 0;
-            success_order_count = 0;
-            success_order_no_count = 0;
-            order_amount = 0;
-            success_order_amount = 0;
-            
             is_return = Number(is_return);
             is_return = isNaN(is_return) ? 0 : is_return
             first_page = Number(first_page);
             first_page = isNaN(first_page) ? 0 : first_page
-            
-            if (sku) {
-                emit(sku+"_"+service_date_str+"_"+website_id,{
+            if (first_page) {
+                emit(url+"_"+service_date_str+"_"+website_id,{
+                    url: url,
                     browser_name:browser_name,
-                    sku:sku,
                     pv:1,
                     uv:uv,
                     ip_count:ip_count,
@@ -165,14 +149,6 @@ func SkuMapReduct(dbName string, collName string, outCollName string, website_id
                     drop_out_count:drop_out_count,
                     devide:devide,
                     country_code:country_code,
-                    
-                    cart_count:cart_count,
-                    order_count:order_count,
-                    success_order_count:success_order_count,
-                    success_order_no_count:success_order_no_count,
-                    order_no_count:order_no_count,
-                    order_amount:order_amount,
-                    success_order_amount:success_order_amount,
                     operate:operate,
                     fec_app:fec_app,
                     resolution:resolution,
@@ -183,114 +159,13 @@ func SkuMapReduct(dbName string, collName string, outCollName string, website_id
                     service_date_str:service_date_str
                     
                 });
-            } else if (cart && cart.length > 0) {
-                for(x in cart){
-                    one = cart[x];
-                    if(one && one['qty']){
-                        sku = one['sku'];
-                        sku_qty = Number(one['qty'])
-                        cart_count = isNaN(sku_qty) ? 0 : sku_qty
-                        emit(sku+"_"+service_date_str+"_"+website_id,{
-                            browser_name:null,
-                            sku:sku,
-                            pv:0,
-                            uv:0,
-                            ip_count:0,
-                            rate_pv:0,
-                            stay_seconds:0,
-                            jump_out_count:0,
-                            drop_out_count:0,
-                            devide:null,
-                            country_code:null,
-                            
-                            cart_count:cart_count,
-                            order_count:order_count,
-                            success_order_count:success_order_count,
-                            success_order_no_count:success_order_no_count,
-                            order_no_count:order_no_count,
-                            order_amount:order_amount,
-                            success_order_amount:success_order_amount,
-                            operate: null,
-                            fec_app: null,
-                            resolution: null,
-                            color_depth: null,
-                            language: null,
-                            is_return: 0,
-                            first_page: 0,
-                            service_date_str:service_date_str
-                        });
-                    }
-                }
-            } else if( order && order['invoice'] && order['products'] ){
-                products = order['products'];
-                payment_status = order['payment_status'];
-                amount = order['amount'];
-                if(amount){
-                    order_amount = amount;
-                }
-                order_no_count = 1;
-                if(payment_status == 'payment_confirmed'){
-                    success_order_no_count = 1;
-                    if(amount){
-                        success_order_amount = amount;
-                    }
-                }
-                for(x in products){
-                    one = products[x];
-                    if(one && one['qty']){
-                        qty = Number(one['qty']);
-                        qty = isNaN(qty) ? 0 : qty
-                        order_count += qty;
-                        sku = one['sku'];
-                        price =one['price'];
-                        cart_count = 0;
-                        order_count = qty;
-                        success_order_count = 0;
-                        success_order_amount = 0;
-                        success_order_no_count = 0;
-                        if(payment_status == 'payment_confirmed'){
-                            success_order_count = qty;
-                            success_order_no_count = 1;
-                            success_order_amount = qty * price;
-                        }
-                        emit(sku+"_"+service_date_str+"_"+website_id,{
-                            browser_name:null,
-                            sku:sku,
-                            pv:0,
-                            uv:0,
-                            ip_count:0,
-                            rate_pv:0,
-                            stay_seconds:0,
-                            jump_out_count:0,
-                            drop_out_count:0,
-                            devide:null,
-                            country_code:null,
-                            
-                            cart_count:cart_count,
-                            order_count:order_count,
-                            success_order_count:success_order_count,
-                            success_order_no_count:success_order_no_count,
-                            order_no_count:order_no_count,
-                            order_amount:order_amount,
-                            success_order_amount:success_order_amount,
-                            operate: null,
-                            fec_app: null,
-                            resolution: null,
-                            color_depth: null,
-                            language: null,
-                            is_return: 0,
-                            first_page: 0,
-                            service_date_str:service_date_str
-                            
-                        });
-                    }
-                }
             }
         }
     `
     
     reduceStr := `
         function(key,emits){
+            this_url                = 0;
             this_pv 				= 0;
             this_rate_pv			= 0;
             this_uv 				= 0;
@@ -302,7 +177,6 @@ func SkuMapReduct(dbName string, collName string, outCollName string, website_id
             this_devide				= {};
             this_country_code		= {};
             this_browser_name		= {};
-            this_sku                = null;
             this_operate			= {};
             this_fec_app      			= {};
             this_is_return			= 0;
@@ -310,40 +184,12 @@ func SkuMapReduct(dbName string, collName string, outCollName string, website_id
             this_resolution			= {};
             this_color_depth		= {};
             this_language			= {};
-            this_cart_count				= 0;
-            this_order_count			= 0;	
-            this_success_order_count	= 0;
-            this_order_amount			= 0;
-            this_success_order_amount	= 0;
-            this_success_order_no_count	= 0;
-            this_order_no_count	= 0;
             
             for(var i in emits){
-                if(emits[i].sku){
-                    this_sku = emits[i].sku;
-                }
-                if(emits[i].cart_count){
-                    this_cart_count 			+= emits[i].cart_count;
-                }
-                if(emits[i].order_count){
-                    this_order_count 			+= emits[i].order_count;
-                }
-                if(emits[i].success_order_count){
-                    this_success_order_count 	+= emits[i].success_order_count;
-                }
-                if(emits[i].success_order_no_count){
-                    this_success_order_no_count += emits[i].success_order_no_count;
-                }
-                if(emits[i].order_no_count){
-                    this_order_no_count += emits[i].order_no_count;
-                }
-                if(emits[i].order_amount){
-                    this_order_amount 			+= emits[i].order_amount;
-                }
-                if(emits[i].success_order_amount){
-                    this_success_order_amount 	+= emits[i].success_order_amount;
-                }
                 
+                if(emits[i].url){
+                    this_url = emits[i].url;
+                }
                 if(emits[i].pv){
                     this_pv 			+= emits[i].pv;
                 }
@@ -359,7 +205,7 @@ func SkuMapReduct(dbName string, collName string, outCollName string, website_id
                 if(emits[i].service_date_str){
                     this_service_date_str = emits[i].service_date_str;
                 }
-                //this_customer_id = this_customer_id.concat(emits[i].customer_id);
+                
                 if(emits[i].jump_out_count){
                     this_jump_out_count += emits[i].jump_out_count;
                 }
@@ -479,8 +325,8 @@ func SkuMapReduct(dbName string, collName string, outCollName string, website_id
             }
             
             return {	
+                url: this_url,
                 browser_name:this_browser_name,
-                sku:this_sku,
                 pv:this_pv,
                 uv:this_uv,
                 rate_pv:this_rate_pv,
@@ -499,13 +345,7 @@ func SkuMapReduct(dbName string, collName string, outCollName string, website_id
                 resolution:this_resolution,
                 color_depth:this_color_depth,
                 language:this_language,
-                cart_count:this_cart_count,
-                order_count:this_order_count,	
-                success_order_count:this_success_order_count,
-                success_order_no_count:this_success_order_no_count,
-                order_no_count:this_order_no_count,
-                order_amount:this_order_amount,
-                success_order_amount:this_success_order_amount,
+                
                 service_date_str:this_service_date_str
             };
         }
@@ -524,27 +364,7 @@ func SkuMapReduct(dbName string, collName string, outCollName string, website_id
             }else{
                 this_pv_rate = 0;
             }
-            // 销售转换率
-            if(uv){
-                this_success_order_no_count = reducedVal.success_order_no_count;
-                this_sku_sale_rate = this_success_order_no_count/uv;
-                this_sku_sale_rate = this_sku_sale_rate*10000;
-                this_sku_sale_rate = Math.ceil(this_sku_sale_rate);
-                this_sku_sale_rate = this_sku_sale_rate/10000;
-            }else{
-                this_sku_sale_rate = 0;
-            }
-            // 订单支付率
-            order_no_count = reducedVal.order_no_count;
-            if(order_no_count){
-                this_success_order_no_count = reducedVal.success_order_no_count;
-                this_order_payment_rate = this_success_order_no_count/order_no_count;
-                this_order_payment_rate = this_order_payment_rate*10000;
-                this_order_payment_rate = Math.ceil(this_order_payment_rate);
-                this_order_payment_rate = this_order_payment_rate/10000;
-            }else{
-                this_order_payment_rate = 0;
-            }
+            
             // 跳出率
             if(uv){
                 this_jump_out_count = reducedVal.jump_out_count;
@@ -591,11 +411,6 @@ func SkuMapReduct(dbName string, collName string, outCollName string, website_id
             reducedVal.stay_seconds_rate = stay_seconds_rate;
             reducedVal.jump_out_rate     = this_jump_out_rate;
             reducedVal.drop_out_rate     = this_drop_out_rate;
-            reducedVal.sku_sale_rate     = this_sku_sale_rate;
-            reducedVal.order_payment_rate= this_order_payment_rate;
-            //reducedVal.country_code    = this_country_code;
-            //reducedVal.browser_name    = this_browser_name;
-            //reducedVal.operate 		 = this_operate;
             reducedVal.pv_rate		     = this_pv_rate;
             reducedVal.website_id        = "` + website_id + `"
             
@@ -621,17 +436,17 @@ func SkuMapReduct(dbName string, collName string, outCollName string, website_id
     }
     // 上面mongodb maoreduce处理完的数据，需要存储到es中
     // 得到 type 以及 index name
-    esWholeSkuTypeName :=  helper.GetEsWholeSkuTypeName()
-    esIndexName := helper.GetEsIndexNameByType(esWholeSkuTypeName)
+    esWholeFirstUrlTypeName :=  helper.GetEsWholeFirstUrlTypeName()
+    esIndexName := helper.GetEsIndexNameByType(esWholeFirstUrlTypeName)
     // es index 的type mapping
-    esWholeSkuTypeMapping := helper.GetEsWholeSkuTypeMapping()
+    esWholeFirstUrlTypeMapping := helper.GetEsWholeFirstUrlTypeMapping()
     // 删除index，如果mapping建立的不正确，可以执行下面的语句删除重建mapping
     //err = esdb.DeleteIndex(esIndexName)
     //if err != nil {
     //    return err
     //}
     // 初始化mapping
-    err = esdb.InitMapping(esIndexName, esWholeSkuTypeName, esWholeSkuTypeMapping)
+    err = esdb.InitMapping(esIndexName, esWholeFirstUrlTypeName, esWholeFirstUrlTypeMapping)
     if err != nil {
         return err
     }
@@ -652,21 +467,21 @@ func SkuMapReduct(dbName string, collName string, outCollName string, website_id
     for i:=0; i<pageNum; i++ {
         err = mongodb.MDC(dbName, outCollName, func(coll *mgo.Collection) error {
             var err error
-            var wholeSkus []model.WholeSku
-            coll.Find(nil).Skip(i*pageNum).Limit(numPerPage).All(&wholeSkus)
-            log.Println("wholeSkus length:")
-            log.Println(len(wholeSkus))
+            var wholeFirstUrls []model.WholeFirstUrl
+            coll.Find(nil).Skip(i*pageNum).Limit(numPerPage).All(&wholeFirstUrls)
+            log.Println("wholeFirstUrls length:")
+            log.Println(len(wholeFirstUrls))
             
             /* 这个代码是upsert单行数据
-            for j:=0; j<len(wholeSkus); j++ {
-                wholeBrowser := wholeSkus[j]
+            for j:=0; j<len(wholeFirstUrls); j++ {
+                wholeBrowser := wholeFirstUrls[j]
                 wholeBrowserValue := wholeBrowser.Value
                 // wholeBrowserValue.Devide = nil
                 // wholeBrowserValue.CountryCode = nil
                 ///wholeBrowserValue.Operate = nil
                 log.Println("ID_:" + wholeBrowser.Id_)
                 wholeBrowserValue.Id = wholeBrowser.Id_
-                err := esdb.UpsertType(esIndexName, esWholeSkuTypeName, wholeBrowser.Id_, wholeBrowserValue)
+                err := esdb.UpsertType(esIndexName, esWholeUrlTypeName, wholeBrowser.Id_, wholeBrowserValue)
                 
                 if err != nil {
                     log.Println("11111" + err.Error())
@@ -674,23 +489,23 @@ func SkuMapReduct(dbName string, collName string, outCollName string, website_id
                 }
             }
             */
-            if len(wholeSkus) > 0 {
+            if len(wholeFirstUrls) > 0 {
                 // 使用bulk的方式，将数据批量插入到elasticSearch
                 bulkRequest, err := esdb.Bulk()
                 if err != nil {
                     log.Println("444" + err.Error())
                     return err
                 }
-                for j:=0; j<len(wholeSkus); j++ {
-                    wholeSku := wholeSkus[j]
-                    wholeSkuValue := wholeSku.Value
-                    wholeSkuValue.Id = wholeSku.Id_
+                for j:=0; j<len(wholeFirstUrls); j++ {
+                    wholeFirstUrl := wholeFirstUrls[j]
+                    wholeFirstUrlValue := wholeFirstUrl.Value
+                    wholeFirstUrlValue.Id = wholeFirstUrl.Id_
                     log.Println("888")
                     log.Println(esIndexName)
-                    log.Println(esWholeSkuTypeName)
-                    log.Println(wholeSku.Id_)
-                    log.Println(wholeSkuValue)
-                    req := esdb.BulkUpsertTypeDoc(esIndexName, esWholeSkuTypeName, wholeSku.Id_, wholeSkuValue)
+                    log.Println(esWholeFirstUrlTypeName)
+                    log.Println(wholeFirstUrl.Id_)
+                    log.Println(wholeFirstUrlValue)
+                    req := esdb.BulkUpsertTypeDoc(esIndexName, esWholeFirstUrlTypeName, wholeFirstUrl.Id_, wholeFirstUrlValue)
                     bulkRequest = bulkRequest.Add(req)
                 }
                 bulkResponse, err := esdb.BulkRequestDo(bulkRequest)

@@ -74,4 +74,31 @@ func GetOutWholeSearchCollName(websiteId string) (string){
     return GetCollName("trace_whole_search_data", websiteId)
 }
 
+// 得到 search lang 统计后的数据输出的collection
+func GetOutWholeSearchLangCollName(websiteId string) (string){
+    return GetCollName("trace_whole_search_lang_data", websiteId)
+}
+
+// 得到 Url 统计后的数据输出的collection
+func GetOutWholeUrlCollName(websiteId string) (string){
+    return GetCollName("trace_whole_url_data", websiteId)
+}
+// 得到 First Url 统计后的数据输出的collection
+func GetOutWholeFirstUrlCollName(websiteId string) (string){
+    return GetCollName("trace_whole_first_url_data", websiteId)
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

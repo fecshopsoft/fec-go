@@ -202,8 +202,17 @@ func Listen(listenIp string) {
         // #### Whole Search
         v1.GET("/whole/search/list",            middleware.PermissionLoginToken, middleware.CommonAdminChildRole, wholeHandler.SearchList)
         v1.GET("/whole/search/fetchtrendinfo",  middleware.PermissionLoginToken, middleware.CommonAdminChildRole, wholeHandler.SearchTrendInfo)
+        // #### Whole Search Lang
+        v1.GET("/whole/searchlang/list",            middleware.PermissionLoginToken, middleware.CommonAdminChildRole, wholeHandler.SearchLangList)
+        v1.GET("/whole/searchlang/fetchtrendinfo",  middleware.PermissionLoginToken, middleware.CommonAdminChildRole, wholeHandler.SearchLangTrendInfo)
         
-        
+        // #### Whole Url
+        v1.GET("/whole/url/list",            middleware.PermissionLoginToken, middleware.CommonAdminChildRole, wholeHandler.UrlList)
+        v1.GET("/whole/url/fetchtrendinfo",  middleware.PermissionLoginToken, middleware.CommonAdminChildRole, wholeHandler.UrlTrendInfo)
+        // #### Whole First Url
+        v1.GET("/whole/firsturl/list",            middleware.PermissionLoginToken, middleware.CommonAdminChildRole, wholeHandler.FirstUrlList)
+        v1.GET("/whole/firsturl/fetchtrendinfo",  middleware.PermissionLoginToken, middleware.CommonAdminChildRole, wholeHandler.FirstUrlTrendInfo)
+       
         
         
         /*

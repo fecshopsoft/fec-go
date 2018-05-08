@@ -185,7 +185,7 @@ func SkuReferMapReduct(dbName string, collName string, outCollName string, websi
                     service_date_str:service_date_str
                     
                 });
-            } else if (cart) {
+            } else if (cart && cart.length > 0) {
                 for(x in cart){
                     one = cart[x];
                     if(one && one['qty']){

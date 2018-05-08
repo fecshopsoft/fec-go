@@ -70,7 +70,7 @@ type TraceGetInfo struct{
     
     
     
-    Cart string `form:"cart" json:"cart" bson:"cart"`
+    // Cart string `form:"cart" json:"cart" bson:"cart"`
     Search string `form:"search" json:"search" bson:"search"`
 }
 
@@ -158,9 +158,9 @@ type TraceInfo struct{
     Category string `form:"category" json:"category" bson:"category"`
     Sku string `form:"sku" json:"sku" bson:"sku"`
     SearchSkuClick int `form:"search_sku_click" json:"search_sku_click" bson:"search_sku_click"`
-    SearchSkuCart map[string]map[string]int  `form:"search_sku_cart" json:"search_sku_cart" bson:"search_sku_cart"`
+    // SearchSkuCart map[string]map[string]int  `form:"search_sku_cart" json:"search_sku_cart" bson:"search_sku_cart"`
     
-    Cart []CartItem `form:"cart" json:"cart" bson:"cart"`
+    // Cart []CartItem `form:"cart" json:"cart" bson:"cart"`
     Search SearchInfo `form:"search" json:"search" bson:"search"`
 }
 
@@ -198,12 +198,7 @@ type TraceMiddInfo struct{
     Sku string `form:"sku" json:"sku" bson:"sku"`
 }
 
-// cart
-type CartItem struct{
-    Sku string `form:"sku" json:"sku" bson:"sku"`
-    Qty int64 `form:"qty" json:"qty" bson:"qty"`
-    Price float64 `form:"price" json:"price" bson:"price"`
-}
+
 // search
 type SearchInfo struct{
     Text string `form:"text" json:"text" bson:"text" json:"text"`
@@ -232,10 +227,10 @@ func SaveJsData(c *gin.Context){
     // searchInfo.Text, _ = url.QueryUnescape(searchInfo.Text)
     traceInfo.Search = searchInfo
     // cart - 购物车
-    var cartItems []CartItem
-    traceGetInfo.Cart, _ = url.QueryUnescape(traceGetInfo.Cart)
-    err = json.Unmarshal([]byte(traceGetInfo.Cart), &cartItems)
-    traceInfo.Cart = cartItems
+    // var cartItems []CartItem
+    // traceGetInfo.Cart, _ = url.QueryUnescape(traceGetInfo.Cart)
+    // err = json.Unmarshal([]byte(traceGetInfo.Cart), &cartItems)
+    // traceInfo.Cart = cartItems
     // 其他变量赋值
     traceInfo.Uuid, _ = url.QueryUnescape(traceGetInfo.Uuid)
     traceInfo.WebsiteId, _ = url.QueryUnescape(traceGetInfo.WebsiteId)
@@ -352,9 +347,13 @@ func SaveJsData(c *gin.Context){
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return
     }
+    traceInfo.ReferUrl,_ = url.QueryUnescape(traceInfo.ReferUrl)
+    log.Println("ReferUrl:")
+    log.Println(traceInfo.ReferUrl);
     // 如果是产品页面，
     if traceInfo.Sku != "" {
         referUrl := traceInfo.ReferUrl
+        
         log.Println("referUrl:" + referUrl)
         if (referUrl != "" && helper.StrContains(referUrl, "/catalogsearch/index?q=")) || (referUrl !="" && helper.StrContains(referUrl, "/#/search/")) {
             log.Println("if success")
@@ -370,28 +369,7 @@ func SaveJsData(c *gin.Context){
             }
         }
     }
-    // 如果是购物车页面
-    if len(traceInfo.Cart) > 0 {
-        cartData := traceInfo.Cart
-        searchSkuCart := make(map[string]map[string]int)
-        for i:=0; i<len(cartData); i++ {
-            item := cartData[i]
-            sku := item.Sku
-            searchInfo, _ := getBeforeCartOne(dbName, collName, traceInfo.Uuid, sku)
-            if searchInfo.Text != "" {
-                var skuQ  map[string]int
-                searchText := ClearDianChar(searchInfo.Text)
-                if _,ok := searchSkuCart[searchText]; ok {
-                    skuQ = searchSkuCart[searchText]
-                } else {
-                    skuQ = make(map[string]int)
-                }
-                skuQ[sku] = 1
-                searchSkuCart[searchText] = skuQ
-            }
-        }
-        traceInfo.SearchSkuCart = searchSkuCart
-    }
+    
     // 进行保存。
     
     err = mongodb.MDC(dbName, collName, func(coll *mgo.Collection) error {

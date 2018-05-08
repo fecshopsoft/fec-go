@@ -393,3 +393,120 @@ func GetEsWholeSearchTypeMapping() (string){
 	}`
 }
 
+
+
+// Whole Search Lang Type Name
+func GetEsWholeSearchLangTypeName() (string){
+    return "whole_search_lang_data"
+}
+// Whole Search Lang Type Mapping
+func GetEsWholeSearchLangTypeMapping() (string){
+    return `{
+		"whole_search_lang_data":{
+            "properties":{
+                "id":               {"type":"keyword"},
+                "website_id":       {"type":"keyword"},
+                "language":         {"type":"keyword"},
+                "pv":               {"type":"integer"},
+                "uv":               {"type":"integer"},
+                "ip_count":         {"type":"integer"},
+                "jump_out_count":   {"type":"integer"},
+                "drop_out_count":   {"type":"integer"},
+                "stay_seconds":     {"type":"integer"},
+                "is_return":        {"type":"integer"},
+                "first_page":       {"type":"integer"},
+                "service_date_str": {"type":"date"},
+                "stay_seconds_rate":{"type":"float"},
+                "jump_out_rate":    {"type":"float"},
+                "drop_out_rate":    {"type":"float"},
+                "is_return_rate":   {"type":"float"},
+                "pv_rate":          {"type":"float"},
+                "search_text":       {"type":"keyword"},
+                "search_sku_click":             {"type":"integer"},
+                "search_login_email":           {"type":"integer"},
+                "search_sku_cart":              {"type":"integer"},
+                "search_sku_order":             {"type":"integer"},
+                "search_sku_order_success":     {"type":"integer"},
+                "search_qty":                   {"type":"integer"},
+                "search_sku_click_rate":        {"type":"float"},
+                "search_sale_rate":             {"type":"float"}
+            }
+        }
+	}`
+}
+
+
+
+// Whole Url Type Name
+func GetEsWholeUrlTypeName() (string){
+    return "whole_url_data"
+}
+// Whole Url Type Mapping
+func GetEsWholeUrlTypeMapping() (string){
+    return `{
+		"whole_url_data":{
+            "properties":{
+                "id":               {"type":"keyword"},
+                "website_id":       {"type":"keyword"},
+                "url":              {"type":"keyword"},
+                "pv":               {"type":"integer"},
+                "uv":               {"type":"integer"},
+                "ip_count":         {"type":"integer"},
+                "jump_out_count":   {"type":"integer"},
+                "drop_out_count":   {"type":"integer"},
+                "stay_seconds":     {"type":"integer"},
+                "is_return":        {"type":"integer"},
+                "first_page":       {"type":"integer"},
+                "service_date_str": {"type":"date"},
+                "stay_seconds_rate":{"type":"float"},
+                "jump_out_rate":    {"type":"float"},
+                "drop_out_rate":    {"type":"float"},
+                "is_return_rate":   {"type":"float"},
+                "pv_rate":          {"type":"float"}
+            }
+        }
+	}`
+}
+
+
+
+
+// Whole First Url Type Name
+func GetEsWholeFirstUrlTypeName() (string){
+    return "whole_first_url_data"
+}
+// Whole First Url Type Mapping
+func GetEsWholeFirstUrlTypeMapping() (string){
+    return `{
+		"whole_first_url_data":{
+            "properties":{
+                "id":               {"type":"keyword"},
+                "website_id":       {"type":"keyword"},
+                "url":              {"type":"keyword"},
+                "pv":               {"type":"integer"},
+                "uv":               {"type":"integer"},
+                "ip_count":         {"type":"integer"},
+                "jump_out_count":   {"type":"integer"},
+                "drop_out_count":   {"type":"integer"},
+                "stay_seconds":     {"type":"integer"},
+                "is_return":        {"type":"integer"},
+                "first_page":       {"type":"integer"},
+                "service_date_str": {"type":"date"},
+                "stay_seconds_rate":{"type":"float"},
+                "jump_out_rate":    {"type":"float"},
+                "drop_out_rate":    {"type":"float"},
+                "is_return_rate":   {"type":"float"},
+                "pv_rate":          {"type":"float"}
+            }
+        }
+	}`
+}
+
+
+
+
+
+
+
+
+

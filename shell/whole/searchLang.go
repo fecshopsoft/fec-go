@@ -15,13 +15,13 @@ import(
 )
 
 // Search 统计计算部分
-func SearchMapReduct(dbName string, collName string, outCollName string, website_id string) error {
+func SearchLangMapReduct(dbName string, collName string, outCollName string, website_id string) error {
     var err error
     
     mapStr := `
         function() {  
             website_id = "` + website_id + `";
-            
+            language 		= this.fec_lang ? this.fec_lang : null ;
             search = this.search ? this.search : null;
             search_text = null;
             search_qty  = 0;
@@ -122,14 +122,8 @@ func SearchMapReduct(dbName string, collName string, outCollName string, website
                 color_depth = null;
             }
             
-            language 		= this.fec_lang;
-            if(language){
-                b= {};
-                b[language] = 1;
-                language 	= b;
-            }else{
-                language = null;
-            }
+            
+            
             // first_page
             first_page 		= this.uuid_first_page ? this.uuid_first_page : 0;
             sku = this.sku ? this.sku : null;
@@ -150,10 +144,11 @@ func SearchMapReduct(dbName string, collName string, outCollName string, website
                 }
             }
             
-            if(search_text){
+            if(search_text && language){
                 if(sku){
-                    emit(search_text+"_"+service_date_str+"_"+website_id,{
+                    emit(search_text+"_"+language+"_"+service_date_str+"_"+website_id,{
                         search_text:search_text,
+                        language:language,
                         website_id:website_id,
                         pv:0,
                         rate_pv:0,
@@ -178,7 +173,7 @@ func SearchMapReduct(dbName string, collName string, outCollName string, website
                         fec_app:'',
                         resolution:'',
                         color_depth:'',
-                        language:'',
+                        
                         website_id:website_id,
                     
                         service_date_str:service_date_str
@@ -186,8 +181,9 @@ func SearchMapReduct(dbName string, collName string, outCollName string, website
                     });
 
                 }else{
-                    emit(search_text+"_"+service_date_str+"_"+website_id,{
+                    emit(search_text+"_"+language+"_"+service_date_str+"_"+website_id,{
                         search_text:search_text,
+                        language:language,
                         pv:1,
                         rate_pv:rate_pv,
                         search_qty:Number(search_qty),
@@ -212,7 +208,6 @@ func SearchMapReduct(dbName string, collName string, outCollName string, website
                         fec_app:fec_app,
                         resolution:resolution,
                         color_depth:color_depth,
-                        language:language,
                         website_id:website_id,
                         
                         service_date_str:service_date_str
@@ -234,8 +229,9 @@ func SearchMapReduct(dbName string, collName string, outCollName string, website
                         if(search_text.length > 260){
                             search_text = search_text.substring(0,260);
                         }
-                        emit(search_text+"_"+service_date_str+"_"+website_id,{
+                        emit(search_text+"_"+language+"_"+service_date_str+"_"+website_id,{
                             search_text:search_text,
+                            language:language,
                             pv:0,
                             rate_pv:0,
                             search_qty:0,
@@ -260,7 +256,6 @@ func SearchMapReduct(dbName string, collName string, outCollName string, website
                             fec_app:'',
                             resolution:'',
                             color_depth:'',
-                            language:'',
                             website_id:website_id,
                             
                             service_date_str:service_date_str
@@ -283,8 +278,9 @@ func SearchMapReduct(dbName string, collName string, outCollName string, website
                         if(search_text.length > 260){
                             search_text = search_text.substring(0,260);
                         }
-                        emit(search_text+"_"+service_date_str+"_"+website_id,{
+                        emit(search_text+"_"+language+"_"+service_date_str+"_"+website_id,{
                             search_text:search_text,
+                            language:language,
                             pv:0,
                             rate_pv:0,
                             search_qty:0,
@@ -308,7 +304,6 @@ func SearchMapReduct(dbName string, collName string, outCollName string, website
                             fec_app:'',
                             resolution:'',
                             color_depth:'',
-                            language:'',
                             website_id:website_id,
                             
                             service_date_str:service_date_str
@@ -333,8 +328,9 @@ func SearchMapReduct(dbName string, collName string, outCollName string, website
                         if(search_text.length > 260){
                             search_text = search_text.substring(0,260);
                         }
-                        emit(search_text+"_"+service_date_str+"_"+website_id,{
+                        emit(search_text+"_"+language+"_"+service_date_str+"_"+website_id,{
                             search_text:search_text,
+                            language:language,
                             pv:0,
                             rate_pv:0,
                             search_qty:0,
@@ -358,7 +354,6 @@ func SearchMapReduct(dbName string, collName string, outCollName string, website
                             fec_app:'',
                             resolution:'',
                             color_depth:'',
-                            language:'',
                             website_id:website_id,
                             
                             service_date_str:service_date_str
@@ -400,11 +395,14 @@ func SearchMapReduct(dbName string, collName string, outCollName string, website
             this_fec_app      			= {};
             this_resolution			= {};
             this_color_depth		= {};
-            this_language			= {};
+            this_language			= null;
             
             for(var i in emits){
                 if(emits[i].search_text){
                     this_search_text	=  emits[i].search_text;
+                }
+                if(emits[i].language){
+                    this_language	=  emits[i].language;
                 }
                 if(emits[i].search_qty){
                     this_search_qty		+=  emits[i].search_qty;
@@ -532,18 +530,7 @@ func SearchMapReduct(dbName string, collName string, outCollName string, website
                         }
                     }
                 }
-                if(emits[i].language){
-                    language = emits[i].language;
-                    for(brower_ne in language){
-                        
-                        count = language[brower_ne];
-                        if(!this_language[brower_ne]){
-                            this_language[brower_ne] = count;
-                        }else{
-                            this_language[brower_ne] += count;
-                        }
-                    }
-                }
+                
                 
                 if(emits[i].first_page){
                     this_first_page 		+= emits[i].first_page;
@@ -762,17 +749,17 @@ func SearchMapReduct(dbName string, collName string, outCollName string, website
     }
     // 上面mongodb maoreduce处理完的数据，需要存储到es中
     // 得到 type 以及 index name
-    esWholeSearchTypeName :=  helper.GetEsWholeSearchTypeName()
-    esIndexName := helper.GetEsIndexNameByType(esWholeSearchTypeName)
+    esWholeSearchLangTypeName :=  helper.GetEsWholeSearchLangTypeName()
+    esIndexName := helper.GetEsIndexNameByType(esWholeSearchLangTypeName)
     // es index 的type mapping
-    esWholeSearchTypeMapping := helper.GetEsWholeSearchTypeMapping()
+    esWholeSearchLangTypeMapping := helper.GetEsWholeSearchLangTypeMapping()
     // 删除index，如果mapping建立的不正确，可以执行下面的语句删除重建mapping
-    // err = esdb.DeleteIndex(esIndexName)
-    // if err != nil {
-    //     return err
-    // }
+    //err = esdb.DeleteIndex(esIndexName)
+    //if err != nil {
+    //    return err
+    //}
     // 初始化mapping
-    err = esdb.InitMapping(esIndexName, esWholeSearchTypeName, esWholeSearchTypeMapping)
+    err = esdb.InitMapping(esIndexName, esWholeSearchLangTypeName, esWholeSearchLangTypeMapping)
     if err != nil {
         return err
     }
@@ -793,14 +780,14 @@ func SearchMapReduct(dbName string, collName string, outCollName string, website
     for i:=0; i<pageNum; i++ {
         err = mongodb.MDC(dbName, outCollName, func(coll *mgo.Collection) error {
             var err error
-            var wholeSearchs []model.WholeSearch
-            coll.Find(nil).Skip(i*pageNum).Limit(numPerPage).All(&wholeSearchs)
-            log.Println("wholeSearchs length:")
-            log.Println(len(wholeSearchs))
+            var wholeSearchLangs []model.WholeSearchLang
+            coll.Find(nil).Skip(i*pageNum).Limit(numPerPage).All(&wholeSearchLangs)
+            log.Println("wholeSearchLangs length:")
+            log.Println(len(wholeSearchLangs))
             
             /* 这个代码是upsert单行数据
-            for j:=0; j<len(wholeSearchs); j++ {
-                wholeBrowser := wholeSearchs[j]
+            for j:=0; j<len(wholeSearchLangs); j++ {
+                wholeBrowser := wholeSearchLangs[j]
                 wholeBrowserValue := wholeBrowser.Value
                 // wholeBrowserValue.Devide = nil
                 // wholeBrowserValue.CountryCode = nil
@@ -815,23 +802,23 @@ func SearchMapReduct(dbName string, collName string, outCollName string, website
                 }
             }
             */
-            if len(wholeSearchs) > 0 {
+            if len(wholeSearchLangs) > 0 {
                 // 使用bulk的方式，将数据批量插入到elasticSearch
                 bulkRequest, err := esdb.Bulk()
                 if err != nil {
                     log.Println("444" + err.Error())
                     return err
                 }
-                for j:=0; j<len(wholeSearchs); j++ {
-                    wholeSearch := wholeSearchs[j]
-                    wholeSearchValue := wholeSearch.Value
-                    wholeSearchValue.Id = wholeSearch.Id_
+                for j:=0; j<len(wholeSearchLangs); j++ {
+                    wholeSearchLang := wholeSearchLangs[j]
+                    wholeSearchLangValue := wholeSearchLang.Value
+                    wholeSearchLangValue.Id = wholeSearchLang.Id_
                     log.Println("888")
                     log.Println(esIndexName)
-                    log.Println(esWholeSearchTypeName)
-                    log.Println(wholeSearch.Id_)
-                    log.Println(wholeSearchValue)
-                    req := esdb.BulkUpsertTypeDoc(esIndexName, esWholeSearchTypeName, wholeSearch.Id_, wholeSearchValue)
+                    log.Println(esWholeSearchLangTypeName)
+                    log.Println(wholeSearchLang.Id_)
+                    log.Println(wholeSearchLangValue)
+                    req := esdb.BulkUpsertTypeDoc(esIndexName, esWholeSearchLangTypeName, wholeSearchLang.Id_, wholeSearchLangValue)
                     bulkRequest = bulkRequest.Add(req)
                 }
                 bulkResponse, err := esdb.BulkRequestDo(bulkRequest)
