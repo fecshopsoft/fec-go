@@ -14,130 +14,131 @@ import(
     
 )
 
-// Url 统计计算部分
-func UrlMapReduct(dbName string, collName string, outCollName string, website_id string) error {
+// Category 统计计算部分
+func CategoryMapReduct(dbName string, collName string, outCollName string, website_id string) error {
     var err error
     
     mapStr := `
         function() {  
             website_id = "` + website_id + `";
-            url = this.url_new ? this.url_new : null;
-            stay_seconds = this.stay_seconds ? this.stay_seconds : 0;
-            // 跳出个数和退出个数
-            jump_out_count = 0;   //跳出
-            drop_out_count = 0;		//退出
-            // 最后一个页面
-            rate_pv = 0;
-            if(this.stay_seconds == 0){
-                // 如果这个页面是第一个访问的页面，则代表跳出
-                if(this.uuid_first_page == 1 ){
-                    jump_out_count = 1;
+            category = this.category ? this.category : null;
+            if (category) {
+                stay_seconds = this.stay_seconds ? this.stay_seconds : 0;
+                // 跳出个数和退出个数
+                jump_out_count = 0;   //跳出
+                drop_out_count = 0;		//退出
+                // 最后一个页面
+                rate_pv = 0;
+                if(this.stay_seconds == 0){
+                    // 如果这个页面是第一个访问的页面，则代表跳出
+                    if(this.uuid_first_page == 1 ){
+                        jump_out_count = 1;
+                    }else{
+                        drop_out_count = 1;
+                    }
                 }else{
-                    drop_out_count = 1;
+                    rate_pv = 1;
                 }
-            }else{
-                rate_pv = 1;
-            }
-            
-            devide 			= this.devide;
-            if(devide){
-                b= {};
-                b[devide] = 1;
-                devide 	= b;
-            }else{
-                devide = null;
-            }
-            
-            browser_name 			= this.browser_name;
-            if(browser_name){
-                b= {};
-                b[browser_name] = 1;
-                browser_name 	= b;
-            }else{
-                browser_name = null;
-            }
-            
-            // country_code
-            country_code 	= this.country_code;
-            if(country_code){
-                b= {};
-                b[country_code] = 1;
-                country_code 	= b;
-            }else{
-                country_code = null;
-            }
-            
-            // operate
-            operate 		= this.operate ;
-            if(operate){
-                b= {};
-                b[operate] = 1;
-                operate 	= b;
-            }else{
-                operate = null;
-            }
-            // fec_app
-            fec_app 		= this.fec_app ;
-            if(fec_app){
-                b= {};
-                b[fec_app] = 1;
-                fec_app 	= b;
-            }else{
-                fec_app = null;
-            }
-            
-            
-            resolution 		= this.resolution ;
-            if(resolution){
-                b= {};
-                b[resolution] = 1;
-                resolution 	= b;
-            }else{
-                resolution = null;
-            }
-            
-            color_depth 		= this.color_depth ;
-            if(color_depth){
-                b= {};
-                b[color_depth] = 1;
-                color_depth 	= b;
-            }else{
-                color_depth = null;
-            }
-            
-            language 		= this.fec_lang;
-            if(language){
-                b= {};
-                b[language] = 1;
-                language 	= b;
-            }else{
-                language = null;
-            }
-            
-            
-            // first_page
-            first_page 		= this.uuid_first_page ? this.uuid_first_page : 0;
-            
-            // 该处进行了更正，不应该 first_visit_this_url ，而应该使用 uuid_first_page
-            is_return = 0;
-            uv = 0;
-            ip_count = 0;
-            if(this.first_visit_this_url == 1){
-                uv = 1;
-                is_return 		= this.is_return ? this.is_return : 0;
-                ip_count = 1;
-            }else{
+                
+                devide 			= this.devide;
+                if(devide){
+                    b= {};
+                    b[devide] = 1;
+                    devide 	= b;
+                }else{
+                    devide = null;
+                }
+                
+                browser_name 			= this.browser_name;
+                if(browser_name){
+                    b= {};
+                    b[browser_name] = 1;
+                    browser_name 	= b;
+                }else{
+                    browser_name = null;
+                }
+                
+                // country_code
+                country_code 	= this.country_code;
+                if(country_code){
+                    b= {};
+                    b[country_code] = 1;
+                    country_code 	= b;
+                }else{
+                    country_code = null;
+                }
+                
+                // operate
+                operate 		= this.operate ;
+                if(operate){
+                    b= {};
+                    b[operate] = 1;
+                    operate 	= b;
+                }else{
+                    operate = null;
+                }
+                // fec_app
+                fec_app 		= this.fec_app ;
+                if(fec_app){
+                    b= {};
+                    b[fec_app] = 1;
+                    fec_app 	= b;
+                }else{
+                    fec_app = null;
+                }
+                
+                
+                resolution 		= this.resolution ;
+                if(resolution){
+                    b= {};
+                    b[resolution] = 1;
+                    resolution 	= b;
+                }else{
+                    resolution = null;
+                }
+                
+                color_depth 		= this.color_depth ;
+                if(color_depth){
+                    b= {};
+                    b[color_depth] = 1;
+                    color_depth 	= b;
+                }else{
+                    color_depth = null;
+                }
+                
+                language 		= this.fec_lang;
+                if(language){
+                    b= {};
+                    b[language] = 1;
+                    language 	= b;
+                }else{
+                    language = null;
+                }
+                
+                
+                // first_page
+                first_page 		= this.uuid_first_page ? this.uuid_first_page : 0;
+                
+                // 
+                is_return = 0;
                 uv = 0;
-            }
-            service_date_str = this.service_date_str ? this.service_date_str : null;
-            
-            is_return = Number(is_return);
-            is_return = isNaN(is_return) ? 0 : is_return
-            first_page = Number(first_page);
-            first_page = isNaN(first_page) ? 0 : first_page
-            if (url) {
-                emit(url+"_"+service_date_str+"_"+website_id,{
-                    url: url,
+                ip_count = 0;
+                if(this.uuid_first_category == 1){
+                    uv = 1;
+                    is_return 		= this.is_return ? this.is_return : 0;
+                }
+                if(this.ip_first_category == 1){
+                    ip_count = 1;
+                }
+                service_date_str = this.service_date_str ? this.service_date_str : null;
+                
+                is_return = Number(is_return);
+                is_return = isNaN(is_return) ? 0 : is_return
+                first_page = Number(first_page);
+                first_page = isNaN(first_page) ? 0 : first_page
+                
+                emit(category+"_"+service_date_str+"_"+website_id,{
+                    category: category,
                     browser_name:browser_name,
                     pv:1,
                     uv:uv,
@@ -165,7 +166,7 @@ func UrlMapReduct(dbName string, collName string, outCollName string, website_id
     
     reduceStr := `
         function(key,emits){
-            this_url                = 0;
+            this_category                = 0;
             this_pv 				= 0;
             this_rate_pv			= 0;
             this_uv 				= 0;
@@ -187,8 +188,8 @@ func UrlMapReduct(dbName string, collName string, outCollName string, website_id
             
             for(var i in emits){
                 
-                if(emits[i].url){
-                    this_url = emits[i].url;
+                if(emits[i].category){
+                    this_category = emits[i].category;
                 }
                 if(emits[i].pv){
                     this_pv 			+= emits[i].pv;
@@ -325,7 +326,7 @@ func UrlMapReduct(dbName string, collName string, outCollName string, website_id
             }
             
             return {	
-                url: this_url,
+                category: this_category,
                 browser_name:this_browser_name,
                 pv:this_pv,
                 uv:this_uv,
@@ -436,17 +437,17 @@ func UrlMapReduct(dbName string, collName string, outCollName string, website_id
     }
     // 上面mongodb maoreduce处理完的数据，需要存储到es中
     // 得到 type 以及 index name
-    esWholeUrlTypeName :=  helper.GetEsWholeUrlTypeName()
-    esIndexName := helper.GetEsIndexNameByType(esWholeUrlTypeName)
+    esWholeCategoryTypeName :=  helper.GetEsWholeCategoryTypeName()
+    esIndexName := helper.GetEsIndexNameByType(esWholeCategoryTypeName)
     // es index 的type mapping
-    esWholeUrlTypeMapping := helper.GetEsWholeUrlTypeMapping()
+    esWholeCategoryTypeMapping := helper.GetEsWholeCategoryTypeMapping()
     // 删除index，如果mapping建立的不正确，可以执行下面的语句删除重建mapping
     //err = esdb.DeleteIndex(esIndexName)
     //if err != nil {
     //    return err
     //}
     // 初始化mapping
-    err = esdb.InitMapping(esIndexName, esWholeUrlTypeName, esWholeUrlTypeMapping)
+    err = esdb.InitMapping(esIndexName, esWholeCategoryTypeName, esWholeCategoryTypeMapping)
     if err != nil {
         return err
     }
@@ -467,21 +468,21 @@ func UrlMapReduct(dbName string, collName string, outCollName string, website_id
     for i:=0; i<pageNum; i++ {
         err = mongodb.MDC(dbName, outCollName, func(coll *mgo.Collection) error {
             var err error
-            var wholeUrls []model.WholeUrl
-            coll.Find(nil).Skip(i*pageNum).Limit(numPerPage).All(&wholeUrls)
-            log.Println("wholeUrls length:")
-            log.Println(len(wholeUrls))
+            var WholeCategorys []model.WholeCategory
+            coll.Find(nil).Skip(i*pageNum).Limit(numPerPage).All(&WholeCategorys)
+            log.Println("WholeCategorys length:")
+            log.Println(len(WholeCategorys))
             
             /* 这个代码是upsert单行数据
-            for j:=0; j<len(wholeUrls); j++ {
-                wholeBrowser := wholeUrls[j]
+            for j:=0; j<len(WholeCategorys); j++ {
+                wholeBrowser := WholeCategorys[j]
                 wholeBrowserValue := wholeBrowser.Value
                 // wholeBrowserValue.Devide = nil
                 // wholeBrowserValue.CountryCode = nil
                 ///wholeBrowserValue.Operate = nil
                 log.Println("ID_:" + wholeBrowser.Id_)
                 wholeBrowserValue.Id = wholeBrowser.Id_
-                err := esdb.UpsertType(esIndexName, esWholeUrlTypeName, wholeBrowser.Id_, wholeBrowserValue)
+                err := esdb.UpsertType(esIndexName, esWholeCategoryTypeName, wholeBrowser.Id_, wholeBrowserValue)
                 
                 if err != nil {
                     log.Println("11111" + err.Error())
@@ -489,23 +490,23 @@ func UrlMapReduct(dbName string, collName string, outCollName string, website_id
                 }
             }
             */
-            if len(wholeUrls) > 0 {
+            if len(WholeCategorys) > 0 {
                 // 使用bulk的方式，将数据批量插入到elasticSearch
                 bulkRequest, err := esdb.Bulk()
                 if err != nil {
                     log.Println("444" + err.Error())
                     return err
                 }
-                for j:=0; j<len(wholeUrls); j++ {
-                    wholeUrl := wholeUrls[j]
-                    wholeUrlValue := wholeUrl.Value
-                    wholeUrlValue.Id = wholeUrl.Id_
+                for j:=0; j<len(WholeCategorys); j++ {
+                    WholeCategory := WholeCategorys[j]
+                    WholeCategoryValue := WholeCategory.Value
+                    WholeCategoryValue.Id = WholeCategory.Id_
                     log.Println("888")
                     log.Println(esIndexName)
-                    log.Println(esWholeUrlTypeName)
-                    log.Println(wholeUrl.Id_)
-                    log.Println(wholeUrlValue)
-                    req := esdb.BulkUpsertTypeDoc(esIndexName, esWholeUrlTypeName, wholeUrl.Id_, wholeUrlValue)
+                    log.Println(esWholeCategoryTypeName)
+                    log.Println(WholeCategory.Id_)
+                    log.Println(WholeCategoryValue)
+                    req := esdb.BulkUpsertTypeDoc(esIndexName, esWholeCategoryTypeName, WholeCategory.Id_, WholeCategoryValue)
                     bulkRequest = bulkRequest.Add(req)
                 }
                 bulkResponse, err := esdb.BulkRequestDo(bulkRequest)

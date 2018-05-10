@@ -135,7 +135,7 @@ func FirstUrlMapReduct(dbName string, collName string, outCollName string, websi
             is_return = isNaN(is_return) ? 0 : is_return
             first_page = Number(first_page);
             first_page = isNaN(first_page) ? 0 : first_page
-            if (first_page) {
+            if (first_page && url) {
                 emit(url+"_"+service_date_str+"_"+website_id,{
                     url: url,
                     browser_name:browser_name,

@@ -142,7 +142,18 @@ func mapReduceByDate(dateStr string) error{
         if err != nil {
             return err
         }
-        
+        // 处理：Whole Category
+        OutWholeCategoryCollName := helper.GetOutWholeCategoryCollName(websiteId)
+        err = whole.CategoryMapReduct(dbName, collName, OutWholeCategoryCollName, websiteId)
+        if err != nil {
+            return err
+        }
+        // 处理：Whole App
+        OutWholeAppCollName := helper.GetOutWholeAppCollName(websiteId)
+        err = whole.AppMapReduct(dbName, collName, OutWholeAppCollName, websiteId)
+        if err != nil {
+            return err
+        }
     }
     return err
 

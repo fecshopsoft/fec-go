@@ -6,6 +6,31 @@ import(
     "github.com/fecshopsoft/fec-go/helper"
 )
 
+
+
+
+/**
+ * 如果当前用户type == 2,则main_id = 当前用户的id
+ * 如果当前用户type == 3，则使用当前用户的parent_id
+ *
+ */
+func GetCustomerMainId(c *gin.Context) (int64){
+    // 添加创建人
+    customerId := helper.GetCurrentCustomerId(c)
+    customerType := helper.GetCurrentCustomerType(c)
+    if customerType == helper.AdminCommonType {
+        return customerId
+    }
+    if customerType == helper.AdminChildType {
+        customer, err := GetCustomerOneById(customerId)
+        if err != nil {
+            return 0
+        }
+        return customer.ParentId
+    }
+    return 0
+}
+
 /**
  * 通过前台传递的own_id，得到合法的own_id
  * 如果当前用户type == 2,则own_id = 当前用户的customerId

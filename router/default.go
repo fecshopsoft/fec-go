@@ -212,7 +212,15 @@ func Listen(listenIp string) {
         // #### Whole First Url
         v1.GET("/whole/firsturl/list",            middleware.PermissionLoginToken, middleware.CommonAdminChildRole, wholeHandler.FirstUrlList)
         v1.GET("/whole/firsturl/fetchtrendinfo",  middleware.PermissionLoginToken, middleware.CommonAdminChildRole, wholeHandler.FirstUrlTrendInfo)
-       
+        // #### Whole Category
+        v1.GET("/whole/category/list",            middleware.PermissionLoginToken, middleware.CommonAdminChildRole, wholeHandler.CategoryList)
+        v1.GET("/whole/category/fetchtrendinfo",  middleware.PermissionLoginToken, middleware.CommonAdminChildRole, wholeHandler.CategoryTrendInfo)
+        // #### Whole App
+        v1.GET("/whole/app/list",            middleware.PermissionLoginToken, middleware.CommonAdminChildRole, wholeHandler.AppList)
+        v1.GET("/whole/app/fetchtrendinfo",  middleware.PermissionLoginToken, middleware.CommonAdminChildRole, wholeHandler.AppTrendInfo)
+        // #### Whole Advertise
+        v1.GET("/whole/advertise/init",            middleware.PermissionLoginToken, middleware.CommonAdminChildRole, wholeHandler.AdvertiseInit)
+        v1.GET("/whole/advertise/generateurl",     middleware.PermissionLoginToken, middleware.CommonAdminChildRole, wholeHandler.AdvertiseGenerateUrl)
         
         
         /*

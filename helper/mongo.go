@@ -88,9 +88,16 @@ func GetOutWholeFirstUrlCollName(websiteId string) (string){
     return GetCollName("trace_whole_first_url_data", websiteId)
 }
 
+// 得到 Category 统计后的数据输出的collection
+func GetOutWholeCategoryCollName(websiteId string) (string){
+    return GetCollName("trace_whole_category_data", websiteId)
+}
 
 
-
+// 得到 App 统计后的数据输出的collection
+func GetOutWholeAppCollName(websiteId string) (string){
+    return GetCollName("trace_whole_app_data", websiteId)
+}
 
 
 

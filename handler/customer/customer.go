@@ -408,6 +408,23 @@ func CustomerAccountLogin(c *gin.Context){
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("该账户不存在或密码错误"))
         return  
     }
+    // 如果用户类型是 helper.AdminChildType,则判断他的主账户是否是有效的
+    if customerToken.Type == helper.AdminChildType {
+        parentId := customerToken.ParentId
+        var customerParentToken CustomerToken
+        //has, err := engine.Where(" password = ? ", encryptionPassStr).And(" username = ?", customer.Username).Get(&customer)
+        has, err := engine.Where("id = ?  and status = ? ", parentId, statusEnable).Get(&customerParentToken)
+        
+        if err != nil{
+            c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+            return  
+        }
+        if has != true{
+            c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("该账户对应的主账户已经被禁用，因此您无法登录"))
+            return  
+        }
+    }
+    
     token, err := security.JwtSignToken(customerToken)
     result := util.BuildSuccessResult(gin.H{
         "token": token,
@@ -579,6 +596,22 @@ func GetCustomerOneById(id int64) (Customer, error){
     }
     return customer, nil
 }
+
+// 找到own_id下的美工员工 job_type = 2
+func GetDesigiPersonByOwnId(own_id int64) ([]CustomerUsername, error) {
+    var customers []CustomerUsername
+    enableStatus := 1
+    jobType := 2
+    err := engine.
+        Where("parent_id = ? and job_type = ? and status = ?", own_id, jobType, enableStatus).
+        Find(&customers)
+    if err != nil {
+        return customers, err
+    } 
+    
+    return customers, nil
+}
+
 
 /**
  * 得到enable的common  admin 

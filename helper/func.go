@@ -24,6 +24,11 @@ type VueSelectOps struct{
     DisplayName string `form:"display_name" json:"display_name"`
 }
 
+type VueSelectStrOps struct{
+    Key string `form:"key" json:"key"`
+    DisplayName string `form:"display_name" json:"display_name"`
+}
+
 type DeleteIds struct{
     Ids []int `form:"ids" json:"ids"`
 }

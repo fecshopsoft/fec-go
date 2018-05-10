@@ -14,15 +14,17 @@ import(
     
 )
 
-// Url 统计计算部分
-func UrlMapReduct(dbName string, collName string, outCollName string, website_id string) error {
+// App 统计计算部分
+func AppMapReduct(dbName string, collName string, outCollName string, website_id string) error {
     var err error
     
     mapStr := `
         function() {  
             website_id = "` + website_id + `";
-            url = this.url_new ? this.url_new : null;
+            app = this.fec_app ? this.fec_app : null;
+            
             stay_seconds = this.stay_seconds ? this.stay_seconds : 0;
+            
             // 跳出个数和退出个数
             jump_out_count = 0;   //跳出
             drop_out_count = 0;		//退出
@@ -37,15 +39,6 @@ func UrlMapReduct(dbName string, collName string, outCollName string, website_id
                 }
             }else{
                 rate_pv = 1;
-            }
-            
-            devide 			= this.devide;
-            if(devide){
-                b= {};
-                b[devide] = 1;
-                devide 	= b;
-            }else{
-                devide = null;
             }
             
             browser_name 			= this.browser_name;
@@ -76,14 +69,14 @@ func UrlMapReduct(dbName string, collName string, outCollName string, website_id
             }else{
                 operate = null;
             }
-            // fec_app
-            fec_app 		= this.fec_app ;
-            if(fec_app){
+            // devide
+            devide 		= this.devide ;
+            if(devide){
                 b= {};
-                b[fec_app] = 1;
-                fec_app 	= b;
+                b[devide] = 1;
+                devide 	= b;
             }else{
-                fec_app = null;
+                devide = null;
             }
             
             
@@ -121,24 +114,76 @@ func UrlMapReduct(dbName string, collName string, outCollName string, website_id
             // 该处进行了更正，不应该 first_visit_this_url ，而应该使用 uuid_first_page
             is_return = 0;
             uv = 0;
-            ip_count = 0;
-            if(this.first_visit_this_url == 1){
+            if(this.uuid_first_page == 1){
                 uv = 1;
-                is_return 		= this.is_return ? this.is_return : 0;
+                is_return = this.is_return ? this.is_return : 0;
+            }
+            if(this.ip_first_page == 1){
                 ip_count = 1;
             }else{
-                uv = 0;
+                ip_count = 0;
             }
             service_date_str = this.service_date_str ? this.service_date_str : null;
             
-            is_return = Number(is_return);
-            is_return = isNaN(is_return) ? 0 : is_return
-            first_page = Number(first_page);
-            first_page = isNaN(first_page) ? 0 : first_page
-            if (url) {
-                emit(url+"_"+service_date_str+"_"+website_id,{
-                    url: url,
+            cart = this.cart ? this.cart : null;
+            order = this.order ? this.order : null;
+            
+            cart_count = 0;
+            order_count = 0;
+            order_no_count = 0;
+            success_order_count = 0;
+            success_order_no_count = 0;
+            order_amount = 0;
+            success_order_amount = 0;
+            
+            if(cart){
+                for(x in cart){
+                    one 		= cart[x];
+                    if(one && one['qty']){
+                        //$sku 		= one['sku'];
+                        var skuqty = Number(one['qty'])
+                        skuqty = isNaN(skuqty) ? 0 : skuqty
+                        cart_count += skuqty;
+                    }
+                }
+            }
+            
+            if(order && order['invoice'] && order['products']){
+                products = order['products'];
+                payment_status = order['payment_status'];
+                amount = order['amount'];
+                if(amount){
+                    order_amount = amount;
+                }
+                order_no_count = 1;
+                if(payment_status == 'payment_confirmed'){
+                    success_order_no_count = 1;
+                    if(amount){
+                        success_order_amount = amount;
+                    }
+                }
+                for(x in products){
+                    one = products[x];
+                    if(one && one['qty']){
+                        qty = Number(one['qty']);
+                        qty = isNaN(qty) ? 0 : qty
+                        order_count += qty;
+                        if(payment_status == 'payment_confirmed'){
+                            success_order_count += qty;
+                            
+                        }
+                    }
+                }
+            }
+            
+            if(app){
+                is_return = Number(is_return);
+                is_return = isNaN(is_return) ? 0 : is_return
+                first_page = Number(first_page);
+                first_page = isNaN(first_page) ? 0 : first_page
+                emit(app+"_"+service_date_str+"_"+website_id,{
                     browser_name:browser_name,
+                    app:app,
                     pv:1,
                     uv:uv,
                     ip_count:ip_count,
@@ -147,10 +192,18 @@ func UrlMapReduct(dbName string, collName string, outCollName string, website_id
                     //customer_id:customer_id,
                     jump_out_count:jump_out_count,
                     drop_out_count:drop_out_count,
-                    devide:devide,
                     country_code:country_code,
+                    
+                    cart_count:cart_count,
+                    order_count:order_count,
+                    success_order_count:success_order_count,
+                    success_order_no_count:success_order_no_count,
+                    order_no_count:order_no_count,
+                    order_amount:order_amount,
+                    success_order_amount:success_order_amount,
                     operate:operate,
-                    fec_app:fec_app,
+                    operate:operate,
+                    devide:devide,
                     resolution:resolution,
                     color_depth:color_depth,
                     language:language,
@@ -160,12 +213,12 @@ func UrlMapReduct(dbName string, collName string, outCollName string, website_id
                     
                 });
             }
+            
         }
     `
     
     reduceStr := `
         function(key,emits){
-            this_url                = 0;
             this_pv 				= 0;
             this_rate_pv			= 0;
             this_uv 				= 0;
@@ -174,22 +227,50 @@ func UrlMapReduct(dbName string, collName string, outCollName string, website_id
             this_jump_out_count		= 0;
             this_drop_out_count		= 0 ;
             this_service_date_str 	= null;
-            this_devide				= {};
             this_country_code		= {};
             this_browser_name		= {};
+            this_app            = null;
             this_operate			= {};
-            this_fec_app      			= {};
+            this_devide      	    = {};
             this_is_return			= 0;
             this_first_page			= 0;
             this_resolution			= {};
             this_color_depth		= {};
             this_language			= {};
+            this_cart_count				= 0;
+            this_order_count			= 0;	
+            this_success_order_count	= 0;
+            this_order_amount			= 0;
+            this_success_order_amount	= 0;
+            this_success_order_no_count	= 0;
+            this_order_no_count	= 0;
             
             for(var i in emits){
-                
-                if(emits[i].url){
-                    this_url = emits[i].url;
+                if(emits[i].app){
+                    this_app = emits[i].app;
                 }
+                if(emits[i].cart_count){
+                    this_cart_count 			+= emits[i].cart_count;
+                }
+                if(emits[i].order_count){
+                    this_order_count 			+= emits[i].order_count;
+                }
+                if(emits[i].success_order_count){
+                    this_success_order_count 	+= emits[i].success_order_count;
+                }
+                if(emits[i].success_order_no_count){
+                    this_success_order_no_count += emits[i].success_order_no_count;
+                }
+                if(emits[i].order_no_count){
+                    this_order_no_count += emits[i].order_no_count;
+                }
+                if(emits[i].order_amount){
+                    this_order_amount 			+= emits[i].order_amount;
+                }
+                if(emits[i].success_order_amount){
+                    this_success_order_amount 	+= emits[i].success_order_amount;
+                }
+                
                 if(emits[i].pv){
                     this_pv 			+= emits[i].pv;
                 }
@@ -205,7 +286,7 @@ func UrlMapReduct(dbName string, collName string, outCollName string, website_id
                 if(emits[i].service_date_str){
                     this_service_date_str = emits[i].service_date_str;
                 }
-                
+                //this_customer_id = this_customer_id.concat(emits[i].customer_id);
                 if(emits[i].jump_out_count){
                     this_jump_out_count += emits[i].jump_out_count;
                 }
@@ -215,19 +296,6 @@ func UrlMapReduct(dbName string, collName string, outCollName string, website_id
                 
                 if(emits[i].rate_pv){
                     this_rate_pv 		+= emits[i].rate_pv;
-                }
-                
-                if(emits[i].devide){
-                    devide = emits[i].devide;
-                    for(brower_ne in devide){
-                        
-                        count = devide[brower_ne];
-                        if(!this_devide[brower_ne]){
-                            this_devide[brower_ne] = count;
-                        }else{
-                            this_devide[brower_ne] += count;
-                        }
-                    }
                 }
                 
                 if(emits[i].country_code){
@@ -267,15 +335,15 @@ func UrlMapReduct(dbName string, collName string, outCollName string, website_id
                     }
                 }
                 
-                if(emits[i].fec_app){
-                    fec_app = emits[i].fec_app;
-                    for(brower_ne in fec_app){
+                if(emits[i].devide){
+                    devide = emits[i].devide;
+                    for(brower_ne in devide){
                         
-                        count = fec_app[brower_ne];
-                        if(!this_fec_app[brower_ne]){
-                            this_fec_app[brower_ne] = count;
+                        count = devide[brower_ne];
+                        if(!this_devide[brower_ne]){
+                            this_devide[brower_ne] = count;
                         }else{
-                            this_fec_app[brower_ne] += count;
+                            this_devide[brower_ne] += count;
                         }
                     }
                 }
@@ -325,7 +393,6 @@ func UrlMapReduct(dbName string, collName string, outCollName string, website_id
             }
             
             return {	
-                url: this_url,
                 browser_name:this_browser_name,
                 pv:this_pv,
                 uv:this_uv,
@@ -339,13 +406,19 @@ func UrlMapReduct(dbName string, collName string, outCollName string, website_id
                 country_code:this_country_code,
                 ip_count:this_ip_count,
                 operate:this_operate,
-                fec_app:this_fec_app,
+                app:this_app,
                 is_return:this_is_return,
                 first_page:this_first_page,
                 resolution:this_resolution,
                 color_depth:this_color_depth,
                 language:this_language,
-                
+                cart_count:this_cart_count,
+                order_count:this_order_count,	
+                success_order_count:this_success_order_count,
+                success_order_no_count:this_success_order_no_count,
+                order_no_count:this_order_no_count,
+                order_amount:this_order_amount,
+                success_order_amount:this_success_order_amount,
                 service_date_str:this_service_date_str
             };
         }
@@ -364,7 +437,27 @@ func UrlMapReduct(dbName string, collName string, outCollName string, website_id
             }else{
                 this_pv_rate = 0;
             }
-            
+            // 销售转换率
+            if(uv){
+                this_success_order_no_count = reducedVal.success_order_no_count;
+                this_sku_sale_rate = this_success_order_no_count/uv;
+                this_sku_sale_rate = this_sku_sale_rate*10000;
+                this_sku_sale_rate = Math.ceil(this_sku_sale_rate);
+                this_sku_sale_rate = this_sku_sale_rate/10000;
+            }else{
+                this_sku_sale_rate = 0;
+            }
+            // 订单支付率
+            order_no_count = reducedVal.order_no_count;
+            if(order_no_count){
+                this_success_order_no_count = reducedVal.success_order_no_count;
+                this_order_payment_rate = this_success_order_no_count/order_no_count;
+                this_order_payment_rate = this_order_payment_rate*10000;
+                this_order_payment_rate = Math.ceil(this_order_payment_rate);
+                this_order_payment_rate = this_order_payment_rate/10000;
+            }else{
+                this_order_payment_rate = 0;
+            }
             // 跳出率
             if(uv){
                 this_jump_out_count = reducedVal.jump_out_count;
@@ -411,12 +504,18 @@ func UrlMapReduct(dbName string, collName string, outCollName string, website_id
             reducedVal.stay_seconds_rate = stay_seconds_rate;
             reducedVal.jump_out_rate     = this_jump_out_rate;
             reducedVal.drop_out_rate     = this_drop_out_rate;
+            reducedVal.sku_sale_rate     = this_sku_sale_rate;
+            reducedVal.order_payment_rate= this_order_payment_rate;
+            //reducedVal.country_code    = this_country_code;
+            //reducedVal.browser_name    = this_browser_name;
+            //reducedVal.operate 		 = this_operate;
             reducedVal.pv_rate		     = this_pv_rate;
             reducedVal.website_id        = "` + website_id + `"
             
             return reducedVal;
         }
     `
+    log.Println("app begin mapreduce")
     // 结果输出的 mongodb collection
     outDoc := bson.M{"replace": outCollName}
     // 执行mapreduce的job struct
@@ -434,22 +533,24 @@ func UrlMapReduct(dbName string, collName string, outCollName string, website_id
     if err != nil {
         return err
     }
+    log.Println("app complete mapreduce")
     // 上面mongodb maoreduce处理完的数据，需要存储到es中
     // 得到 type 以及 index name
-    esWholeUrlTypeName :=  helper.GetEsWholeUrlTypeName()
-    esIndexName := helper.GetEsIndexNameByType(esWholeUrlTypeName)
+    esWholeAppTypeName :=  helper.GetEsWholeAppTypeName()
+    esIndexName := helper.GetEsIndexNameByType(esWholeAppTypeName)
     // es index 的type mapping
-    esWholeUrlTypeMapping := helper.GetEsWholeUrlTypeMapping()
+    esWholeAppTypeMapping := helper.GetEsWholeAppTypeMapping()
     // 删除index，如果mapping建立的不正确，可以执行下面的语句删除重建mapping
     //err = esdb.DeleteIndex(esIndexName)
     //if err != nil {
     //    return err
     //}
     // 初始化mapping
-    err = esdb.InitMapping(esIndexName, esWholeUrlTypeName, esWholeUrlTypeMapping)
+    err = esdb.InitMapping(esIndexName, esWholeAppTypeName, esWholeAppTypeMapping)
     if err != nil {
         return err
     }
+    log.Println("app complete mapping")
     // 同步mongo数据到ES
     // mongodb中的数据总数
     mCount := 0
@@ -460,28 +561,31 @@ func UrlMapReduct(dbName string, collName string, outCollName string, website_id
         return err
     })
     if err != nil {
+        //log.Println("get coll count error")
+        log.Println(err.Error())
         return err
     }
+    //log.Println("for each")
     numPerPage := helper.BulkSyncCount
     pageNum := int(math.Ceil(float64(mCount) / float64(numPerPage)))
     for i:=0; i<pageNum; i++ {
         err = mongodb.MDC(dbName, outCollName, func(coll *mgo.Collection) error {
             var err error
-            var wholeUrls []model.WholeUrl
-            coll.Find(nil).Skip(i*pageNum).Limit(numPerPage).All(&wholeUrls)
-            log.Println("wholeUrls length:")
-            log.Println(len(wholeUrls))
+            var WholeApps []model.WholeApp
+            coll.Find(nil).Skip(i*pageNum).Limit(numPerPage).All(&WholeApps)
+            log.Println("WholeApps length:")
+            log.Println(len(WholeApps))
             
             /* 这个代码是upsert单行数据
-            for j:=0; j<len(wholeUrls); j++ {
-                wholeBrowser := wholeUrls[j]
+            for j:=0; j<len(WholeApps); j++ {
+                wholeBrowser := WholeApps[j]
                 wholeBrowserValue := wholeBrowser.Value
                 // wholeBrowserValue.Devide = nil
                 // wholeBrowserValue.CountryCode = nil
                 ///wholeBrowserValue.Operate = nil
                 log.Println("ID_:" + wholeBrowser.Id_)
                 wholeBrowserValue.Id = wholeBrowser.Id_
-                err := esdb.UpsertType(esIndexName, esWholeUrlTypeName, wholeBrowser.Id_, wholeBrowserValue)
+                err := esdb.UpsertType(esIndexName, esWholeAppTypeName, WholeApp.Id_, WholeAppValue)
                 
                 if err != nil {
                     log.Println("11111" + err.Error())
@@ -489,23 +593,23 @@ func UrlMapReduct(dbName string, collName string, outCollName string, website_id
                 }
             }
             */
-            if len(wholeUrls) > 0 {
+            if len(WholeApps) > 0 {
                 // 使用bulk的方式，将数据批量插入到elasticSearch
                 bulkRequest, err := esdb.Bulk()
                 if err != nil {
                     log.Println("444" + err.Error())
                     return err
                 }
-                for j:=0; j<len(wholeUrls); j++ {
-                    wholeUrl := wholeUrls[j]
-                    wholeUrlValue := wholeUrl.Value
-                    wholeUrlValue.Id = wholeUrl.Id_
+                for j:=0; j<len(WholeApps); j++ {
+                    WholeApp := WholeApps[j]
+                    WholeAppValue := WholeApp.Value
+                    WholeAppValue.Id = WholeApp.Id_
                     log.Println("888")
                     log.Println(esIndexName)
-                    log.Println(esWholeUrlTypeName)
-                    log.Println(wholeUrl.Id_)
-                    log.Println(wholeUrlValue)
-                    req := esdb.BulkUpsertTypeDoc(esIndexName, esWholeUrlTypeName, wholeUrl.Id_, wholeUrlValue)
+                    log.Println(esWholeAppTypeName)
+                    log.Println(WholeApp.Id_)
+                    log.Println(WholeAppValue)
+                    req := esdb.BulkUpsertTypeDoc(esIndexName, esWholeAppTypeName, WholeApp.Id_, WholeAppValue)
                     bulkRequest = bulkRequest.Add(req)
                 }
                 bulkResponse, err := esdb.BulkRequestDo(bulkRequest)

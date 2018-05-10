@@ -239,10 +239,68 @@ func GetChannelCreatedCustomerOps(channelInfos []ChannelInfo) ([]helper.VueSelec
     return groupArr, nil
 }
 
+// 得到channel child Ops
+func GetChannelChildOpsByOwnIdAndChannel(own_id int64, channel string) ([]helper.VueSelectStrOps, error){
+    var groupArr []helper.VueSelectStrOps
+    channelInfos, err := GetChannelByOwnIdAndChannel(own_id, channel)
+    if err != nil{
+        return nil, err
+    }
+    for i:=0; i<len(channelInfos); i++ {
+        channelInfo := channelInfos[i]
+        groupArr = append(groupArr, helper.VueSelectStrOps{Key: channelInfo.ChannelChild, DisplayName: channelInfo.ChannelChild})
+    }
+    return groupArr, nil
+
+} 
+// 得到channel ops
+func GetChannelOpsByOwnId(own_id int64)([]helper.VueSelectStrOps, error){
+    var groupArr []helper.VueSelectStrOps
+    channelInfos, err := GetChannelByOwnId(own_id)
+    if err != nil{
+        return nil, err
+    }
+    s := make(map[string]string)
+    for i:=0; i<len(channelInfos); i++ {
+        channelInfo := channelInfos[i]
+        if _, ok := s[channelInfo.Channel]; !ok {
+            s[channelInfo.Channel] = channelInfo.Channel
+            groupArr = append(groupArr, helper.VueSelectStrOps{Key: channelInfo.Channel, DisplayName: channelInfo.Channel})
+        }
+    }
+    return groupArr, nil
+}
+
+/**
+ * 根据 own_id 查询得到 ChannelInfo
+ */
+func GetChannelByOwnId(own_id int64) ([]ChannelInfo, error){
+    // 得到结果数据
+    var channelInfos []ChannelInfo
+    err := engine.Where("own_id = ? ",own_id).Find(&channelInfos) 
+    if err != nil{
+        return channelInfos, err
+    }
+    return channelInfos, nil
+}
+
+/**
+ * 根据 own_id, channel 查询得到 ChannelInfo
+ */
+func GetChannelByOwnIdAndChannel(own_id int64, channel string) ([]ChannelInfo, error){
+    // 得到结果数据
+    var channelInfos []ChannelInfo
+    err := engine.Where("own_id = ? and channel = ? ", own_id, channel).Find(&channelInfos) 
+    if err != nil{
+        return channelInfos, err
+    }
+    return channelInfos, nil
+}
+ 
 
 /**
  * 根据 market_group_ids 查询得到 MarketGroup
- */
+
 func GetChannelByIds(market_group_ids []int64) ([]MarketGroup, error){
     // 得到结果数据
     var marketGroups []MarketGroup
@@ -252,3 +310,4 @@ func GetChannelByIds(market_group_ids []int64) ([]MarketGroup, error){
     }
     return marketGroups, nil
 }
+ */
