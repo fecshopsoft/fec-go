@@ -191,5 +191,13 @@ func Str(c int) (string) {
 func Str64(c int64) (string) {
     return strconv.Itoa(int(c))
 }
+// 字符串转换成数字Float64
+func Float64(str string) (float64, error) {
+    f, err := strconv.ParseFloat(str, 64)
+    if err != nil {
+        return 0, err
+    }
+    return f, nil
+}
 
 

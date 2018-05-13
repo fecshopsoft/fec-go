@@ -9,9 +9,8 @@ import(
     "errors"
     "github.com/globalsign/mgo"
     "github.com/globalsign/mgo/bson"
+    "github.com/fecshopsoft/fec-go/initialization"
 )
-
-
 
 
 // trace info
@@ -41,6 +40,7 @@ type TraceApiInfo struct{
     FecCampaign string `form:"fec_campaign" json:"fec_campaign" bson:"fec_campaign"`
     FecContent string `form:"fec_content" json:"fec_content" bson:"fec_content"`
     FecDesign string `form:"fec_design" json:"fec_design" bson:"fec_design"`
+    FecMarketGroup string `form:"fec_market_group" json:"fec_market_group" bson:"fec_market_group"`
     
     FecStore string `form:"fec_store" json:"fec_store" bson:"fec_store"`
     FecLang string `form:"fec_lang" json:"fec_lang" bson:"fec_lang"`
@@ -92,6 +92,7 @@ type TraceApiDbInfo struct{
     FecCampaign string `form:"fec_campaign" json:"fec_campaign" bson:"fec_campaign"`
     FecContent string `form:"fec_content" json:"fec_content" bson:"fec_content"`
     FecDesign string `form:"fec_design" json:"fec_design" bson:"fec_design"`
+    FecMarketGroup string `form:"fec_market_group" json:"fec_market_group" bson:"fec_market_group"`
     
     FecStore string `form:"fec_store" json:"fec_store" bson:"fec_store"`
     FecLang string `form:"fec_lang" json:"fec_lang" bson:"fec_lang"`
@@ -242,6 +243,15 @@ func SaveApiData(c *gin.Context){
         traceApiDbInfo.FecCampaign = traceApiInfo.FecCampaign
         traceApiDbInfo.FecContent = traceApiInfo.FecContent
         traceApiDbInfo.FecDesign = traceApiInfo.FecDesign
+        
+        // traceApiDbInfo.FecMarketGroup = traceApiInfo.FecMarketGroup
+        customerIdWithMarketGroup := initialization.CustomerIdWithMarketGroup
+        customerId, err := helper.Int64(traceApiDbInfo.FecContent)
+        if err == nil && customerId != 0 {
+            if mgId, ok := customerIdWithMarketGroup[customerId]; ok {
+                traceApiDbInfo.FecMarketGroup = helper.Str64(mgId)
+            }
+        }
         
         traceApiDbInfo.FecStore = traceApiInfo.FecStore
         traceApiDbInfo.FecLang = traceApiInfo.FecLang

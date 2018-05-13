@@ -2,6 +2,7 @@ package middleware
 
 import(
 	"sync"
+    "log"
     customerH "github.com/fecshopsoft/fec-go/handler/customer"
 )
 // https://studygolang.com/articles/7973
@@ -15,9 +16,16 @@ type CustomerResourceCache struct {
 	lock  sync.RWMutex
 }
 
+
 // 添加kv键值对
 func (this *CustomerResourceCache) Set(customer_id int64, resources []customerH.ResourceRole) {
-	this.lock.Lock()
+	log.Println("###################1")
+    log.Println(customer_id)
+    log.Println(resources)
+    this.lock.Lock()
+    if this.resources == nil {
+        this.resources = make(map[int64][]customerH.ResourceRole)
+    }
 	this.resources[customer_id] = resources
 	this.lock.Unlock()
 }

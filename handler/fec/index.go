@@ -8,6 +8,7 @@ import(
     "net/url"
     // "errors"
     "log"
+    "github.com/fecshopsoft/fec-go/initialization"
     "encoding/json"
     "github.com/globalsign/mgo"
     "github.com/globalsign/mgo/bson"
@@ -57,6 +58,7 @@ type TraceGetInfo struct{
     FecCampaign string `form:"fec_campaign" json:"fec_campaign" bson:"fec_campaign"`
     FecContent string `form:"fec_content" json:"fec_content" bson:"fec_content"`
     FecDesign string `form:"fec_design" json:"fec_design" bson:"fec_design"`
+    FecMarketGroup string `form:"fec_market_group" json:"fec_market_group" bson:"fec_market_group"`
     
     FecStore string `form:"fec_store" json:"fec_store" bson:"fec_store"`
     FecLang string `form:"fec_lang" json:"fec_lang" bson:"fec_lang"`
@@ -124,6 +126,7 @@ type TraceInfo struct{
     FecCampaign string `form:"fec_campaign" json:"fec_campaign" bson:"fec_campaign"`
     FecContent string `form:"fec_content" json:"fec_content" bson:"fec_content"`
     FecDesign string `form:"fec_design" json:"fec_design" bson:"fec_design"`
+    FecMarketGroup string `form:"fec_market_group" json:"fec_market_group" bson:"fec_market_group"`
     
     FecStore string `form:"fec_store" json:"fec_store" bson:"fec_store"`
     FecLang string `form:"fec_lang" json:"fec_lang" bson:"fec_lang"`
@@ -264,6 +267,17 @@ func SaveJsData(c *gin.Context){
     traceInfo.FecCampaign, _ = url.QueryUnescape(traceGetInfo.FecCampaign)
     traceInfo.FecContent, _ = url.QueryUnescape(traceGetInfo.FecContent)
     traceInfo.FecDesign, _ = url.QueryUnescape(traceGetInfo.FecDesign)
+    
+    // 通过 traceInfo.FecContent 查询得到 traceInfo.FecMarketGroup
+    
+    customerIdWithMarketGroup := initialization.CustomerIdWithMarketGroup
+    customerId, err := helper.Int64(traceInfo.FecContent)
+    if err == nil && customerId != 0 {
+        if mgId, ok := customerIdWithMarketGroup[customerId]; ok {
+            traceInfo.FecMarketGroup = helper.Str64(mgId)
+        }
+    }
+    
     // category
     traceInfo.Category, _ = url.QueryUnescape(traceGetInfo.Category)
     

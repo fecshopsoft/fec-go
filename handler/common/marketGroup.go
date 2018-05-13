@@ -216,7 +216,12 @@ func MarketGroupList(c *gin.Context){
     c.JSON(http.StatusOK, result)
 }
 
-
+func GetAllMarketGroup() ([]MarketGroup, error){
+    // 得到结果数据
+    var marketGroups []MarketGroup
+    err := engine.Find(&marketGroups) 
+    return marketGroups, err
+}
 
 
 // 通过创建人ids，得到创建人的name

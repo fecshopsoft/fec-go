@@ -41,6 +41,11 @@ func GetEngine() *(xorm.Engine){
 	return engine;
 }
 
+func CloseEngine() error{
+    engine := GetEngine()
+    return engine.Close()
+}
+
 type XOrmWhereParam map[string]interface{}
 
 /**

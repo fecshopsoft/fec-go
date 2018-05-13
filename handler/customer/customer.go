@@ -43,7 +43,7 @@ type Customer struct {
     Age int `form:"age" json:"age"`
     Type int `form:"type" json:"type"`
     
-    MarketGroupId int `form:"market_group_id" json:"market_group_id"`
+    MarketGroupId int64 `form:"market_group_id" json:"market_group_id"`
     JobType int `form:"job_type" json:"job_type"`
     
     ParentId int64 `form:"parent_id" json:"parent_id" xorm:"int null"`
