@@ -4,14 +4,19 @@ import(
     "github.com/fecshopsoft/fec-go/handler/customer"
     "github.com/fecshopsoft/fec-go/handler/common"
     "github.com/fecshopsoft/fec-go/util"
+    "github.com/fecshopsoft/fec-go/config"
     "github.com/gin-gonic/gin"
     "net/http"
+    "strconv"
     "net/url"
     "log"
+    "unicode/utf8"
+    "github.com/tealeg/xlsx"
     "github.com/fecshopsoft/fec-go/initialization"
     "github.com/fecshopsoft/fec-go/db/mysqldb"
     "github.com/fecshopsoft/fec-go/helper"
 )
+
 
 
 type Advertise struct {
@@ -74,7 +79,7 @@ func AdvertiseInit(c *gin.Context){
         }
         for i:=0; i<len(customers); i++ {
             customer := customers[i]
-            designOptions = append(designOptions, helper.VueSelectOps{Key: customer.Id, DisplayName: customer.Username})
+            designOptions = append(designOptions, helper.VueSelectOps{Key: customer.Id, DisplayName: customer.Name})
         }
     }
      log.Println("######3")
@@ -249,9 +254,218 @@ func AdvertiseGenerateUrl(c *gin.Context){
 }
 
 
+/**
+ * 列表查询
+ */
+func AdvertiseList(c *gin.Context){
+    engine := mysqldb.GetEngine()
+    // 获取参数并处理
+    var sortD string
+    var sortColumns string
+    var own_id int64
+    defaultPageNum:= c.GetString("defaultPageNum")
+    defaultPageCount := c.GetString("defaultPageCount")
+    page, _  := strconv.Atoi(c.DefaultQuery("page", defaultPageNum))
+    limit, _ := strconv.Atoi(c.DefaultQuery("limit", defaultPageCount))
+    advertise_id     := c.DefaultQuery("advertise_id", "")
+    fec_source     := c.DefaultQuery("fec_source", "")
+    fec_medium     := c.DefaultQuery("fec_medium", "")
+    own_id_i, _ := strconv.Atoi(c.DefaultQuery("own_id", ""))
+    own_id = int64(own_id_i)
+    // own_id = customer.GetCustomerMainId(c)
+    
+    sort     := c.DefaultQuery("sort", "")
+    created_at_begin := c.DefaultQuery("created_begin_timestamps", "")
+    created_at_end   := c.DefaultQuery("created_end_timestamps", "")
+    if utf8.RuneCountInString(sort) >= 2 {
+        sortD = string([]byte(sort)[:1])
+        sortColumns = string([]byte(sort)[1:])
+    } 
+    whereParam := make(mysqldb.XOrmWhereParam)
+    if advertise_id != "" {
+        whereParam["advertise_id"] = advertise_id
+    }  
+    if fec_source != "" {
+        whereParam["fec_source"] = fec_source
+    }  
+    if fec_medium != "" {
+        whereParam["fec_medium"] = fec_medium
+    }  
+    own_id, err := customer.Get3OwnId(c, own_id)
+    if err != nil{
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+        return  
+    }
+    if own_id != 0 {
+        whereParam["own_id"] = own_id
+    }
+    whereParam["created_at"] = []string{"scope", created_at_begin, created_at_end}
+    whereStr, whereVal := mysqldb.GetXOrmWhere(whereParam)
+    // 进行查询
+    query := engine.Limit(limit, (page-1)*limit)
+    if whereStr != "" {
+        query = query.Where(whereStr, whereVal...)
+    }
+    // 排序
+    if sortD == "+" && sortColumns != "" {
+        query = query.Asc(sortColumns)
+    } else if sortD == "-" && sortColumns != "" {
+        query = query.Desc(sortColumns)
+    }
+    // 得到查询count数
+    var advertise Advertise
+    counts, err := engine.Where(whereStr, whereVal...).Count(&advertise)
+    if err != nil{
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+        return  
+    }
+    // 得到结果数据
+    var advertises []Advertise
+    err = query.Find(&advertises) 
+    if err != nil{
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+        return  
+    }
+    ownNameOps, err := customer.Get3OwnNameOps(c)
+    if err != nil{
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+        return  
+    }
+    var designGroupArr  []helper.VueSelectOps
+    var contentGroupArr []helper.VueSelectOps
+    var marketGroupArr  []helper.VueSelectOps
+    
+    for i:=0; i<len(advertises); i++ {
+        advertise := advertises[i]
+        fecDesignInt64, _ := helper.Int64(advertise.FecDesign)
+        designGroupVal := initialization.CustomerIdWithName[fecDesignInt64]
+        designGroupArr = append(designGroupArr, helper.VueSelectOps{Key: fecDesignInt64, DisplayName: designGroupVal})
+        
+        fecContent64, _ := helper.Int64(advertise.FecContent)
+        contentGroupVal := initialization.CustomerIdWithName[fecContent64]
+        contentGroupArr = append(contentGroupArr, helper.VueSelectOps{Key: fecContent64, DisplayName: contentGroupVal})
+        
+        marketGroup := advertise.MarketGroup
+        marketGroupVal := initialization.MarketGroupIdWithName[advertise.MarketGroup]
+        marketGroupArr = append(marketGroupArr, helper.VueSelectOps{Key: marketGroup, DisplayName: marketGroupVal})
+        
+        // helper.VueSelectOps{Key: channelInfo.Channel, DisplayName: channelInfo.Channel}
+    }
+    
+    // 生成返回结果
+    result := util.BuildSuccessResult(gin.H{
+        "items": advertises,
+        "total": counts,
+        "ownNameOps": ownNameOps,
+        "designGroupOps": designGroupArr,
+        "contentGroupOps": contentGroupArr,
+        "marketGroupOps": marketGroupArr,
+    })
+    // 返回json
+    c.JSON(http.StatusOK, result)
+}
 
+func AdvertiseDownloadMutilXlsx(c *gin.Context){
+    c.File("/root/go/src/github.com/fecshopsoft/fec-go/marketurl.xlsx")
 
+}
 
+func GenerateMutilAdvertise(c *gin.Context){
+    //得到上传的文件
+    file, err := c.FormFile("file") //image这个是uplaodify参数定义中的   'fileObjName':'image'
+    fileName := "/" + helper.RandomUUID() + ".xlsx"
+    outfileName := "/out_" + helper.RandomUUID() + ".xlsx"
+    saveUploadFileDir := config.Get("saveUploadFileDir")
+    saveUploadFileName := saveUploadFileDir + fileName
+    outUploadFileName := saveUploadFileDir + outfileName
+    log.Println(saveUploadFileName)
+    err = c.SaveUploadedFile(file, saveUploadFileName)
+    if err != nil{
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+        return  
+    }
+    // 用excel打开 文件 saveUploadFileName
+    
+    xlFile, err := xlsx.OpenFile(saveUploadFileName)
+    if err != nil{
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+        return  
+    }
+    
+    var file2 *xlsx.File
+    var sheet2 *xlsx.Sheet
+    var row2 *xlsx.Row
+    var cell2 *xlsx.Cell
+
+    file2 = xlsx.NewFile()
+    sheet2, err = file2.AddSheet("Sheet1")
+    if err != nil {
+        
+    }
+    // 增加标题
+    row2 = sheet2.AddRow()
+    cell2 = row2.AddCell()
+    cell2.Value = "url"
+    cell2 = row2.AddCell()
+    cell2.Value = "fec_source"
+    cell2 = row2.AddCell()
+    cell2.Value = "fec_medium"
+    cell2 = row2.AddCell()
+    cell2.Value = "fec_campaign"
+    cell2 = row2.AddCell()
+    cell2.Value = "fec_design"
+    cell2 = row2.AddCell()
+    cell2.Value = "fec_content"
+    cell2 = row2.AddCell()
+    cell2.Value = "advertise_cost($)"
+    cell2 = row2.AddCell()
+    cell2.Value = "remark"
+    
+    for _, sheet := range xlFile.Sheets {
+        ii := 0
+        for _, row := range sheet.Rows {
+            ii = ii + 1
+            if ii > 1 {
+                rowCells    := row.Cells
+                url         := rowCells[0].String()
+                source      := rowCells[1].String()
+                medium      := rowCells[2].String()
+                campaign    := rowCells[3].String()
+                design      := rowCells[4].String()
+                content     := rowCells[5].String()
+                cost        := rowCells[6].String()
+                remark      := rowCells[7].String()
+                
+                log.Println("url:" + url)
+                log.Println("source:" + source)
+                log.Println("medium:" + medium)
+                log.Println("campaign:" + campaign)
+                log.Println("design:" + design)
+                log.Println("content:" + content)
+                log.Println("cost:" + cost)
+                log.Println("remark:" + remark)
+                
+                row2 = sheet2.AddRow()
+                cell2 = row2.AddCell()
+                cell2.Value = "I am a cell!"
+                cell2 = row2.AddCell()
+                cell2.Value = "222"
+                cell2 = row2.AddCell()
+                cell2.Value = "3333"
+            
+            }  
+        }
+    }
+    
+    err = file2.Save(outUploadFileName)
+    if err != nil {
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+        return  
+    }
+    
+    c.File(outUploadFileName)
+
+}
 
 
 

@@ -29,6 +29,7 @@ type CustomerToken struct {
 type CustomerUsername struct {
     Id int64 `form:"id" json:"id"`
     Username string `form:"username" json:"username" binding:"required"`
+    Name string `form:"name" json:"name"`
 }
 
 type Customer struct {

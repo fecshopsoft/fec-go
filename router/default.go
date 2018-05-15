@@ -221,6 +221,9 @@ func Listen(listenIp string) {
         // #### Whole Advertise
         v1.GET("/whole/advertise/init",            middleware.PermissionLoginToken, middleware.CommonAdminChildRole, wholeHandler.AdvertiseInit)
         v1.GET("/whole/advertise/generateurl",     middleware.PermissionLoginToken, middleware.CommonAdminChildRole, wholeHandler.AdvertiseGenerateUrl)
+        v1.GET("/whole/advertise/list",            middleware.PermissionLoginToken, middleware.CommonAdminChildRole, wholeHandler.AdvertiseList)
+        v1.GET("/whole/advertise/download/mutilxlsx", wholeHandler.AdvertiseDownloadMutilXlsx)
+        v1.POST("/whole/advertise/generatemutiladvertise", middleware.PermissionLoginToken, middleware.CommonAdminChildRole, wholeHandler.GenerateMutilAdvertise)
         
         
         /*
