@@ -224,6 +224,8 @@ func Listen(listenIp string) {
         v1.GET("/whole/advertise/list",            middleware.PermissionLoginToken, middleware.CommonAdminChildRole, wholeHandler.AdvertiseList)
         v1.GET("/whole/advertise/download/mutilxlsx", wholeHandler.AdvertiseDownloadMutilXlsx)
         v1.POST("/whole/advertise/generatemutiladvertise", middleware.PermissionLoginToken, middleware.CommonAdminChildRole, wholeHandler.GenerateMutilAdvertise)
+        v1.POST("/whole/advertise/generatemutillinkadvertise", middleware.PermissionLoginToken, middleware.CommonAdminChildRole, wholeHandler.GenerateMutilLinkAdvertise)
+        
         
         
         /*
@@ -353,3 +355,20 @@ func initLog() {
 	gin.DefaultErrorWriter = errorFile
 	//gin.RecoveryWithWriter(gin_error_file)
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

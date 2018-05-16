@@ -98,10 +98,7 @@ func AdvertiseInit(c *gin.Context){
 
 
 func AdvertiseGenerateUrl(c *gin.Context){
-    engine := mysqldb.GetEngine()
     errStr := ""
-    warnStr := ""
-    successInfo := gin.H{}
     channel         := c.DefaultQuery("channel", "")
     channel_child   := c.DefaultQuery("channel_child", "")
     campaign        := c.DefaultQuery("campaign", "")
@@ -109,6 +106,31 @@ func AdvertiseGenerateUrl(c *gin.Context){
     advertise_url   := c.DefaultQuery("advertise_url", "")
     advertise_cost  := c.DefaultQuery("advertise_cost", "")
     remark          := c.DefaultQuery("remark", "")
+    
+    // 其他信息
+    currentCustomerId := helper.GetCurrentCustomerId(c)
+    own_id := customer.GetCustomerMainId(c)
+    
+    customerOne, err := customer.GetCustomerOneById(currentCustomerId)
+    if err != nil {
+        errStr += err.Error()
+    }
+    marketGroupId := customerOne.MarketGroupId
+    
+    errStr, warnStr, successInfo, _ := generateAdvertiseInfo(channel, channel_child, campaign, design_person, advertise_url,  advertise_cost, remark, currentCustomerId, own_id, marketGroupId, errStr, "")
+    result := util.BuildSuccessResult(gin.H{
+        "error": errStr,
+        "warning": warnStr,
+        "success_info": successInfo,
+    })
+    // 返回json
+    c.JSON(http.StatusOK, result)
+}
+
+func generateAdvertiseInfo(channel string, channel_child string, campaign string, design_person string, advertise_url string,  advertise_cost string, remark string, currentCustomerId int64, own_id int64, marketGroupId int64, errStr string, fid string) (string, string, gin.H, string) {
+    engine := mysqldb.GetEngine()
+    warnStr := ""
+    successInfo := gin.H{}
     // 判断必填参数是否缺失
     if advertise_url == "" {
         errStr += "广告链接URL不能为空，"
@@ -153,15 +175,7 @@ func AdvertiseGenerateUrl(c *gin.Context){
     }
     
     
-    // 其他信息
-    currentCustomerId := helper.GetCurrentCustomerId(c)
-    own_id := customer.GetCustomerMainId(c)
     
-    customerOne, err := customer.GetCustomerOneById(currentCustomerId)
-    if err != nil {
-        errStr += err.Error()
-    }
-    marketGroupId := customerOne.MarketGroupId
     // 写入数据库
     var advertise Advertise
     if errStr == "" {
@@ -184,8 +198,15 @@ func AdvertiseGenerateUrl(c *gin.Context){
             errStr += "插入失败"
         } else {
             id := advertise.Id
-            advertise_id := int64(100000000) + id
-            advertise.AdvertiseId = helper.Str64(advertise_id)
+            //var advertise_id int64
+            if fid == "" {
+                //advertise_id = int64(1000000000) + id
+                //advertise_id_str := helper.Str64(advertise_id)
+                advertise.AdvertiseId = helper.RandomUUID()
+                fid = advertise.AdvertiseId
+            } else {
+                advertise.AdvertiseId = fid
+            }
             // url 添加参数
             u, _ := url.Parse(advertise.Url)
             q, _ := url.ParseQuery(u.RawQuery)
@@ -219,7 +240,7 @@ func AdvertiseGenerateUrl(c *gin.Context){
                     "advertise_url": advertise.AdvertiseUrl,
                     "created_at": advertise.CreatedAt,
                     "origin_url": advertise_url,
-                    "fid": advertise_id,
+                    "fid": fid,
                     "channel": advertise.FecSource,
                     "channel_child": advertise.FecMedium,
                     "campaign": advertise.FecCampaign,
@@ -244,13 +265,15 @@ func AdvertiseGenerateUrl(c *gin.Context){
     // fecshop.appfront.fancyecommerce.com?fid=1111&fec_source=2222&fec_medium=3333&fec_campaign=4444&fec_content=5555&fec_design=6666
     // fec_source 渠道，fec_medium 子渠道， fec_campaign 活动， fec_content 员工，fec_design 美工
     // successStr += "success"
-    result := util.BuildSuccessResult(gin.H{
+    /*
+    return gin.H{
         "error": errStr,
         "warning": warnStr,
         "success_info": successInfo,
-    })
-    // 返回json
-    c.JSON(http.StatusOK, result)
+    }
+    */
+    return errStr, warnStr, successInfo, fid
+
 }
 
 
@@ -405,21 +428,41 @@ func GenerateMutilAdvertise(c *gin.Context){
     // 增加标题
     row2 = sheet2.AddRow()
     cell2 = row2.AddCell()
-    cell2.Value = "url"
+    cell2.Value = "origin url（初始URL）"
     cell2 = row2.AddCell()
-    cell2.Value = "fec_source"
+    cell2.Value = "fec_source（渠道）"
     cell2 = row2.AddCell()
-    cell2.Value = "fec_medium"
+    cell2.Value = "fec_medium（子渠道）"
     cell2 = row2.AddCell()
-    cell2.Value = "fec_campaign"
+    cell2.Value = "fec_campaign（活动）"
     cell2 = row2.AddCell()
-    cell2.Value = "fec_design"
+    cell2.Value = "fec_design（美工）"
     cell2 = row2.AddCell()
-    cell2.Value = "fec_content"
+    cell2.Value = "advertise_cost（广告费）"
     cell2 = row2.AddCell()
-    cell2.Value = "advertise_cost($)"
+    cell2.Value = "remark（广告备注）"
+    
     cell2 = row2.AddCell()
-    cell2.Value = "remark"
+    cell2.Value = "error_info（报错信息）"
+    cell2 = row2.AddCell()
+    cell2.Value = "warn_info（警告信息，可忽略）"
+    cell2 = row2.AddCell()
+    cell2.Value = "fid（广告唯一标示）"
+    cell2 = row2.AddCell()
+    cell2.Value = "advertise_person（广告员工）"
+    cell2 = row2.AddCell()
+    cell2.Value = "advertise_market_group（广告小组）"
+    cell2 = row2.AddCell()
+    cell2.Value = "advertise_url（广告url，您的广告请使用下面的url）"
+    //
+    errStr := ""
+    currentCustomerId := helper.GetCurrentCustomerId(c)
+    own_id := customer.GetCustomerMainId(c)
+    customerOne, err := customer.GetCustomerOneById(currentCustomerId)
+    if err != nil {
+        errStr += err.Error()
+    }
+    marketGroupId := customerOne.MarketGroupId
     
     for _, sheet := range xlFile.Sheets {
         ii := 0
@@ -427,32 +470,87 @@ func GenerateMutilAdvertise(c *gin.Context){
             ii = ii + 1
             if ii > 1 {
                 rowCells    := row.Cells
-                url         := rowCells[0].String()
-                source      := rowCells[1].String()
-                medium      := rowCells[2].String()
-                campaign    := rowCells[3].String()
-                design      := rowCells[4].String()
-                content     := rowCells[5].String()
-                cost        := rowCells[6].String()
-                remark      := rowCells[7].String()
+                rowLen := len(rowCells)
+                url := ""
+                if rowLen > 0 {
+                    url = rowCells[0].String()
+                }
+                source := ""
+                if rowLen > 1 {
+                    source = rowCells[1].String()
+                }
+                medium := ""
+                if rowLen > 2 {
+                    medium = rowCells[2].String()
+                }
+                campaign := ""
+                if rowLen > 3 {
+                    campaign = rowCells[3].String()
+                }
+                design := ""
+                if rowLen > 4 {
+                    design = rowCells[4].String()
+                }
+                //content     := rowCells[5].String()
+                cost := ""
+                if rowLen > 5 {
+                    cost = rowCells[5].String()
+                }
+                remark := ""
+                if rowLen > 6 {
+                    remark = rowCells[6].String()
+                }
                 
                 log.Println("url:" + url)
                 log.Println("source:" + source)
                 log.Println("medium:" + medium)
                 log.Println("campaign:" + campaign)
                 log.Println("design:" + design)
-                log.Println("content:" + content)
+                // log.Println("content:" + content)
                 log.Println("cost:" + cost)
                 log.Println("remark:" + remark)
-                
+                // 加入原始信息
                 row2 = sheet2.AddRow()
                 cell2 = row2.AddCell()
-                cell2.Value = "I am a cell!"
+                cell2.Value = url
                 cell2 = row2.AddCell()
-                cell2.Value = "222"
+                cell2.Value = source
                 cell2 = row2.AddCell()
-                cell2.Value = "3333"
-            
+                cell2.Value = medium
+                cell2 = row2.AddCell()
+                cell2.Value = campaign
+                cell2 = row2.AddCell()
+                cell2.Value = design
+                cell2 = row2.AddCell()
+                cell2.Value = cost
+                cell2 = row2.AddCell()
+                cell2.Value = remark
+                // 计算信息
+                errStr, warnStr, successInfo, _ := generateAdvertiseInfo(source, medium, campaign, design, url,  cost, remark, currentCustomerId, own_id, marketGroupId, errStr, "")
+                cell2 = row2.AddCell()
+                cell2.Value = errStr
+                cell2 = row2.AddCell()
+                cell2.Value = warnStr
+                if errStr == "" && successInfo != nil {
+                    
+                    cell2 = row2.AddCell()
+                    cell2.Value, _ = successInfo["fid"].(string)
+                    cell2 = row2.AddCell()
+                    cell2.Value, _ = successInfo["advertise_person"].(string)
+                    cell2 = row2.AddCell()
+                    cell2.Value, _ = successInfo["advertise_market_group"].(string)
+                    cell2 = row2.AddCell()
+                    cell2.Value, _ = successInfo["advertise_url"].(string)
+                } else {
+                    cell2 = row2.AddCell()
+                    cell2.Value = ""
+                    cell2 = row2.AddCell()
+                    cell2.Value = ""
+                    cell2 = row2.AddCell()
+                    cell2.Value = ""
+                    cell2 = row2.AddCell()
+                    cell2.Value = ""
+                }
             }  
         }
     }
@@ -470,5 +568,201 @@ func GenerateMutilAdvertise(c *gin.Context){
 
 
 
+func GenerateMutilLinkAdvertise(c *gin.Context){
+    //得到上传的文件
+    file, err := c.FormFile("file") //image这个是uplaodify参数定义中的   'fileObjName':'image'
+    fileName := "/" + helper.RandomUUID() + ".xlsx"
+    outfileName := "/out_" + helper.RandomUUID() + ".xlsx"
+    saveUploadFileDir := config.Get("saveUploadFileDir")
+    saveUploadFileName := saveUploadFileDir + fileName
+    outUploadFileName := saveUploadFileDir + outfileName
+    log.Println(saveUploadFileName)
+    err = c.SaveUploadedFile(file, saveUploadFileName)
+    if err != nil{
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+        return  
+    }
+    // 用excel打开 文件 saveUploadFileName
+    
+    xlFile, err := xlsx.OpenFile(saveUploadFileName)
+    if err != nil{
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+        return  
+    }
+    
+    var file2 *xlsx.File
+    var sheet2 *xlsx.Sheet
+    var row2 *xlsx.Row
+    var cell2 *xlsx.Cell
 
+    file2 = xlsx.NewFile()
+    sheet2, err = file2.AddSheet("Sheet1")
+    if err != nil {
+        
+    }
+    // 增加标题
+    row2 = sheet2.AddRow()
+    cell2 = row2.AddCell()
+    cell2.Value = "origin url（初始URL）"
+    cell2 = row2.AddCell()
+    cell2.Value = "fec_source（渠道）"
+    cell2 = row2.AddCell()
+    cell2.Value = "fec_medium（子渠道）"
+    cell2 = row2.AddCell()
+    cell2.Value = "fec_campaign（活动）"
+    cell2 = row2.AddCell()
+    cell2.Value = "fec_design（美工）"
+    cell2 = row2.AddCell()
+    cell2.Value = "advertise_cost（广告费）"
+    cell2 = row2.AddCell()
+    cell2.Value = "remark（广告备注）"
+    
+    cell2 = row2.AddCell()
+    cell2.Value = "error_info（报错信息）"
+    cell2 = row2.AddCell()
+    cell2.Value = "warn_info（警告信息，可忽略）"
+    cell2 = row2.AddCell()
+    cell2.Value = "fid（广告唯一标示）"
+    cell2 = row2.AddCell()
+    cell2.Value = "advertise_person（广告员工）"
+    cell2 = row2.AddCell()
+    cell2.Value = "advertise_market_group（广告小组）"
+    cell2 = row2.AddCell()
+    cell2.Value = "advertise_url（广告url，您的广告请使用下面的url）"
+    //
+    errStr := ""
+    currentCustomerId := helper.GetCurrentCustomerId(c)
+    own_id := customer.GetCustomerMainId(c)
+    customerOne, err := customer.GetCustomerOneById(currentCustomerId)
+    if err != nil {
+        errStr += err.Error()
+    }
+    marketGroupId := customerOne.MarketGroupId
+    fid := ""
+    for _, sheet := range xlFile.Sheets {
+        ii := 0
+        for _, row := range sheet.Rows {
+            ii = ii + 1
+            if ii > 1 {
+                rowCells    := row.Cells
+                rowLen := len(rowCells)
+                url := ""
+                if rowLen > 0 {
+                    url = rowCells[0].String()
+                }
+                source := ""
+                if rowLen > 1 {
+                    source = rowCells[1].String()
+                }
+                medium := ""
+                if rowLen > 2 {
+                    medium = rowCells[2].String()
+                }
+                campaign := ""
+                if rowLen > 3 {
+                    campaign = rowCells[3].String()
+                }
+                design := ""
+                if rowLen > 4 {
+                    design = rowCells[4].String()
+                }
+                //content     := rowCells[5].String()
+                cost := ""
+                if rowLen > 5 {
+                    cost = rowCells[5].String()
+                }
+                remark := ""
+                if rowLen > 6 {
+                    remark = rowCells[6].String()
+                }
+                
+                log.Println("url:" + url)
+                log.Println("source:" + source)
+                log.Println("medium:" + medium)
+                log.Println("campaign:" + campaign)
+                log.Println("design:" + design)
+                // log.Println("content:" + content)
+                log.Println("cost:" + cost)
+                log.Println("remark:" + remark)
+                // 加入原始信息
+                row2 = sheet2.AddRow()
+                cell2 = row2.AddCell()
+                cell2.Value = url
+                cell2 = row2.AddCell()
+                cell2.Value = source
+                cell2 = row2.AddCell()
+                cell2.Value = medium
+                cell2 = row2.AddCell()
+                cell2.Value = campaign
+                cell2 = row2.AddCell()
+                cell2.Value = design
+                cell2 = row2.AddCell()
+                cell2.Value = cost
+                cell2 = row2.AddCell()
+                cell2.Value = remark
+                // 计算信息
+                var warnStr string
+                var successInfo gin.H
+                
+                errStr, warnStr, successInfo, fid = generateAdvertiseInfo(source, medium, campaign, design, url,  cost, remark, currentCustomerId, own_id, marketGroupId, errStr, fid)
+                cell2 = row2.AddCell()
+                cell2.Value = errStr
+                cell2 = row2.AddCell()
+                cell2.Value = warnStr
+                if errStr == "" && successInfo != nil {
+                    
+                    cell2 = row2.AddCell()
+                    cell2.Value, _ = successInfo["fid"].(string)
+                    cell2 = row2.AddCell()
+                    cell2.Value, _ = successInfo["advertise_person"].(string)
+                    cell2 = row2.AddCell()
+                    cell2.Value, _ = successInfo["advertise_market_group"].(string)
+                    cell2 = row2.AddCell()
+                    cell2.Value, _ = successInfo["advertise_url"].(string)
+                } else {
+                    cell2 = row2.AddCell()
+                    cell2.Value = ""
+                    cell2 = row2.AddCell()
+                    cell2.Value = ""
+                    cell2 = row2.AddCell()
+                    cell2.Value = ""
+                    cell2 = row2.AddCell()
+                    cell2.Value = ""
+                }
+            }  
+        }
+    }
+    
+    err = file2.Save(outUploadFileName)
+    if err != nil {
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+        return  
+    }
+    
+    c.File(outUploadFileName)
 
+}
+
+/*
+ return gin.H{
+        "error": errStr,
+        "warning": warnStr,
+        "success_info": successInfo,
+    }
+
+successInfo = gin.H{
+                    "advertise_url": advertise.AdvertiseUrl,
+                    "created_at": advertise.CreatedAt,
+                    "origin_url": advertise_url,
+                    "fid": advertise_id,
+                    "channel": advertise.FecSource,
+                    "channel_child": advertise.FecMedium,
+                    "campaign": advertise.FecCampaign,
+                    "design_person": initialization.CustomerIdWithName[fecDesignInt64],
+                    "advertise_person": initialization.CustomerIdWithName[fecContent64],
+                    "advertise_market_group": initialization.MarketGroupIdWithName[advertise.MarketGroup],
+                    "advertise_cost": advertise.AdvertiseCost,
+                    "advertise_remark": advertise.Remark,
+                }
+
+*/

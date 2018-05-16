@@ -112,6 +112,7 @@ func RandomUUID() string{
     return u.String()
 }
 
+
 // 通过随机生成的uuid，得到access token
 func GenerateAccessToken() (string, error){
     uuid := RandomUUID()
