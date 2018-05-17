@@ -8,6 +8,7 @@ import(
     testHandler "github.com/fecshopsoft/fec-go/handler/test"
     cronHandler "github.com/fecshopsoft/fec-go/handler/cron"
     wholeHandler "github.com/fecshopsoft/fec-go/handler/whole"
+    advertiseHandler "github.com/fecshopsoft/fec-go/handler/advertise"
     "github.com/fecshopsoft/fec-go/middleware"
     "github.com/fecshopsoft/fec-go/config"
     "github.com/fecshopsoft/fec-go/initialization"
@@ -226,6 +227,9 @@ func Listen(listenIp string) {
         v1.POST("/whole/advertise/generatemutiladvertise", middleware.PermissionLoginToken, middleware.CommonAdminChildRole, wholeHandler.GenerateMutilAdvertise)
         v1.POST("/whole/advertise/generatemutillinkadvertise", middleware.PermissionLoginToken, middleware.CommonAdminChildRole, wholeHandler.GenerateMutilLinkAdvertise)
         
+        // #### Advertise Fid
+        v1.GET("/advertise/fid/list",            middleware.PermissionLoginToken, middleware.CommonAdminChildRole, advertiseHandler.FidList)
+        v1.GET("/advertise/fid/fetchtrendinfo",  middleware.PermissionLoginToken, middleware.CommonAdminChildRole, advertiseHandler.FidTrendInfo)
         
         
         /*

@@ -147,6 +147,11 @@ type TraceInfo struct{
     // Ip First Page ，类似上面的 uuid_first_page
     IpFirstPage int `form:"ip_first_page" json:"ip_first_page" bson:"ip_first_page"`
     // uuid 
+    UuidFirstFid int `form:"uuid_first_fid" json:"uuid_first_fid" bson:"uuid_first_fid"`
+    //
+    IpFirstFid int `form:"ip_first_fid" json:"ip_first_fid" bson:"ip_first_fid"`
+    
+    // uuid 
     UuidFirstCategory int `form:"uuid_first_category" json:"uuid_first_category" bson:"uuid_first_category"`
     //
     IpFirstCategory int `form:"ip_first_category" json:"ip_first_category" bson:"ip_first_category"`
@@ -185,6 +190,11 @@ type TraceMiddInfo struct{
     UuidFirstPage int `form:"uuid_first_page" json:"uuid_first_page" bson:"uuid_first_page"`
     // Ip First Page ，类似上面的 uuid_first_page
     IpFirstPage int `form:"ip_first_page" json:"ip_first_page" bson:"ip_first_page"`
+    // uuid 
+    UuidFirstFid int `form:"uuid_first_fid" json:"uuid_first_fid" bson:"uuid_first_fid"`
+    //
+    IpFirstFid int `form:"ip_first_fid" json:"ip_first_fid" bson:"ip_first_fid"`
+    
     // uuid 
     UuidFirstCategory int `form:"uuid_first_category" json:"uuid_first_category" bson:"uuid_first_category"`
     //
@@ -327,6 +337,22 @@ func SaveJsData(c *gin.Context){
     if err != nil {
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return
+    }
+    
+    if traceInfo.Fid != "" {
+        // UuidFirstFid
+        traceInfo.UuidFirstFid, err = getUuidFirstFid(dbName, collName, traceInfo.Uuid, traceInfo.Fid)
+        if err != nil {
+            c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+            return
+        }
+        // IpFirstCategory
+        traceInfo.IpFirstFid, err = getIpFirstFid(dbName, collName, ipStr, traceInfo.Fid)
+        if err != nil {
+            c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+            return
+        }
+        
     }
     
     if traceInfo.Category != "" {

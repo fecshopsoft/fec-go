@@ -3,6 +3,7 @@ package shell
 import(
     "github.com/fecshopsoft/fec-go/helper"
     "github.com/fecshopsoft/fec-go/shell/whole"
+    "github.com/fecshopsoft/fec-go/shell/advertise"
     "log"
     "os"
     commonHandler "github.com/fecshopsoft/fec-go/handler/common"
@@ -151,6 +152,14 @@ func mapReduceByDate(dateStr string) error{
         // 处理：Whole App
         OutWholeAppCollName := helper.GetOutWholeAppCollName(websiteId)
         err = whole.AppMapReduct(dbName, collName, OutWholeAppCollName, websiteId)
+        if err != nil {
+            return err
+        }
+        
+        
+        // 处理：Advertise Fid
+        OutAdvertiseFidCollName := helper.GetOutAdvertiseFidCollName(websiteId)
+        err = advertise.FidMapReduct(dbName, collName, OutAdvertiseFidCollName, websiteId)
         if err != nil {
             return err
         }

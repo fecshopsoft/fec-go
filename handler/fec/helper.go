@@ -197,6 +197,45 @@ func getIpFirstCategory(dbName string, collName string, ipStr string, categoryNa
     return ipFirstCategory, err
 }  
 
+
+
+func getUuidFirstFid(dbName string, collName string, uuid string, fid string) (int, error) {
+    var uuidFirstFid int = 0
+    err := mongodb.MDC(dbName, collName, func(coll *mgo.Collection) error {
+        var traceInfo TraceMiddInfo
+        
+        _ = coll.Find(bson.M{"uuid": uuid, "fid": fid}).One(&traceInfo)
+        
+        // 如果查询不到，则说明该ip为首次访问
+        if traceInfo.Uuid == "" {
+            uuidFirstFid = 1
+        } else {
+            return nil
+        }
+        return nil
+    })
+    return uuidFirstFid, err
+} 
+   
+func getIpFirstFid(dbName string, collName string, ipStr string, fid string) (int, error) {
+    var ipFirstFid int = 0
+    err := mongodb.MDC(dbName, collName, func(coll *mgo.Collection) error {
+        var traceInfo TraceMiddInfo
+        
+        _ = coll.Find(bson.M{"ip": ipStr, "fid": fid}).One(&traceInfo)
+        
+        // 如果查询不到，则说明该ip为首次访问
+        if traceInfo.Ip == "" {
+            ipFirstFid = 1
+        } else {
+            return nil
+        }
+        return nil
+    })
+    return ipFirstFid, err
+}  
+
+
 func getUrlNew(originUrl string) string{
     return originUrl
 }
