@@ -6,6 +6,7 @@ import(
     "net/http"
     "github.com/fecshopsoft/fec-go/helper"
     "github.com/fecshopsoft/fec-go/shell/model"
+    "github.com/fecshopsoft/fec-go/initialization"
     "context"
     "strconv"
     "log"
@@ -139,6 +140,9 @@ func FidList(c *gin.Context){
         return
     }
     
+    var designGroupArr  []helper.VueSelectOps
+    var contentGroupArr []helper.VueSelectOps
+    var marketGroupArr  []helper.VueSelectOps
     
     var ts []model.AdvertiseFidValue
     if searchResult.Hits.TotalHits > 0 {
@@ -154,6 +158,19 @@ func FidList(c *gin.Context){
                 return
             }
             ts = append(ts, advertiseFid)
+            
+            fecDesignInt64, _ := helper.Int64(advertiseFid.FecDesign)
+            designGroupVal := initialization.CustomerIdWithName[fecDesignInt64]
+            designGroupArr = append(designGroupArr, helper.VueSelectOps{Key: fecDesignInt64, DisplayName: designGroupVal})
+            
+            fecContent64, _ := helper.Int64(advertiseFid.FecContent)
+            contentGroupVal := initialization.CustomerIdWithName[fecContent64]
+            contentGroupArr = append(contentGroupArr, helper.VueSelectOps{Key: fecContent64, DisplayName: contentGroupVal})
+            
+            fecMarketGroup64, _ := helper.Int64(advertiseFid.FecMarketGroup)
+            marketGroupVal := initialization.MarketGroupIdWithName[fecMarketGroup64]
+            marketGroupArr = append(marketGroupArr, helper.VueSelectOps{Key: fecMarketGroup64, DisplayName: marketGroupVal})
+            
         }
     }
     ownNameOptions, err := getOwnNames(c, selectOwnIds)
@@ -178,6 +195,9 @@ func FidList(c *gin.Context){
         "ownNameOptions": ownNameOptions,
         "siteIdOptions": siteNameOptions,
         "siteImgUrls": siteImgUrls,
+        "designGroupOps": designGroupArr,
+        "contentGroupOps": contentGroupArr,
+        "marketGroupOps": marketGroupArr,
     })
     // 返回json
     c.JSON(http.StatusOK, result)
@@ -264,6 +284,13 @@ func FidTrendInfo(c *gin.Context){
     SkuSaleRateTrend := make(map[string]float64)
     
     
+    RegisterCountTrend := make(map[string]int64)
+    LoginCountTrend := make(map[string]int64)
+    CategoryCountTrend := make(map[string]int64)
+    SkuCountTrend := make(map[string]int64)
+    SearchCountTrend := make(map[string]int64)
+    success_order_c_success_uv_rateTrend := make(map[string]float64)
+    success_order_c_all_uv_rateTrend := make(map[string]float64)
     if searchResult.Hits.TotalHits > 0 {
         // Iterate through results
         for _, hit := range searchResult.Hits.Hits {
@@ -277,6 +304,14 @@ func FidTrendInfo(c *gin.Context){
                 return
             }
             serviceDateStr := advertiseFid.ServiceDateStr
+            
+            RegisterCountTrend[serviceDateStr] = advertiseFid.RegisterCount
+            LoginCountTrend[serviceDateStr] = advertiseFid.LoginCount
+            CategoryCountTrend[serviceDateStr] = advertiseFid.CategoryCount
+            SkuCountTrend[serviceDateStr] = advertiseFid.SkuCount
+            SearchCountTrend[serviceDateStr] = advertiseFid.SearchCount
+            success_order_c_success_uv_rateTrend[serviceDateStr] = advertiseFid.SuccessOrderCSuccessUvRate
+            success_order_c_all_uv_rateTrend[serviceDateStr] = advertiseFid.SuccessOrderCAllUvRate
             // pvTrend
             pvTrend[serviceDateStr] = advertiseFid.Pv
             // uvTrend
@@ -330,15 +365,19 @@ func FidTrendInfo(c *gin.Context){
             "is_return": IsReturnTrend,
             "is_return_rate": IsReturnRateTrend,
             "sku_sale_rate": SkuSaleRateTrend,
+            "register_count": RegisterCountTrend,
+            "login_count": LoginCountTrend,
+            "category_count": CategoryCountTrend,
+            "sku_count": SkuCountTrend,
+            "search_count": SearchCountTrend,
+            "success_order_c_success_uv_rate": success_order_c_success_uv_rateTrend,
+            "success_order_c_all_uv_rate": success_order_c_all_uv_rateTrend,
         },
     })
     // 返回json
     c.JSON(http.StatusOK, result)
     
 }
-
-
-
 
 
 
