@@ -163,6 +163,14 @@ func mapReduceByDate(dateStr string) error{
         if err != nil {
             return err
         }
+        
+        // 处理：Advertise Content
+        OutAdvertiseContentCollName := helper.GetOutAdvertiseContentCollName(websiteId)
+        err = advertise.ContentMapReduct(dbName, collName, OutAdvertiseContentCollName, websiteId)
+        if err != nil {
+            return err
+        }
+        
     }
     return err
 

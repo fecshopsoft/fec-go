@@ -398,3 +398,19 @@ func GetAllEnableCommonCustomerChild() ([]CustomerUsername, error){
     }
     return customers, nil
 }
+
+/**
+ * 得到enable的common  admin  by own_id
+ */
+func GetEnableCustomerChild(own_id int64) ([]CustomerUsername, error){
+    // 得到结果数据
+    var customers []CustomerUsername
+    engine := mysqldb.GetEngine()
+    err := engine.Where("parent_id = ? and status = ? ", own_id, statusEnable).Find(&customers) 
+    if err != nil{
+        return nil, err 
+    }
+    return customers, nil
+}
+
+

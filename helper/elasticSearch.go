@@ -633,3 +633,60 @@ func GetEsAdvertiseFidTypeMapping() (string){
         }
 	}`
 }
+
+
+
+// Advertise Content Type Name
+func GetEsAdvertiseContentTypeName() (string){
+    return "advertise_content_data"
+}
+// Advertise Content Type Mapping , 下面是去除的mapping
+// "fid":              {"type":"keyword"},
+// "fec_medium_main":  {"type":"keyword"},
+// "fec_design":       {"type":"keyword"},
+func GetEsAdvertiseContentTypeMapping() (string){
+    return `{
+		"advertise_content_data":{
+            "properties":{
+                "id":               {"type":"keyword"},
+                
+                "fec_market_group": {"type":"keyword"},
+                "fec_content":      {"type":"keyword"},
+                "fec_source":       {"type":"keyword"},
+                
+                "success_order_c_all_uv_rate": {"type":"float"},
+                "success_order_c_success_uv_rate": {"type":"float"},
+                
+                "register_count":   {"type":"integer"},
+                "login_count":      {"type":"integer"},
+                "category_count":   {"type":"integer"},
+                "sku_count":        {"type":"integer"},
+                "search_count":     {"type":"integer"},
+                
+                "website_id":       {"type":"keyword"},
+                "app":              {"type":"keyword"},
+                "pv":               {"type":"integer"},
+                "uv":               {"type":"integer"},
+                "ip_count":         {"type":"integer"},
+                "jump_out_count":   {"type":"integer"},
+                "drop_out_count":   {"type":"integer"},
+                "stay_seconds":     {"type":"integer"},
+                "is_return":        {"type":"integer"},
+                "first_page":       {"type":"integer"},
+                "service_date_str": {"type":"date"},
+                "stay_seconds_rate":{"type":"float"},
+                "jump_out_rate":    {"type":"float"},
+                "drop_out_rate":    {"type":"float"},
+                "is_return_rate":   {"type":"float"},
+                "pv_rate":          {"type":"float"},
+                "sku_sale_rate":    {"type":"float"},
+                "cart_count":               {"type":"integer"},
+                "order_count":              {"type":"integer"},
+                "success_order_count":      {"type":"integer"},
+                "success_order_no_count":   {"type":"integer"},
+                "order_amount":             {"type":"float"},
+                "success_order_amount":     {"type":"float"}
+            }
+        }
+	}`
+}

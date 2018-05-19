@@ -99,12 +99,15 @@ func GetOutWholeAppCollName(websiteId string) (string){
     return GetCollName("trace_whole_app_data", websiteId)
 }
 
-// 得到 App 统计后的数据输出的collection
+// 得到 Advertise Fid 统计后的数据输出的collection
 func GetOutAdvertiseFidCollName(websiteId string) (string){
     return GetCollName("trace_advertise_fid_data", websiteId)
 }
 
-
+// 得到 Advertise Content 统计后的数据输出的collection
+func GetOutAdvertiseContentCollName(websiteId string) (string){
+    return GetCollName("trace_advertise_content_data", websiteId)
+}
 
 
 

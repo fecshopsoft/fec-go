@@ -134,6 +134,27 @@ func ActiveOwnIdAndWebsite(c *gin.Context) (int64, string, []int64, []string, er
     return chosen_own_id, chosen_website_id, selectOwnIds, selectWebsiteIds, nil 
 }
 
+// 通过own_id 得到 员工和设计人员数组
+func getContentAndDesign(c *gin.Context, own_id int64) ([]customerH.VueSelectOps, []customerH.VueSelectOps, error){
+    var contentNames []customerH.VueSelectOps
+    var designNames  []customerH.VueSelectOps
+    customers, err := customerH.GetEnableCustomerChild(own_id)
+    if err != nil {
+        return contentNames, designNames, err
+    }
+    for i:=0; i<len(customers); i++ {
+        customer := customers[i]
+        jobType := customer.JobType
+        if jobType == 1 {
+            contentNames = append(contentNames, customerH.VueSelectOps{Key:customer.Id, DisplayName: customer.Name})
+        } else if jobType == 2 {
+            designNames = append(designNames, customerH.VueSelectOps{Key:customer.Id, DisplayName: customer.Name})
+        } 
+        
+    }
+    return contentNames, designNames, err
+}
+
 func getOwnNames(c *gin.Context, selectOwnIds []int64) ([]customerH.VueSelectOps, error) {
     var ownNames []customerH.VueSelectOps
     //customerType := helper.GetCurrentCustomerType(c)
