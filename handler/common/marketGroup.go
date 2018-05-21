@@ -256,3 +256,23 @@ func GetMarketGroupByIds(market_group_ids []int64) ([]MarketGroup, error){
     }
     return marketGroups, nil
 }
+
+
+
+/**
+ * 根据 OwnId 查询得到 MarketGroups
+ */
+func GetMarketGroupByOwnId(own_id int64) ([]MarketGroup, error){
+    // 得到结果数据
+    var marketGroups []MarketGroup
+    err := engine.Where(" own_id = ? ",own_id).Find(&marketGroups) 
+    if err != nil{
+        return marketGroups, err
+    }
+    return marketGroups, nil
+}
+
+
+
+
+

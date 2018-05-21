@@ -32,7 +32,7 @@ import(
  *   websiteIds 和 选择的websiteId 发送给vue。vue进行刷新
  */
 
-func ContentList(c *gin.Context){
+func DesignList(c *gin.Context){
     
     defaultPageNum:= c.GetString("defaultPageNum")
     defaultPageCount := c.GetString("defaultPageCount")
@@ -43,8 +43,8 @@ func ContentList(c *gin.Context){
     
     service_date_str_begin := c.DefaultQuery("service_date_str_begin", "")
     service_date_str_end := c.DefaultQuery("service_date_str_end", "")
-    fec_content := c.DefaultQuery("fec_content", "")
-    //fec_design := c.DefaultQuery("fec_design", "")
+    //fec_market_group := c.DefaultQuery("fec_market_group", "")
+    fec_design := c.DefaultQuery("fec_design", "")
     uv_begin := c.DefaultQuery("uv_begin", "")
     uv_end := c.DefaultQuery("uv_end", "")
     // 搜索条件
@@ -60,14 +60,10 @@ func ContentList(c *gin.Context){
         }
         q = q.Must(newRangeQuery)
     }
-    // fec_content 搜索
-    if fec_content != "" {
-        q = q.Must(elastic.NewTermQuery("fec_content", fec_content))
-    }
     // fec_design 搜索
-    //if fec_design != "" {
-    //    q = q.Must(elastic.NewTermQuery("fec_design", fec_design))
-    //}
+    if fec_design != "" {
+        q = q.Must(elastic.NewTermQuery("fec_design", fec_design))
+    }
     // uv 范围搜索
     if uv_begin != "" || uv_end != "" {
         newRangeQuery := elastic.NewRangeQuery("uv")
@@ -97,12 +93,18 @@ func ContentList(c *gin.Context){
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return
     }
-    // 添加website_id 搜索条件
+    //marketGroups, err := getMarketGroup(chosen_own_id)
+    //if err != nil{
+    //    c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+    //    return
+    //}
+    
+    // 添加 website_id 搜索条件
     q = q.Must(elastic.NewTermQuery("website_id", chosen_website_id))
     
     // esIndexName := helper.GetEsIndexName(chosen_website_id)
-    esAdvertiseContentTypeName :=  helper.GetEsAdvertiseContentTypeName()
-    esIndexName := helper.GetEsIndexNameByType(esAdvertiseContentTypeName)
+    esAdvertiseDesignTypeName :=  helper.GetEsAdvertiseDesignTypeName()
+    esIndexName := helper.GetEsIndexNameByType(esAdvertiseDesignTypeName)
     client, err := esdb.Client()
     if err != nil{
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
@@ -117,13 +119,13 @@ func ContentList(c *gin.Context){
     //rangeQuery := NewRangeQuery("pv").Gt(3)
     log.Println(8888888888888)
     log.Println(esIndexName)
-    log.Println(esAdvertiseContentTypeName)
+    log.Println(esAdvertiseDesignTypeName)
     log.Println(page-1)
     log.Println(limit)
     log.Println(sort)
     search := client.Search().
         Index(esIndexName).        // search in index "twitter"
-        Type(esAdvertiseContentTypeName).
+        Type(esAdvertiseDesignTypeName).
         Query(q).
         From((page-1)*limit).Size(limit).
         Pretty(true)
@@ -138,7 +140,7 @@ func ContentList(c *gin.Context){
     /*
     searchResult, err := client.Search().
         Index(esIndexName).        // search in index "twitter"
-        Type(esAdvertiseContentTypeName).
+        Type(esAdvertiseDesignTypeName).
         Query(q).        // specify the query
         //Sort("user", true).      // sort by "user" field, ascending
         From(0).Size(10).        // take documents 0-9
@@ -155,48 +157,66 @@ func ContentList(c *gin.Context){
     var contentGroupArr []helper.VueSelectOps
     var marketGroupArr  []helper.VueSelectOps
     
-    var ts []model.AdvertiseContentValue
+    var ts []model.AdvertiseDesignValue
     s1 := make(map[string]string)
+    s2 := make(map[string]string)
+    s3 := make(map[string]string)
     if searchResult.Hits.TotalHits > 0 {
         // Iterate through results
         for _, hit := range searchResult.Hits.Hits {
             // hit.Index contains the name of the index
 
             // Deserialize hit.Source into a Tweet (could also be just a map[string]interface{}).
-            var advertiseContent model.AdvertiseContentValue
-            err := json.Unmarshal(*hit.Source, &advertiseContent)
+            var advertiseDesign model.AdvertiseDesignValue
+            err := json.Unmarshal(*hit.Source, &advertiseDesign)
             if err != nil{
+                log.Println("###1")
                 c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
                 return
             }
-            ts = append(ts, advertiseContent)
-            fecDesign := advertiseContent.FecDesign
-            for k,_ := range fecDesign{
-                if _,ok := s1[k]; !ok {
-                    s1[k] = k
-                    fecDesignInt64, _ := helper.Int64(k)
-                    designGroupVal := initialization.CustomerIdWithName[fecDesignInt64]
-                    designGroupArr = append(designGroupArr, helper.VueSelectOps{Key: fecDesignInt64, DisplayName: designGroupVal})
+            ts = append(ts, advertiseDesign)
+            
+            k := advertiseDesign.FecDesign
+            if _,ok := s3[k]; !ok {
+                s3[k] = k
+                fecDesignInt64, _ := helper.Int64(advertiseDesign.FecDesign)
+                designGroupVal := initialization.CustomerIdWithName[fecDesignInt64]
+                designGroupArr = append(designGroupArr, helper.VueSelectOps{Key: fecDesignInt64, DisplayName: designGroupVal})
+                
+            }
+            
+            fecContent := advertiseDesign.FecContent
+            for k,_ := range fecContent{
+                if _,ok := s2[k]; !ok {
+                    s2[k] = k
+                    fecContentInt64, _ := helper.Int64(k)
+                    contentGroupVal := initialization.CustomerIdWithName[fecContentInt64]
+                    contentGroupArr = append(contentGroupArr, helper.VueSelectOps{Key: fecContentInt64, DisplayName: contentGroupVal})
                 }
             }
             
-            fecContent64, _ := helper.Int64(advertiseContent.FecContent)
-            contentGroupVal := initialization.CustomerIdWithName[fecContent64]
-            contentGroupArr = append(contentGroupArr, helper.VueSelectOps{Key: fecContent64, DisplayName: contentGroupVal})
-            
-            fecMarketGroup64, _ := helper.Int64(advertiseContent.FecMarketGroup)
-            marketGroupVal := initialization.MarketGroupIdWithName[fecMarketGroup64]
-            marketGroupArr = append(marketGroupArr, helper.VueSelectOps{Key: fecMarketGroup64, DisplayName: marketGroupVal})
+            fecMarketGroup := advertiseDesign.FecMarketGroup
+            for k,_ := range fecMarketGroup{
+                if _,ok := s1[k]; !ok {
+                    s1[k] = k
+                    fecMarketGroup64, _ := helper.Int64(k)
+                    marketGroupVal := initialization.MarketGroupIdWithName[fecMarketGroup64]
+                    marketGroupArr = append(marketGroupArr, helper.VueSelectOps{Key: fecMarketGroup64, DisplayName: marketGroupVal})
+               
+                }
+            }
             
         }
     }
     ownNameOptions, err := getOwnNames(c, selectOwnIds)
     if err != nil{
+        log.Println("###2")
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return
     }
     siteNameOptions, siteImgUrls, err := getSiteNameAndImgUrls(c, selectWebsiteIds)
     if err != nil{
+        log.Println("###3")
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return
     }
@@ -217,16 +237,17 @@ func ContentList(c *gin.Context){
         "marketGroupOps": marketGroupArr,
         "contentSelectOps": contentNames,
         "designSelectOps": designNames,
+        //"marketGroupSelectOps": marketGroups,
     })
     // 返回json
     c.JSON(http.StatusOK, result)
 }
 
 // 得到 trend  info
-func ContentTrendInfo(c *gin.Context){
-    fec_content := c.DefaultQuery("fec_content", "")
-    if fec_content == ""{
-        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("request get param fec_content can not empty"))
+func DesignTrendInfo(c *gin.Context){
+    fec_design := c.DefaultQuery("fec_design", "")
+    if fec_design == ""{
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("request get param fec_design can not empty"))
         return
     }
     service_date_str := c.DefaultQuery("service_date_str", "")
@@ -249,7 +270,7 @@ func ContentTrendInfo(c *gin.Context){
     log.Println(service_date_str)
     q = q.Must(newRangeQuery)
     // 加入浏览器
-    q = q.Must(elastic.NewTermQuery("fec_content", fec_content))
+    q = q.Must(elastic.NewTermQuery("fec_design", fec_design))
     website_id, err := GetReqWebsiteId(c)
     if err != nil{
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
@@ -257,8 +278,8 @@ func ContentTrendInfo(c *gin.Context){
     }
     q = q.Must(elastic.NewTermQuery("website_id", website_id))
     // esIndexName := helper.GetEsIndexName(website_id)
-    esAdvertiseContentTypeName :=  helper.GetEsAdvertiseContentTypeName()
-    esIndexName := helper.GetEsIndexNameByType(esAdvertiseContentTypeName)
+    esAdvertiseDesignTypeName :=  helper.GetEsAdvertiseDesignTypeName()
+    esIndexName := helper.GetEsIndexNameByType(esAdvertiseDesignTypeName)
     client, err := esdb.Client()
     if err != nil{
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
@@ -266,7 +287,7 @@ func ContentTrendInfo(c *gin.Context){
     }
     search := client.Search().
         Index(esIndexName).        // search in index "twitter"
-        Type(esAdvertiseContentTypeName).
+        Type(esAdvertiseDesignTypeName).
         Query(q).
         From(0).Size(9999).
         Pretty(true)
@@ -316,47 +337,47 @@ func ContentTrendInfo(c *gin.Context){
             // hit.Index contains the name of the index
 
             // Deserialize hit.Source into a Tweet (could also be just a map[string]interface{}).
-            var advertiseContent model.AdvertiseContentValue
-            err := json.Unmarshal(*hit.Source, &advertiseContent)
+            var advertiseDesign model.AdvertiseDesignValue
+            err := json.Unmarshal(*hit.Source, &advertiseDesign)
             if err != nil{
                 c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
                 return
             }
-            serviceDateStr := advertiseContent.ServiceDateStr
+            serviceDateStr := advertiseDesign.ServiceDateStr
             
-            RegisterCountTrend[serviceDateStr] = advertiseContent.RegisterCount
-            LoginCountTrend[serviceDateStr] = advertiseContent.LoginCount
-            CategoryCountTrend[serviceDateStr] = advertiseContent.CategoryCount
-            SkuCountTrend[serviceDateStr] = advertiseContent.SkuCount
-            SearchCountTrend[serviceDateStr] = advertiseContent.SearchCount
-            success_order_c_success_uv_rateTrend[serviceDateStr] = advertiseContent.SuccessOrderCSuccessUvRate
-            success_order_c_all_uv_rateTrend[serviceDateStr] = advertiseContent.SuccessOrderCAllUvRate
+            RegisterCountTrend[serviceDateStr] = advertiseDesign.RegisterCount
+            LoginCountTrend[serviceDateStr] = advertiseDesign.LoginCount
+            CategoryCountTrend[serviceDateStr] = advertiseDesign.CategoryCount
+            SkuCountTrend[serviceDateStr] = advertiseDesign.SkuCount
+            SearchCountTrend[serviceDateStr] = advertiseDesign.SearchCount
+            success_order_c_success_uv_rateTrend[serviceDateStr] = advertiseDesign.SuccessOrderCSuccessUvRate
+            success_order_c_all_uv_rateTrend[serviceDateStr] = advertiseDesign.SuccessOrderCAllUvRate
             // pvTrend
-            pvTrend[serviceDateStr] = advertiseContent.Pv
+            pvTrend[serviceDateStr] = advertiseDesign.Pv
             // uvTrend
-            uvTrend[serviceDateStr] = advertiseContent.Uv
-            ipCountTrend[serviceDateStr] = advertiseContent.IpCount
+            uvTrend[serviceDateStr] = advertiseDesign.Uv
+            ipCountTrend[serviceDateStr] = advertiseDesign.IpCount
             // staySecondsTrend
-            staySecondsTrend[serviceDateStr] = advertiseContent.StaySeconds
+            staySecondsTrend[serviceDateStr] = advertiseDesign.StaySeconds
             // staySecondsRateTrend
-            staySecondsRateTrend[serviceDateStr] = advertiseContent.StaySecondsRate
-            PvRateTrend[serviceDateStr] = advertiseContent.PvRate
-            JumpOutCountTrend[serviceDateStr] = advertiseContent.JumpOutCount
-            DropOutCountTrend[serviceDateStr] = advertiseContent.DropOutCount
-            JumpOutRateTrend[serviceDateStr] = advertiseContent.JumpOutRate
-            DropOutRateTrend[serviceDateStr] = advertiseContent.DropOutRate
-            CartCountTrend[serviceDateStr] = advertiseContent.CartCount
-            OrderCountTrend[serviceDateStr] = advertiseContent.OrderCount
-            SuccessOrderCountTrend[serviceDateStr] = advertiseContent.SuccessOrderCount
-            SuccessOrderNoCountTrend[serviceDateStr] = advertiseContent.SuccessOrderNoCount
-            OrderNoCountTrend[serviceDateStr] = advertiseContent.OrderNoCount
-            OrderPaymentRateTrend[serviceDateStr] = advertiseContent.OrderPaymentRate
-            OrderAmountTrend[serviceDateStr] = advertiseContent.OrderAmount
-            SuccessOrderAmountTrend[serviceDateStr] = advertiseContent.SuccessOrderAmount
+            staySecondsRateTrend[serviceDateStr] = advertiseDesign.StaySecondsRate
+            PvRateTrend[serviceDateStr] = advertiseDesign.PvRate
+            JumpOutCountTrend[serviceDateStr] = advertiseDesign.JumpOutCount
+            DropOutCountTrend[serviceDateStr] = advertiseDesign.DropOutCount
+            JumpOutRateTrend[serviceDateStr] = advertiseDesign.JumpOutRate
+            DropOutRateTrend[serviceDateStr] = advertiseDesign.DropOutRate
+            CartCountTrend[serviceDateStr] = advertiseDesign.CartCount
+            OrderCountTrend[serviceDateStr] = advertiseDesign.OrderCount
+            SuccessOrderCountTrend[serviceDateStr] = advertiseDesign.SuccessOrderCount
+            SuccessOrderNoCountTrend[serviceDateStr] = advertiseDesign.SuccessOrderNoCount
+            OrderNoCountTrend[serviceDateStr] = advertiseDesign.OrderNoCount
+            OrderPaymentRateTrend[serviceDateStr] = advertiseDesign.OrderPaymentRate
+            OrderAmountTrend[serviceDateStr] = advertiseDesign.OrderAmount
+            SuccessOrderAmountTrend[serviceDateStr] = advertiseDesign.SuccessOrderAmount
             
-            IsReturnTrend[serviceDateStr] = advertiseContent.IsReturn
-            IsReturnRateTrend[serviceDateStr] = advertiseContent.IsReturnRate
-            SkuSaleRateTrend[serviceDateStr] = advertiseContent.SkuSaleRate
+            IsReturnTrend[serviceDateStr] = advertiseDesign.IsReturn
+            IsReturnRateTrend[serviceDateStr] = advertiseDesign.IsReturnRate
+            SkuSaleRateTrend[serviceDateStr] = advertiseDesign.SkuSaleRate
         }
     }
     // 生成返回结果

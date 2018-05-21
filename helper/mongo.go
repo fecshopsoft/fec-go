@@ -109,9 +109,15 @@ func GetOutAdvertiseContentCollName(websiteId string) (string){
     return GetCollName("trace_advertise_content_data", websiteId)
 }
 
+// 得到 Advertise MarketGroup 统计后的数据输出的collection
+func GetOutAdvertiseMarketGroupCollName(websiteId string) (string){
+    return GetCollName("trace_advertise_market_group_data", websiteId)
+}
 
-
-
+// 得到 Advertise Design 统计后的数据输出的 collection
+func GetOutAdvertiseDesignCollName(websiteId string) (string){
+    return GetCollName("trace_advertise_design_data", websiteId)
+}
 
 
 

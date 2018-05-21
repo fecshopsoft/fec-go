@@ -155,6 +155,21 @@ func getContentAndDesign(c *gin.Context, own_id int64) ([]customerH.VueSelectOps
     return contentNames, designNames, err
 }
 
+
+// 通过own_id 得到 员工和设计人员数组
+func getMarketGroup(own_id int64) ([]customerH.VueSelectOps, error){
+    var marketGroupNames []customerH.VueSelectOps
+    groups, err := commonH.GetMarketGroupByOwnId(own_id)
+    if err != nil {
+        return marketGroupNames, err
+    }
+    for i:=0; i<len(groups); i++ {
+        marketGroup := groups[i]
+        marketGroupNames = append(marketGroupNames, customerH.VueSelectOps{Key:marketGroup.Id, DisplayName: marketGroup.Name})
+    }
+    return marketGroupNames, err
+}
+
 func getOwnNames(c *gin.Context, selectOwnIds []int64) ([]customerH.VueSelectOps, error) {
     var ownNames []customerH.VueSelectOps
     //customerType := helper.GetCurrentCustomerType(c)

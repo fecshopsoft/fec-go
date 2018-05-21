@@ -12,12 +12,10 @@ import(
 // 计算数据，以及把数据同步到ES
 func MapReductAndSyncDataToEs(){
     dateStr := helper.DateUTCStr()
-    
     err := mapReduceByDate(dateStr)
     if err != nil {
         log.Println(err.Error())
     }
-    
 }
 
 // 计算数据，以及把数据同步到ES
@@ -66,21 +64,24 @@ func mapReduceByDate(dateStr string) error{
         websiteId := websiteInfo.SiteUid
         //esIndexName := helper.GetEsIndexName(websiteId)
         collName := helper.GetTraceDataCollName(websiteId)
-        
+        log.Println("###########")
+        log.Println("OutWholeBrowserCollName")
         // 处理：Whole Browser
         OutWholeBrowserCollName := helper.GetOutWholeBrowserCollName(websiteId)
         err = whole.BrowserMapReduct(dbName, collName, OutWholeBrowserCollName, websiteId)
         if err != nil {
             return err
         }
-        
+        log.Println("###########")
+        log.Println("OutWholeAllCollName")
         // Whole All
         OutWholeAllCollName := helper.GetOutWholeAllCollName(websiteId)
         err = whole.AllMapReduct(dbName, collName, OutWholeAllCollName, websiteId)
         if err != nil {
             return err
         }
-        
+        log.Println("###########")
+        log.Println("OutWholeReferCollName")
         // 处理：Whole Refer
         OutWholeReferCollName := helper.GetOutWholeReferCollName(websiteId)
         err = whole.ReferMapReduct(dbName, collName, OutWholeReferCollName, websiteId)
@@ -170,6 +171,21 @@ func mapReduceByDate(dateStr string) error{
         if err != nil {
             return err
         }
+        
+        // 处理：Advertise MarketGroup
+        OutAdvertiseMarketGroupCollName := helper.GetOutAdvertiseMarketGroupCollName(websiteId)
+        err = advertise.MarketGroupMapReduct(dbName, collName, OutAdvertiseMarketGroupCollName, websiteId)
+        if err != nil {
+            return err
+        }
+        
+        // 处理：Advertise Design
+        OutAdvertiseDesignCollName := helper.GetOutAdvertiseDesignCollName(websiteId)
+        err = advertise.DesignMapReduct(dbName, collName, OutAdvertiseDesignCollName, websiteId)
+        if err != nil {
+            return err
+        }
+        
         
     }
     return err

@@ -235,6 +235,14 @@ func Listen(listenIp string) {
         v1.GET("/advertise/content/list",            middleware.PermissionLoginToken, middleware.CommonAdminChildRole, advertiseHandler.ContentList)
         v1.GET("/advertise/content/fetchtrendinfo",  middleware.PermissionLoginToken, middleware.CommonAdminChildRole, advertiseHandler.ContentTrendInfo)
         
+        // #### Advertise MarketGroup
+        v1.GET("/advertise/marketgroup/list",            middleware.PermissionLoginToken, middleware.CommonAdminChildRole, advertiseHandler.MarketGroupList)
+        v1.GET("/advertise/marketgroup/fetchtrendinfo",  middleware.PermissionLoginToken, middleware.CommonAdminChildRole, advertiseHandler.MarketGroupTrendInfo)
+        
+        // #### Advertise Design
+        v1.GET("/advertise/design/list",            middleware.PermissionLoginToken, middleware.CommonAdminChildRole, advertiseHandler.DesignList)
+        v1.GET("/advertise/design/fetchtrendinfo",  middleware.PermissionLoginToken, middleware.CommonAdminChildRole, advertiseHandler.DesignTrendInfo)
+        
         
         /*
         v1.GET("/customer/list", func(c *gin.Context) {
