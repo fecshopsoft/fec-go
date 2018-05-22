@@ -119,5 +119,28 @@ func GetOutAdvertiseDesignCollName(websiteId string) (string){
     return GetCollName("trace_advertise_design_data", websiteId)
 }
 
+// 得到 Advertise Campaign 统计后的数据输出的 collection
+func GetOutAdvertiseCampaignCollName(websiteId string) (string){
+    return GetCollName("trace_advertise_campaign_data", websiteId)
+}
+
+
+// 得到 Advertise Medium 统计后的数据输出的 collection
+func GetOutAdvertiseMediumCollName(websiteId string) (string){
+    return GetCollName("trace_advertise_medium_data", websiteId)
+}
+
+
+// 得到 Advertise source 统计后的数据输出的 collection
+func GetOutAdvertiseSourceCollName(websiteId string) (string){
+    return GetCollName("trace_advertise_source_data", websiteId)
+}
+
+
+
+
+
+
+
 
 

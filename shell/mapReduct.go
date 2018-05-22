@@ -4,8 +4,10 @@ import(
     "github.com/fecshopsoft/fec-go/helper"
     "github.com/fecshopsoft/fec-go/shell/whole"
     "github.com/fecshopsoft/fec-go/shell/advertise"
+    "github.com/fecshopsoft/fec-go/db/esdb"
     "log"
     "os"
+    "sync"
     commonHandler "github.com/fecshopsoft/fec-go/handler/common"
 )
 
@@ -56,6 +58,11 @@ func mapReduceByDate(dateStr string) error{
     // 通过时间，得到数据库name
     dbName := helper.GetTraceDbNameByDate(dateStr)
     websiteInfos, err := commonHandler.GetAllActiveWebsiteId()
+    if err != nil {
+        return err
+    }
+    // 删除所有的elasticSearch Index
+    // err = RemoveSpecialEsIndex()
     if err != nil {
         return err
     }
@@ -186,8 +193,114 @@ func mapReduceByDate(dateStr string) error{
             return err
         }
         
+        // 处理：Advertise  Campaign
+        OutAdvertiseCampaignCollName := helper.GetOutAdvertiseCampaignCollName(websiteId)
+        err = advertise.CampaignMapReduct(dbName, collName, OutAdvertiseCampaignCollName, websiteId)
+        if err != nil {
+            return err
+        }
+        
+        // 处理：Advertise  Medium
+        OutAdvertiseMediumCollName := helper.GetOutAdvertiseMediumCollName(websiteId)
+        err = advertise.MediumMapReduct(dbName, collName, OutAdvertiseMediumCollName, websiteId)
+        if err != nil {
+            return err
+        }
+        
+        // 处理：Advertise  Source
+        OutAdvertiseSourceCollName := helper.GetOutAdvertiseSourceCollName(websiteId)
+        err = advertise.SourceMapReduct(dbName, collName, OutAdvertiseSourceCollName, websiteId)
+        if err != nil {
+            return err
+        }
         
     }
     return err
 
+}
+
+var removeEsIndexErr error
+var once sync.Once
+
+func RemoveSpecialEsIndex() error{
+    // var err error
+    once.Do(func() {
+        log.Println("RemoveSpecialEsIndex, begin ...")
+        var s []string;
+        var t string
+        
+        t =  helper.GetEsAdvertiseMediumTypeName()
+        s = append(s, t )
+        
+        t =  helper.GetEsAdvertiseSourceTypeName()
+        s = append(s, t )
+        
+        t =  helper.GetEsAdvertiseCampaignTypeName()
+        s = append(s, t )
+        
+        t =  helper.GetEsAdvertiseDesignTypeName()
+        s = append(s, t )
+        
+        t =  helper.GetEsAdvertiseMarketGroupTypeName()
+        s = append(s, t )
+        
+        t =  helper.GetEsAdvertiseContentTypeName()
+        s = append(s, t )
+        
+        t =  helper.GetEsAdvertiseFidTypeName()
+        s = append(s, t )
+        
+        t =  helper.GetEsWholeAppTypeName()
+        s = append(s, t )
+        
+        t =  helper.GetEsWholeCategoryTypeName()
+        s = append(s, t )
+        
+        t =  helper.GetEsWholeFirstUrlTypeName()
+        s = append(s, t )
+        
+        t =  helper.GetEsWholeUrlTypeName()
+        s = append(s, t )
+        
+        t =  helper.GetEsWholeSearchTypeName()
+        s = append(s, t )
+        
+        t =  helper.GetEsWholeSkuReferTypeName()
+        s = append(s, t )
+        
+        t =  helper.GetEsWholeSkuTypeName()
+        s = append(s, t )
+        
+        t =  helper.GetEsWholeDevideTypeName()
+        s = append(s, t )
+        
+        t =  helper.GetEsWholeCountryTypeName()
+        s = append(s, t )
+        
+        t =  helper.GetEsWholeReferTypeName()
+        s = append(s, t )
+        
+        t =  helper.GetEsWholeAllTypeName()
+        s = append(s, t )
+        
+        t =  helper.GetEsWholeBrowserTypeName()
+        s = append(s, t )
+        
+        for i:=0; i<len(s); i++ {
+            typeName := s[i]
+            removeEsIndexErr = RemoveEsIndex(typeName)
+            if removeEsIndexErr != nil {
+                return
+            }
+        }
+        log.Println("RemoveSpecialEsIndex, complete ...")
+    })
+    return removeEsIndexErr      
+}
+// t =  helper.GetEsAdvertiseCampaignTypeName()
+func RemoveEsIndex(typeName string) error{
+    esIndexName := helper.GetEsIndexNameByType(typeName)
+    log.Println("RemoveSpecialEsIndex, esIndexName:" + esIndexName)
+    err := esdb.DeleteIndex(esIndexName)
+    return err
 }

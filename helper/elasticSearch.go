@@ -61,6 +61,7 @@ func GetEsWholeBrowserTypeMapping() (string){
                 "is_return_rate":   {"type":"float"},
                 "pv_rate":          {"type":"float"},
                 "sku_sale_rate":    {"type":"float"},
+                "order_payment_rate":       {"type":"float"},
                 "cart_count":               {"type":"integer"},
                 "order_count":              {"type":"integer"},
                 "success_order_count":      {"type":"integer"},
@@ -137,6 +138,7 @@ func GetEsWholeAllTypeMapping() (string){
                 "is_return_rate":   {"type":"float"},
                 "pv_rate":          {"type":"float"},
                 "sku_sale_rate":    {"type":"float"},
+                "order_payment_rate":       {"type":"float"},
                 "cart_count":               {"type":"integer"},
                 "order_count":              {"type":"integer"},
                 "success_order_count":      {"type":"integer"},
@@ -183,6 +185,7 @@ func GetEsWholeReferTypeMapping() (string){
                 "is_return_rate":   {"type":"float"},
                 "pv_rate":          {"type":"float"},
                 "sku_sale_rate":    {"type":"float"},
+                "order_payment_rate":       {"type":"float"},
                 "cart_count":               {"type":"integer"},
                 "order_count":              {"type":"integer"},
                 "success_order_count":      {"type":"integer"},
@@ -222,6 +225,7 @@ func GetEsWholeCountryTypeMapping() (string){
                 "is_return_rate":   {"type":"float"},
                 "pv_rate":          {"type":"float"},
                 "sku_sale_rate":    {"type":"float"},
+                "order_payment_rate":       {"type":"float"},
                 "cart_count":               {"type":"integer"},
                 "order_count":              {"type":"integer"},
                 "success_order_count":      {"type":"integer"},
@@ -261,6 +265,7 @@ func GetEsWholeDevideTypeMapping() (string){
                 "is_return_rate":   {"type":"float"},
                 "pv_rate":          {"type":"float"},
                 "sku_sale_rate":    {"type":"float"},
+                "order_payment_rate":       {"type":"float"},
                 "cart_count":               {"type":"integer"},
                 "order_count":              {"type":"integer"},
                 "success_order_count":      {"type":"integer"},
@@ -300,6 +305,7 @@ func GetEsWholeSkuTypeMapping() (string){
                 "is_return_rate":   {"type":"float"},
                 "pv_rate":          {"type":"float"},
                 "sku_sale_rate":    {"type":"float"},
+                "order_payment_rate":       {"type":"float"},
                 "cart_count":               {"type":"integer"},
                 "order_count":              {"type":"integer"},
                 "success_order_count":      {"type":"integer"},
@@ -340,6 +346,7 @@ func GetEsWholeSkuReferTypeMapping() (string){
                 "is_return_rate":   {"type":"float"},
                 "pv_rate":          {"type":"float"},
                 "sku_sale_rate":    {"type":"float"},
+                "order_payment_rate":       {"type":"float"},
                 "cart_count":               {"type":"integer"},
                 "order_count":              {"type":"integer"},
                 "success_order_count":      {"type":"integer"},
@@ -565,6 +572,7 @@ func GetEsWholeAppTypeMapping() (string){
                 "is_return_rate":   {"type":"float"},
                 "pv_rate":          {"type":"float"},
                 "sku_sale_rate":    {"type":"float"},
+                "order_payment_rate":       {"type":"float"},
                 "cart_count":               {"type":"integer"},
                 "order_count":              {"type":"integer"},
                 "success_order_count":      {"type":"integer"},
@@ -623,6 +631,7 @@ func GetEsAdvertiseFidTypeMapping() (string){
                 "is_return_rate":   {"type":"float"},
                 "pv_rate":          {"type":"float"},
                 "sku_sale_rate":    {"type":"float"},
+                "order_payment_rate":       {"type":"float"},
                 "cart_count":               {"type":"integer"},
                 "order_count":              {"type":"integer"},
                 "success_order_count":      {"type":"integer"},
@@ -680,6 +689,7 @@ func GetEsAdvertiseContentTypeMapping() (string){
                 "is_return_rate":   {"type":"float"},
                 "pv_rate":          {"type":"float"},
                 "sku_sale_rate":    {"type":"float"},
+                "order_payment_rate":       {"type":"float"},
                 "cart_count":               {"type":"integer"},
                 "order_count":              {"type":"integer"},
                 "success_order_count":      {"type":"integer"},
@@ -735,6 +745,7 @@ func GetEsAdvertiseMarketGroupTypeMapping() (string){
                 "is_return_rate":   {"type":"float"},
                 "pv_rate":          {"type":"float"},
                 "sku_sale_rate":    {"type":"float"},
+                "order_payment_rate":       {"type":"float"},
                 "cart_count":               {"type":"integer"},
                 "order_count":              {"type":"integer"},
                 "success_order_count":      {"type":"integer"},
@@ -789,6 +800,7 @@ func GetEsAdvertiseDesignTypeMapping() (string){
                 "is_return_rate":   {"type":"float"},
                 "pv_rate":          {"type":"float"},
                 "sku_sale_rate":    {"type":"float"},
+                "order_payment_rate":       {"type":"float"},
                 "cart_count":               {"type":"integer"},
                 "order_count":              {"type":"integer"},
                 "success_order_count":      {"type":"integer"},
@@ -799,3 +811,189 @@ func GetEsAdvertiseDesignTypeMapping() (string){
         }
 	}`
 }
+
+
+
+// Advertise Campaign Type Name
+func GetEsAdvertiseCampaignTypeName() (string){
+    return "advertise_campaign_data"
+}
+// Advertise market_group Type Mapping , 下面是去除的mapping
+// "fid":              {"type":"keyword"},
+// "fec_medium_main":  {"type":"keyword"},
+// "fec_design":       {"type":"keyword"},
+// "fec_content":      {"type":"keyword"},
+// "fec_source":       {"type":"keyword"},
+func GetEsAdvertiseCampaignTypeMapping() (string){
+    return `{
+		"advertise_campaign_data":{
+            "properties":{
+                "id":               {"type":"keyword"},
+                "fec_campaign":     {"type":"keyword"},
+                "success_order_c_all_uv_rate":      {"type":"float"},
+                "success_order_c_success_uv_rate":  {"type":"float"},
+                
+                "register_count":   {"type":"integer"},
+                "login_count":      {"type":"integer"},
+                "category_count":   {"type":"integer"},
+                "sku_count":        {"type":"integer"},
+                "search_count":     {"type":"integer"},
+                
+                "website_id":       {"type":"keyword"},
+                "app":              {"type":"keyword"},
+                "pv":               {"type":"integer"},
+                "uv":               {"type":"integer"},
+                "ip_count":         {"type":"integer"},
+                "jump_out_count":   {"type":"integer"},
+                "drop_out_count":   {"type":"integer"},
+                "stay_seconds":     {"type":"integer"},
+                "is_return":        {"type":"integer"},
+                "first_page":       {"type":"integer"},
+                "service_date_str": {"type":"date"},
+                "stay_seconds_rate":{"type":"float"},
+                "jump_out_rate":    {"type":"float"},
+                "drop_out_rate":    {"type":"float"},
+                "is_return_rate":   {"type":"float"},
+                "pv_rate":          {"type":"float"},
+                "sku_sale_rate":    {"type":"float"},
+                "order_payment_rate":       {"type":"float"},
+                "cart_count":               {"type":"integer"},
+                "order_count":              {"type":"integer"},
+                "success_order_count":      {"type":"integer"},
+                "success_order_no_count":   {"type":"integer"},
+                "order_amount":             {"type":"float"},
+                "success_order_amount":     {"type":"float"}
+            }
+        }
+	}`
+}
+
+
+
+
+
+// Advertise Medium Type Name
+func GetEsAdvertiseMediumTypeName() (string){
+    return "advertise_medium_data"
+}
+// Advertise market_group Type Mapping , 下面是去除的mapping
+// "fid":              {"type":"keyword"},
+// "fec_medium_main":  {"type":"keyword"},
+// "fec_design":       {"type":"keyword"},
+// "fec_content":      {"type":"keyword"},
+// "fec_source":       {"type":"keyword"},
+func GetEsAdvertiseMediumTypeMapping() (string){
+    return `{
+		"advertise_medium_data":{
+            "properties":{
+                "id":               {"type":"keyword"},
+                "fec_source":     {"type":"keyword"},
+                "fec_medium":     {"type":"keyword"},
+                "success_order_c_all_uv_rate":      {"type":"float"},
+                "success_order_c_success_uv_rate":  {"type":"float"},
+                
+                "register_count":   {"type":"integer"},
+                "login_count":      {"type":"integer"},
+                "category_count":   {"type":"integer"},
+                "sku_count":        {"type":"integer"},
+                "search_count":     {"type":"integer"},
+                
+                "website_id":       {"type":"keyword"},
+                "app":              {"type":"keyword"},
+                "pv":               {"type":"integer"},
+                "uv":               {"type":"integer"},
+                "ip_count":         {"type":"integer"},
+                "jump_out_count":   {"type":"integer"},
+                "drop_out_count":   {"type":"integer"},
+                "stay_seconds":     {"type":"integer"},
+                "is_return":        {"type":"integer"},
+                "first_page":       {"type":"integer"},
+                "service_date_str": {"type":"date"},
+                "stay_seconds_rate":{"type":"float"},
+                "jump_out_rate":    {"type":"float"},
+                "drop_out_rate":    {"type":"float"},
+                "is_return_rate":   {"type":"float"},
+                "pv_rate":          {"type":"float"},
+                "sku_sale_rate":    {"type":"float"},
+                "order_payment_rate":       {"type":"float"},
+                "cart_count":               {"type":"integer"},
+                "order_count":              {"type":"integer"},
+                "success_order_count":      {"type":"integer"},
+                "success_order_no_count":   {"type":"integer"},
+                "order_amount":             {"type":"float"},
+                "success_order_amount":     {"type":"float"}
+            }
+        }
+	}`
+}
+
+
+
+
+
+// Advertise Source Type Name
+func GetEsAdvertiseSourceTypeName() (string){
+    return "advertise_source_data"
+}
+// Advertise market_group Type Mapping , 下面是去除的mapping
+// "fid":              {"type":"keyword"},
+// "fec_medium_main":  {"type":"keyword"},
+// "fec_design":       {"type":"keyword"},
+// "fec_content":      {"type":"keyword"},
+// "fec_source":       {"type":"keyword"},
+func GetEsAdvertiseSourceTypeMapping() (string){
+    return `{
+		"advertise_source_data":{
+            "properties":{
+                "id":               {"type":"keyword"},
+                "fec_source":     {"type":"keyword"},
+                "success_order_c_all_uv_rate":      {"type":"float"},
+                "success_order_c_success_uv_rate":  {"type":"float"},
+                
+                "register_count":   {"type":"integer"},
+                "login_count":      {"type":"integer"},
+                "category_count":   {"type":"integer"},
+                "sku_count":        {"type":"integer"},
+                "search_count":     {"type":"integer"},
+                
+                "website_id":       {"type":"keyword"},
+                "app":              {"type":"keyword"},
+                "pv":               {"type":"integer"},
+                "uv":               {"type":"integer"},
+                "ip_count":         {"type":"integer"},
+                "jump_out_count":   {"type":"integer"},
+                "drop_out_count":   {"type":"integer"},
+                "stay_seconds":     {"type":"integer"},
+                "is_return":        {"type":"integer"},
+                "first_page":       {"type":"integer"},
+                "service_date_str": {"type":"date"},
+                "stay_seconds_rate":{"type":"float"},
+                "jump_out_rate":    {"type":"float"},
+                "drop_out_rate":    {"type":"float"},
+                "is_return_rate":   {"type":"float"},
+                "pv_rate":          {"type":"float"},
+                "sku_sale_rate":    {"type":"float"},
+                "order_payment_rate":       {"type":"float"},
+                "cart_count":               {"type":"integer"},
+                "order_count":              {"type":"integer"},
+                "success_order_count":      {"type":"integer"},
+                "success_order_no_count":   {"type":"integer"},
+                "order_amount":             {"type":"float"},
+                "success_order_amount":     {"type":"float"}
+            }
+        }
+	}`
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
