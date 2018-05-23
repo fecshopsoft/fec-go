@@ -214,6 +214,13 @@ func mapReduceByDate(dateStr string) error{
             return err
         }
         
+        // 处理 Advertise Edm （source + campaign）
+        OutAdvertiseEdmCollName := helper.GetOutAdvertiseEdmCollName(websiteId)
+        err = advertise.EdmMapReduct(dbName, collName, OutAdvertiseEdmCollName, websiteId)
+        if err != nil {
+            return err
+        }
+        
     }
     return err
 

@@ -216,6 +216,24 @@ func getUuidFirstFid(dbName string, collName string, uuid string, fid string) (i
     })
     return uuidFirstFid, err
 } 
+
+func getUuidCampaignFirstFid(dbName string, collName string, uuid string, fid string, fec_campaign string) (int, error) {
+    var uuidCampaignFirstFid int = 0
+    err := mongodb.MDC(dbName, collName, func(coll *mgo.Collection) error {
+        var traceInfo TraceMiddInfo
+        
+        _ = coll.Find(bson.M{"uuid": uuid, "fid": fid, "fec_campaign": fec_campaign}).One(&traceInfo)
+        
+        // 如果查询不到，则说明该ip为首次访问
+        if traceInfo.Uuid == "" {
+            uuidCampaignFirstFid = 1
+        } else {
+            return nil
+        }
+        return nil
+    })
+    return uuidCampaignFirstFid, err
+} 
    
 func getIpFirstFid(dbName string, collName string, ipStr string, fid string) (int, error) {
     var ipFirstFid int = 0

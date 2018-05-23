@@ -148,6 +148,8 @@ type TraceInfo struct{
     IpFirstPage int `form:"ip_first_page" json:"ip_first_page" bson:"ip_first_page"`
     // uuid 
     UuidFirstFid int `form:"uuid_first_fid" json:"uuid_first_fid" bson:"uuid_first_fid"`
+    
+    UuidCampaignFirstFid int `form:"uuid_campaign_first_fid" json:"uuid_campaign_first_fid" bson:"uuid_campaign_first_fid"`
     //
     IpFirstFid int `form:"ip_first_fid" json:"ip_first_fid" bson:"ip_first_fid"`
     
@@ -193,6 +195,8 @@ type TraceMiddInfo struct{
     // uuid 
     UuidFirstFid int `form:"uuid_first_fid" json:"uuid_first_fid" bson:"uuid_first_fid"`
     //
+    UuidCampaignFirstFid int `form:"uuid_campaign_first_fid" json:"uuid_campaign_first_fid" bson:"uuid_campaign_first_fid"`
+    
     IpFirstFid int `form:"ip_first_fid" json:"ip_first_fid" bson:"ip_first_fid"`
     
     // uuid 
@@ -346,6 +350,15 @@ func SaveJsData(c *gin.Context){
             c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
             return
         }
+        // 如果edm，则。。
+        if traceInfo.FecSource == "EDM" {
+            traceInfo.UuidCampaignFirstFid, err = getUuidCampaignFirstFid(dbName, collName, traceInfo.Uuid, traceInfo.Fid, traceInfo.FecCampaign)
+            if err != nil {
+                c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+                return
+            }
+        }
+        
         // IpFirstCategory
         traceInfo.IpFirstFid, err = getIpFirstFid(dbName, collName, ipStr, traceInfo.Fid)
         if err != nil {

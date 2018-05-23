@@ -137,7 +137,10 @@ func GetOutAdvertiseSourceCollName(websiteId string) (string){
 }
 
 
-
+// 得到 Advertise edm 统计后的数据输出的 collection
+func GetOutAdvertiseEdmCollName(websiteId string) (string){
+    return GetCollName("trace_advertise_edm_data", websiteId)
+}
 
 
 
