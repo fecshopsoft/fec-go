@@ -201,4 +201,63 @@ func Float64(str string) (float64, error) {
     return f, nil
 }
 
+// 两个slice string的差集
+func ArrayDiff(s1 []string, s2 []string) []string{
+    var s3 []string 
+    var k int
+    if len(s1) == 0 {
+        return s2
+    }
+    if len(s2) == 0 {
+        return s3
+    }
+    for i:=0; i<len(s2); i++ {
+        s2_s := s2[i]
+        k = 0;
+        for j:=0; j<len(s1); j++ {
+            s1_s := s1[j]
+            if s1_s == s2_s {
+                k = 1;
+                break;
+            }
+        }
+        if k == 0 {
+            s3 = append(s3, s2_s)
+        }
+    }
+    return s3
+}
+// slice 并集，并做唯一处理
+func ArrayMergeAndUnique(s1 []string, s2 []string) []string{
+    var s3 []string 
+    m := make(map[string]string)
+    for i:=0; i<len(s1); i++ {
+        s1_s := s1[i]
+        if _, ok := m[s1_s]; !ok {
+            m[s1_s] = s1_s
+            s3 = append(s3, s1_s)
+        }
+    }
+    for i:=0; i<len(s2); i++ {
+        s2_s := s2[i]
+        if _, ok := m[s2_s]; !ok {
+            m[s2_s] = s2_s
+            s3 = append(s3, s2_s)
+        }
+    }
 
+    return s3
+}
+// slice 唯一
+func ArrayUnique(s1 []string) []string {
+    var s3 []string 
+    m := make(map[string]string)
+    for i:=0; i<len(s1); i++ {
+        s1_s := s1[i]
+        if _, ok := m[s1_s]; !ok {
+            m[s1_s] = s1_s
+            s3 = append(s3, s1_s)
+        }
+    }
+    return s3
+}

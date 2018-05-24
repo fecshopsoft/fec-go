@@ -4,6 +4,7 @@ import(
     "github.com/fecshopsoft/fec-go/helper"
     "github.com/fecshopsoft/fec-go/shell/whole"
     "github.com/fecshopsoft/fec-go/shell/advertise"
+    "github.com/fecshopsoft/fec-go/shell/customer"
     "github.com/fecshopsoft/fec-go/db/esdb"
     "log"
     "os"
@@ -73,6 +74,25 @@ func mapReduceByDate(dateStr string) error{
         collName := helper.GetTraceDataCollName(websiteId)
         log.Println("###########")
         log.Println("OutWholeBrowserCollName")
+        // 处理用户部分，合并email相同的用户。
+        // 1.首先做email计数统计
+        customerDbName := helper.GetCustomerDbName()
+        customerCollName := helper.GetCustomerCollName(websiteId)
+        OutCustomerEmailCollName := helper.GetOutCustomerEmailCollName(websiteId)
+        err = customer.EmailMapReduct(customerDbName, customerCollName, OutCustomerEmailCollName, websiteId)
+        if err != nil {
+            return err
+        }
+        // 2.将email count >=2 的用户合并，然后将trace 基础数据进行更新
+        err = customer.CustomerMergeByEmail(dbName, collName, customerDbName, customerCollName, OutCustomerEmailCollName, websiteId)
+        if err != nil {
+            return err
+        }
+        
+        
+        
+        
+        
         // 处理：Whole Browser
         OutWholeBrowserCollName := helper.GetOutWholeBrowserCollName(websiteId)
         err = whole.BrowserMapReduct(dbName, collName, OutWholeBrowserCollName, websiteId)
@@ -221,6 +241,13 @@ func mapReduceByDate(dateStr string) error{
             return err
         }
         
+        // 处理 customer Uuid
+        //OutCustomerUuidCollName := helper.GetOutCustomerUuidCollName(websiteId)
+        //err = customer.UuidMapReduct(dbName, collName, OutCustomerUuidCollName, websiteId)
+        //if err != nil {
+        //    return err
+        //}
+        
     }
     return err
 
@@ -235,6 +262,9 @@ func RemoveSpecialEsIndex() error{
         log.Println("RemoveSpecialEsIndex, begin ...")
         var s []string;
         var t string
+        
+        t =  helper.GetEsAdvertiseEdmTypeName()
+        s = append(s, t )
         
         t =  helper.GetEsAdvertiseMediumTypeName()
         s = append(s, t )

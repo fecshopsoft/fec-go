@@ -68,7 +68,7 @@ func (traceApiDbInfo TraceApiDbInfo) TableName() string {
 // trace info
 type TraceApiDbInfo struct{
     Id_ bson.ObjectId `form:"_id" json:"_id" bson:"_id"` 
-    
+    CustomerId string `form:"customer_id" json:"customer_id" bson:"customer_id"`
     Uuid string `form:"uuid" json:"uuid" bson:"uuid"`
     ClActivity string `form:"cl_activity" json:"cl_activity" bson:"cl_activity"`
     ClActivityChild string `form:"cl_activity_child" json:"cl_activity_child" bson:"cl_activity_child"`
@@ -358,6 +358,25 @@ func SaveApiData(c *gin.Context){
         }
     }
     
+    // 添加customer Id
+    var emailArr []string
+    
+    if traceApiDbInfo.LoginEmail != "" {
+        emailArr = append(emailArr, traceApiDbInfo.LoginEmail)
+    }
+    if traceApiDbInfo.RegisterEmail != "" {
+        emailArr = append(emailArr, traceApiDbInfo.RegisterEmail)
+    }
+    if traceApiDbInfo.Order.Email != "" {
+        emailArr = append(emailArr, traceApiDbInfo.Order.Email)
+    }
+    var customerId string
+    customerId, err = getCustomerId(traceApiDbInfo.WebsiteId, traceApiDbInfo.Uuid, emailArr)
+    if err != nil {
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+        return
+    } 
+    traceApiDbInfo.CustomerId = customerId
     //  ##############
     
             

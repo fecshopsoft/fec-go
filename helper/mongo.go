@@ -5,6 +5,18 @@ import (
    
 )
 
+// 得到customer数据
+func GetCustomerDbName() string {
+    return "trace_customer"
+}
+// 得到customer表的数据
+func GetCustomerCollName(websiteId string) string {
+    return "customer" + "_" + websiteId
+}
+func GetOutCustomerEmailCollName(websiteId string) string {
+    return "customer_email" + "_" + websiteId
+}
+
 // 得到当前时间对应的 mongodb   的 dbName
 // nowDateStr 格式：  2009-12-12
 func GetDbName(dbName string, nowDateStr string) (string){
@@ -142,7 +154,10 @@ func GetOutAdvertiseEdmCollName(websiteId string) (string){
     return GetCollName("trace_advertise_edm_data", websiteId)
 }
 
-
+// 得到 customer uuid 统计后的数据输出的 collection
+func GetOutCustomerUuidCollName(websiteId string) (string){
+    return GetCollName("trace_customer_uuid_data", websiteId)
+}
 
 
 

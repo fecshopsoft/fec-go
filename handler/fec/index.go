@@ -83,6 +83,7 @@ type TraceGetInfo struct{
 type TraceInfo struct{
     Id_ bson.ObjectId `form:"_id" json:"_id" bson:"_id"` 
     Uuid string `binding:"required" form:"uuid" json:"uuid" bson:"uuid"`
+    CustomerId string `form:"customer_id" json:"customer_id" bson:"customer_id"`
     
     Ip string `form:"ip" json:"ip" bson:"ip"`
     CountryCode string `form:"country_code" json:"country_code" bson:"country_code"`
@@ -422,7 +423,15 @@ func SaveJsData(c *gin.Context){
             }
         }
     }
-    
+    // 添加customer Id
+    var emailArr []string
+    var uuidCustomerId string
+    uuidCustomerId, err = getCustomerId(traceInfo.WebsiteId, traceInfo.Uuid, emailArr)
+    if err != nil {
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+        return
+    } 
+    traceInfo.CustomerId = uuidCustomerId
     // 进行保存。
     
     err = mongodb.MDC(dbName, collName, func(coll *mgo.Collection) error {
@@ -482,13 +491,15 @@ func InitTraceDataCollIndex() error{
 func createIndex(dateStr string, websiteId string) error{
     dbName := helper.GetTraceDbNameByDate(dateStr)
     collName := helper.GetTraceDataCollName(websiteId)
-    err := mongodb.MDC(dbName, collName, func(coll *mgo.Collection) error {
+    var err error
+    err = mongodb.MDC(dbName, collName, func(coll *mgo.Collection) error {
         var err error
         // 下面的每一个子项，就是一个索引。
         mgoIndex := [][]string{
             []string{"order.invoice"},
             []string{"uuid", "_id"},
             []string{"ip"},
+            []string{"customer_id"},
             []string{"uuid", "service_timestamp"},
         }
         for i:=0; i<len(mgoIndex); i++ {
@@ -509,6 +520,35 @@ func createIndex(dateStr string, websiteId string) error{
         //     return err
         // }
         // log.Println(lastIndexes)
+        return err
+    })
+    if err != nil {
+        return err
+    }
+    // 给customer id 添加索引
+    dbName = helper.GetCustomerDbName()
+    collName = helper.GetCustomerCollName(websiteId)
+    err = mongodb.MDC(dbName, collName, func(coll *mgo.Collection) error {
+        var err error
+        // 下面的每一个子项，就是一个索引。
+        mgoIndex := [][]string{
+            []string{"customer_id"},
+            []string{"uuids"},
+            []string{"emails"},
+        }
+        for i:=0; i<len(mgoIndex); i++ {
+            index := mgo.Index{
+                Key: mgoIndex[i],
+                // Unique: true,
+                // DropDups: true,
+                Background: true, // See notes.
+                // Sparse: true,
+            }
+            err = coll.EnsureIndex(index)
+            if err != nil {
+                return err
+            }
+        }
         return err
     })
     return err

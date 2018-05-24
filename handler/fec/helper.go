@@ -4,7 +4,9 @@ import(
     "github.com/fecshopsoft/fec-go/db/mongodb"
     "github.com/globalsign/mgo"
     "github.com/globalsign/mgo/bson"
+    "errors"
     fecHelper "github.com/fecshopsoft/fec-go/helper"
+    shellModel "github.com/fecshopsoft/fec-go/shell/customerModel"
 )
 
 
@@ -294,4 +296,74 @@ func getFirstVisitThisUrl(dbName string, collName string, uuid string, urlNew st
     })
     return firstVisitThisUrl, err
 } 
+
+// 得到用户的customer_id  customer_id,  uuids,  emails
+func getCustomerId(websiteId string, uuid string, emailArr []string) (string, error){
+    var customerId string
+    var err error
+    if uuid == "" {
+        return customerId, errors.New("uuid is empty")
+    }
+    dbName := fecHelper.GetCustomerDbName()
+    collName := fecHelper.GetCustomerCollName(websiteId)
+    err = mongodb.MDC(dbName, collName, func(coll *mgo.Collection) error {
+        var uuidCustomer shellModel.UuidCustomer
+        
+        err = coll.Find(bson.M{"uuids": uuid}).One(&uuidCustomer)
+        updated_at := fecHelper.DateTimestamps()
+        // 如果查询不到，则说明该URL为首次访问
+        if uuidCustomer.CustomerId != "" {
+            // uuids := uuidCustomer.Uuids
+            emails := uuidCustomer.Emails
+            diff := fecHelper.ArrayDiff(emails, emailArr)
+            
+            if len(diff) > 0 {
+                emails = fecHelper.ArrayMergeAndUnique(emails, emailArr)
+                // 进行保存emails
+                err = mongodb.MDC(dbName, collName, func(coll *mgo.Collection) error {
+                    selector := bson.M{"customer_id": uuidCustomer.CustomerId}
+                    updateData := bson.M{"$set": bson.M{"emails": emails, "updated_at":updated_at}}
+                    err = coll.Update(selector, updateData)
+                    return err
+                })
+                
+            }
+            customerId = uuidCustomer.CustomerId
+        } else {
+            // 如果不存在，则插入
+            err = mongodb.MDC(dbName, collName, func(coll *mgo.Collection) error {
+                emailArr = fecHelper.ArrayUnique(emailArr)
+                var u []string
+                u = append(u, uuid)
+                uuidCustomer.Id_ = bson.NewObjectId()
+                uuidCustomer.CustomerId = uuidCustomer.Id_.Hex()
+                uuidCustomer.Uuids = u
+                uuidCustomer.Emails = emailArr
+                uuidCustomer.UpdatedAt = updated_at
+                err = coll.Insert(uuidCustomer)
+                return err
+            })
+            customerId = uuidCustomer.CustomerId
+        }
+        return err
+    })
+    
+    
+    return customerId, err
+
+}  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
   
