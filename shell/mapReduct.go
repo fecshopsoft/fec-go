@@ -242,11 +242,11 @@ func mapReduceByDate(dateStr string) error{
         }
         
         // 处理 customer Uuid
-        //OutCustomerUuidCollName := helper.GetOutCustomerUuidCollName(websiteId)
-        //err = customer.UuidMapReduct(dbName, collName, OutCustomerUuidCollName, websiteId)
-        //if err != nil {
-        //    return err
-        //}
+        OutCustomerUuidCollName := helper.GetOutCustomerUuidCollName(websiteId)
+        err = customer.UuidMapReduct(dbName, collName, OutCustomerUuidCollName, websiteId)
+        if err != nil {
+            return err
+        }
         
     }
     return err
@@ -262,6 +262,9 @@ func RemoveSpecialEsIndex() error{
         log.Println("RemoveSpecialEsIndex, begin ...")
         var s []string;
         var t string
+        
+        t =  helper.GetEsCustomerUuidTypeName()
+        s = append(s, t )
         
         t =  helper.GetEsAdvertiseEdmTypeName()
         s = append(s, t )

@@ -1043,6 +1043,64 @@ func GetEsAdvertiseEdmTypeMapping() (string){
 }
 
 
+// Advertise Edm Type Name
+func GetEsCustomerUuidTypeName() (string){
+    return "customer_uuid_data"
+}
+
+
+func GetEsCustomerUuidTypeMapping() (string){
+    return `{
+		"customer_uuid_data":{
+            "properties":{
+                "id":               {"type":"keyword"},
+                
+                "customer_id":      {"type":"keyword"},
+                "uuid":             {"type":"keyword"},
+                "pv":               {"type":"integer"},
+                "stay_seconds":     {"type":"integer"},
+                "register_email":   {"type":"keyword"},
+                "login_email":      {"type":"keyword"},
+                "service_date_str": {"type":"date"},
+                
+                "fec_content":               {"type":"keyword"},
+                "fec_market_group":          {"type":"keyword"},
+                "fec_campaign":              {"type":"keyword"},
+                "fec_source":                {"type":"keyword"},
+                "fec_medium":                {"type":"keyword"},
+                "fec_design":                {"type":"keyword"},
+                "fid":                       {"type":"keyword"},
+                
+                "visit_page_sku":           {"type":"integer"},
+                "visit_page_category":      {"type":"integer"},
+                "visit_page_search":        {"type":"integer"},
+                "visit_page_cart":          {"type":"integer"},
+                "visit_page_order":         {"type":"integer"},
+                
+                "visit_page_order_processing":      {"type":"integer"},
+                "visit_page_order_pending":         {"type":"integer"},
+                
+                "visit_page_order_amount":              {"type":"float"},
+                "visit_page_order_processing_amount":   {"type":"float"},
+                "visit_page_order_pending_amount":      {"type":"float"},
+                
+                "domain":                               {"type":"keyword"},
+                "country_code":                         {"type":"keyword"},
+                "ip":                                   {"type":"keyword"},
+                "devide":                               {"type":"keyword"},
+                "browser_name":                         {"type":"keyword"},
+                "operate":                              {"type":"keyword"},
+                "is_return":                            {"type":"integer"},
+                "first_page_url":                       {"type":"keyword"},
+                "out_page":                             {"type":"keyword"},
+                "service_date_str":                     {"type":"keyword"},
+                
+            }
+        }
+	}`
+}
+
+
 
 
 
