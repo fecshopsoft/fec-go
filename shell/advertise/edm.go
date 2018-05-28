@@ -25,44 +25,10 @@ func EdmMapReduct(dbName string, collName string, outCollName string, website_id
             fid 	= this.fid ? this.fid : null;
             if (fid && fec_source == 'EDM') {
                 fec_edm = fid + '_' + fec_campaign
-                fec_medium 	= this.fec_medium;
-                if(fec_medium){
-                    b= {};
-                    b[fec_medium] = 1;
-                    fec_medium 	= b;
-                }else{
-                    fec_medium = null;
-                }
-                
-                
-                fec_content 	= this.fec_content;
-                if(fec_content){
-                    b= {};
-                    b[fec_content] = 1;
-                    fec_content 	= b;
-                }else{
-                    fec_content = null;
-                }
-                
-                fec_market_group 	= this.fec_market_group;
-                if(fec_market_group){
-                    b= {};
-                    b[fec_market_group] = 1;
-                    fec_market_group 	= b;
-                }else{
-                    fec_market_group = null;
-                }
-                
-                fec_design 	= this.fec_design;
-                if(fec_design){
-                    b= {};
-                    b[fec_design] = 1;
-                    fec_design 	= b;
-                }else{
-                    fec_design = null;
-                }
-                
-                
+                fec_medium 	= this.fec_medium ? this.fec_medium : null;
+                fec_content 	= this.fec_content ? this.fec_content : null;
+                fec_market_group 	= this.fec_market_group ? this.fec_market_group : null;
+                fec_design 	= this.fec_design ? this.fec_design : null;
                 
                 first_referrer_domain = this.first_referrer_domain ? this.first_referrer_domain : null;
                 if(first_referrer_domain){
@@ -450,10 +416,10 @@ func EdmMapReduct(dbName string, collName string, outCollName string, website_id
             this_fec_edm    	= null;
             this_fid 	= null;
             
-            this_fec_medium 	= {};
-            this_fec_content 	= {};
-            this_fec_market_group 	= {};
-            this_fec_design 	= {};
+            this_fec_medium 	= null;
+            this_fec_content 	= null;
+            this_fec_market_group 	= null;
+            this_fec_design 	= null;
             
             this_first_referrer_domain	 		= {};
             
@@ -478,33 +444,12 @@ func EdmMapReduct(dbName string, collName string, outCollName string, website_id
             
             for(var i in emits){
                 
-                //if( emits[i].fec_market_group){
-                //    this_fec_market_group 		=  emits[i].fec_market_group;
-                //}
-                if(emits[i].fec_market_group){
-                    fec_market_group = emits[i].fec_market_group;
-                    for(brower_ne in fec_market_group){
-                        count = fec_market_group[brower_ne];
-                        if(!this_fec_market_group[brower_ne]){
-                            this_fec_market_group[brower_ne] = count;
-                        }else{
-                            this_fec_market_group[brower_ne] += count;
-                        }
-                    }
+                if( emits[i].fec_market_group){
+                    this_fec_market_group 		=  emits[i].fec_market_group;
                 }
-                //if( emits[i].fec_content){
-                //    this_fec_content 		=  emits[i].fec_content;
-                //}
-                if(emits[i].fec_content){
-                    fec_content = emits[i].fec_content;
-                    for(brower_ne in fec_content){
-                        count = fec_content[brower_ne];
-                        if(!this_fec_content[brower_ne]){
-                            this_fec_content[brower_ne] = count;
-                        }else{
-                            this_fec_content[brower_ne] += count;
-                        }
-                    }
+                
+                if( emits[i].fec_content){
+                    this_fec_content 		=  emits[i].fec_content;
                 }
                 
                 if( emits[i].fid){
@@ -520,28 +465,12 @@ func EdmMapReduct(dbName string, collName string, outCollName string, website_id
                     this_fec_campaign 		=  emits[i].fec_campaign;
                 }
                 
-                if(emits[i].fec_medium){
-                    fec_medium = emits[i].fec_medium;
-                    for(brower_ne in fec_medium){
-                        count = fec_medium[brower_ne];
-                        if(!this_fec_medium[brower_ne]){
-                            this_fec_medium[brower_ne] = count;
-                        }else{
-                            this_fec_medium[brower_ne] += count;
-                        }
-                    }
+                if( emits[i].fec_medium){
+                    this_fec_medium 		=  emits[i].fec_medium;
                 }
                 
-                if(emits[i].fec_design){
-                    fec_design = emits[i].fec_design;
-                    for(brower_ne in fec_design){
-                        count = fec_design[brower_ne];
-                        if(!this_fec_design[brower_ne]){
-                            this_fec_design[brower_ne] = count;
-                        }else{
-                            this_fec_design[brower_ne] += count;
-                        }
-                    }
+                if( emits[i].fec_design){
+                    this_fec_design 		=  emits[i].fec_design;
                 }
                 
                 if(emits[i].first_referrer_domain){

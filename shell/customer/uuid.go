@@ -6,7 +6,7 @@ import(
     "github.com/fecshopsoft/fec-go/db/mongodb"
     "github.com/fecshopsoft/fec-go/db/esdb"
     "github.com/fecshopsoft/fec-go/helper"
-    "github.com/fecshopsoft/fec-go/shell/model"
+    model "github.com/fecshopsoft/fec-go/shell/customerModel"
     "github.com/globalsign/mgo"
     "github.com/globalsign/mgo/bson"
     "math"
@@ -27,12 +27,45 @@ func UuidMapReduct(dbName string, collName string, outCollName string, website_i
             
             service_date_str = this.service_date_str ? this.service_date_str : null;
             stay_seconds= this.stay_seconds ? this.stay_seconds : 0;
-            sku 		= this.sku ? [this.sku] : null;
-            category 	= this.category ? [this.category] : null;
             
-            search 		= this.search ? [this.search] : null;
-            cart		= this.cart ? this.cart : null;  // last cart page
-            order		= this.order ? [this.order] : null;
+            sku 			= this.sku;
+            if(sku){
+                b= {};
+                b[sku] = 1;
+                sku 	= b;
+            }else{
+                sku = null;
+            }
+            category 			= this.category;
+            if(category){
+                b= {};
+                b[category] = 1;
+                category 	= b;
+            }else{
+                category = null;
+            }
+            
+            search 			= this.search;
+            if(search && search.text){
+                b= {};
+                b[search.text] = search.result_qty;
+                search 	= b;
+            }else{
+                search = null;
+            }
+            
+            if (this.cart) {
+                cart		= this.cart.length > 0 ? this.cart : null;  // last cart page
+            } else {
+                cart = null
+            }
+            
+            if (this.order) {
+                order		= this.order.invoice ? [this.order] : null;
+            }else {
+                order = null
+            }
+            
             customer_email		= [];
             if(login_email){
                 customer_email.push(login_email);
@@ -44,15 +77,90 @@ func UuidMapReduct(dbName string, collName string, outCollName string, website_i
             // user_agent= this.user_agent ? this.user_agent : null;
             // service_timestamp= this.service_timestamp ? this.service_timestamp : null;
            
-            country_code= this.country_code ? this.country_code : null;
-            ip= this.ip ? this.ip : null;
-             devide= this.devide ? this.devide : null;
+
+            ip 			= this.ip;
+            if(ip){
+                b= {};
+                b[ip] = 1;
+                ip 	= b;
+            }else{
+                ip = null;
+            }
             
-            browser_name= this.browser_name ? this.browser_name : null;
-            browser_lang= this.browser_lang ? this.browser_lang : null;
-            browser_version= this.browser_version ? this.browser_version : null;
-            operate= this.operate ? this.operate : null;
+            browser_name 			= this.browser_name;
+            if(browser_name){
+                b= {};
+                b[browser_name] = 1;
+                browser_name 	= b;
+            }else{
+                browser_name = null;
+            }
             
+            devide 			= this.devide;
+            if(devide){
+                b= {};
+                b[devide] = 1;
+                devide 	= b;
+            }else{
+                devide = null;
+            }
+            
+            // country_code
+            country_code 	= this.country_code;
+            if(country_code){
+                b= {};
+                b[country_code] = 1;
+                country_code 	= b;
+            }else{
+                country_code = null;
+            }
+            
+            // operate
+            operate 		= this.operate ;
+            if(operate){
+                b= {};
+                b[operate] = 1;
+                operate 	= b;
+            }else{
+                operate = null;
+            }
+            // fec_app
+            fec_app 		= this.fec_app ;
+            if(fec_app){
+                b= {};
+                b[fec_app] = 1;
+                fec_app 	= b;
+            }else{
+                fec_app = null;
+            }
+            
+            resolution 		= this.resolution ;
+            if(resolution){
+                b= {};
+                b[resolution] = 1;
+                resolution 	= b;
+            }else{
+                resolution = null;
+            }
+            
+            color_depth 		= this.color_depth ;
+            if(color_depth){
+                b= {};
+                b[color_depth] = 1;
+                color_depth 	= b;
+            }else{
+                color_depth = null;
+            }
+            
+            language 		= this.fec_lang;
+            if(language){
+                b= {};
+                b[language] = 1;
+                language 	= b;
+            }else{
+                language = null;
+            }
+        
             
             
             first_referrer_domain= this.first_referrer_domain ? this.first_referrer_domain : null;
@@ -75,7 +183,7 @@ func UuidMapReduct(dbName string, collName string, outCollName string, website_i
             visit_page_order_processing_amount = 0;
             visit_page_order_pending_amount = 0;
             visit_page_order_amount = 0;
-            if(v_order = this.order){
+            if(v_order = this.order && this.order.invoice){
                 if(v_order['amount']){
                     visit_page_order_amount = v_order['amount'];
                 }
@@ -97,36 +205,116 @@ func UuidMapReduct(dbName string, collName string, outCollName string, website_i
                 
             }
             
-            sku_cart = [];
-            sku_order = [];
-            sku_order_success = [];
+            
+            
+            sku_cart = {};
+            sku_order = {};
+            sku_order_success = {};
             thiscart = this.cart;
             if(thiscart){
+                ii = 0 ;
                 for(x in thiscart){
+                    ii++;
                     c_one = thiscart[x];
                     $c_sku = c_one['sku'];
                     if($c_sku){
-                        sku_cart.push($c_sku);
+                        sku_cart[$c_sku] = c_one['qty'];
                     }
+                }
+                if (ii == 0) {
+                    sku_cart = null;
                 }
             }
             thisorder = this.order;
-            if(thisorder){ 
+            if(thisorder && this.order.invoice){ 
                 c_products = thisorder.products;
                 o_payment_status = thisorder.payment_status;
+                ii = 0 ;
+                jj = 0;
                 for(x in c_products){
                     o_product = c_products[x];
                     o_sku = o_product['sku'];
                     if(o_sku){
                         if(o_payment_status == 'payment_confirmed'){
-                            sku_order_success.push(o_sku);
+                            ii++;
+                            sku_order_success[o_sku] = o_product['qty'];
+                        }else{
+                            jj++;
+                            sku_order[o_sku] = o_product['qty'];
                         }
-                        sku_order.push(o_sku);
                     }
+                }
+                if (ii == 0) {
+                    sku_order_success = null;
+                }
+                if (jj == 0) {
+                    sku_order = null;
                 }
             }
             
+            fid 	= this.fid;
+            if(fid){
+                b= {};
+                b[fid] = 1;
+                fid 	= b;
+            }else{
+                fid = null;
+            }
             
+            fec_content 	= this.fec_content;
+            if(fec_content){
+                b= {};
+                b[fec_content] = 1;
+                fec_content 	= b;
+            }else{
+                fec_content = null;
+            }
+            
+            fec_market_group 	= this.fec_market_group;
+            if(fec_market_group){
+                b= {};
+                b[fec_market_group] = 1;
+                fec_market_group 	= b;
+            }else{
+                fec_market_group = null;
+            }
+            
+            fec_campaign 	= this.fec_campaign;
+            if(fec_campaign){
+                b= {};
+                b[fec_campaign] = 1;
+                fec_campaign 	= b;
+            }else{
+                fec_campaign = null;
+            }
+            
+            
+            fec_source 	= this.fec_source;
+            if(fec_source){
+                b= {};
+                b[fec_source] = 1;
+                fec_source 	= b;
+            }else{
+                fec_source = null;
+            }
+            
+            fec_medium 	= this.fec_medium;
+            if(fec_medium){
+                b= {};
+                b[fec_medium] = 1;
+                fec_medium 	= b;
+            }else{
+                fec_medium = null;
+            }
+            
+            fec_design 	= this.fec_design;
+            if(fec_design){
+                b= {};
+                b[fec_design] = 1;
+                fec_design 	= b;
+            }else{
+                fec_design = null;
+            }
             
             if(customer_id){
                 emit(this.service_date_str+"_"+this.customer_id,{
@@ -138,16 +326,28 @@ func UuidMapReduct(dbName string, collName string, outCollName string, website_i
                     login_email:login_email,
                     service_date_str:service_date_str,
                     customer_email:customer_email,
-                    fid:this.fid ? this.fid : null,
-                        
-                    fec_content:this.fec_content ? this.fec_content : null,
-                    fec_market_group:this.fec_market_group ? this.fec_market_group : null,
-                    fec_campaign:this.fec_campaign ? this.fec_campaign : null,
-                    fec_source:this.fec_source ? this.fec_source : null,
-                    fec_medium:this.fec_medium ? this.fec_medium : null,
-                    fec_design:this.fec_design ? this.fec_design : null,
                     
-                        
+                    // 改变成数组
+                    fid:fid ? fid : null,  
+                    fec_content:fec_content ? fec_content : null,
+                    fec_market_group:fec_market_group ? fec_market_group : null,
+                    fec_campaign:fec_campaign ? fec_campaign : null,
+                    fec_source:fec_source ? fec_source : null,
+                    fec_medium:fec_medium ? fec_medium : null,
+                    fec_design:fec_design ? fec_design : null,
+                    
+                    // 新添加
+                    ip: ip,
+                    browser_name: browser_name,
+                    devide: devide,
+                    country_code: country_code,
+                    operate: operate,
+                    fec_app: fec_app,
+                    resolution: resolution,
+                    color_depth: color_depth,
+                    language: language,
+            
+                
                     sku:sku,
                     sku_cart:sku_cart,
                     sku_order:sku_order,
@@ -170,31 +370,19 @@ func UuidMapReduct(dbName string, collName string, outCollName string, website_i
                     visit_page_order_pending_amount:visit_page_order_pending_amount,
                     
                     domain:this.domain ? this.domain : null,
-                    country_code:country_code,
-                    country_name:this.country_name ? this.country_name : null,
-                    ip:ip,
                     
-                    devide:devide,
-                    //user_agent:user_agent,
-                    browser_name:browser_name,
-                    browser_version:browser_version,
-                    browser_lang:browser_lang,
-                    operate:operate,
                     refer_url:refer_url,
                     first_referrer_domain:first_referrer_domain,
                     
                     is_return:is_return,
                     
-                    color_depth:this.color_depth ? this.color_depth : null,
-                    resolution:this.resolution ? this.resolution : null,
                     first_page_url:first_page_url,
                     out_page:out_page,
-                    device_pixel_ratio:this.device_pixel_ratio ? this.device_pixel_ratio : null,
                     service_date_str:service_date_str,
                     
                     
                     data:[{
-                        _id:this._id ? this._id : null,
+                        _id:this._id ? this._id.valueOf() : null,
                         ip:this.ip ? this.ip : null,
                         country_code:this.country_code ? this.country_code : null,
                         country_name:this.country_name ? this.country_name : null,
@@ -210,7 +398,10 @@ func UuidMapReduct(dbName string, collName string, outCollName string, website_i
                         fec_medium:this.fec_medium ? this.fec_medium : null,
                         fec_design:this.fec_design ? this.fec_design : null,
                         
-                        device_pixel_ratio:this.device_pixel_ratio ? this.device_pixel_ratio : null,
+                        // 新添加
+                        fec_app:this.fec_app ?  this.fec_app : null,
+                        language:this.language ?  this.language : null,
+                    
                         is_return:is_return,
                         user_agent:this.user_agent ? this.user_agent : null,
                         browser_name:this.browser_name ? this.browser_name : null,
@@ -246,19 +437,36 @@ func UuidMapReduct(dbName string, collName string, outCollName string, website_i
         }
     `
     
+            //sku_cart
+            //sku_order_success
+            //sku_order
+            //sku
+            //category
+  
     reduceStr := `
         function(key,emits){
             this_uuid 				= null;
-            this_mid 				= null;
+            
+            this_ip		        = {};
+            this_browser_name	= {};
+            this_devide	        = {};
+            this_country_code   = {};
+            this_operate	    = {};
+            this_fec_app        = {};
+            this_resolution     = {};
+            this_color_depth    = {};
+            this_language       = {};
             
             this_customer_email		= [];
-            this_fec_content 				= null;
-            this_fec_market_group 			= null;
-            this_fec_campaign 				= null;
-            this_fec_source 				= null;
-            this_fec_medium 				= null;
-            this_fec_design 				= null;
-                        
+            
+            this_fid 				        = {};
+            this_fec_content 				= {};
+            this_fec_market_group 			= {};
+            this_fec_campaign 				= {};
+            this_fec_source 				= {};
+            this_fec_medium 				= {};
+            this_fec_design 				= {};
+
             this_customer_id		= null;
             this_identify 			= [];
             this_pv 				= 0;
@@ -268,13 +476,14 @@ func UuidMapReduct(dbName string, collName string, outCollName string, website_i
             
             this_login_email		= null;
             
-            this_sku				= [];
-            this_sku_cart			= [];
-            this_sku_order			= [];
-            this_sku_order_success	= [];
+            this_sku				= {};
+            this_category		    = {};
+            this_sku_cart			= {};
+            this_sku_order			= {};
+            this_sku_order_success	= {};
             
-            this_category		= [];
-            this_search		= [];
+            
+            this_search		= {};
             this_cart		= [];
             this_order		= [];
             
@@ -290,58 +499,128 @@ func UuidMapReduct(dbName string, collName string, outCollName string, website_i
             this_visit_page_order_amount			= 0;
             this_visit_page_order_processing_amount	= 0;
             this_visit_page_order_pending_amount	= 0;
-                
-            
-            this_ip		= null;
-            
-            
-            this_devide	= null;
-            this_browser_name	= null;
-            this_browser_lang	= null;
-            this_browser_version= null;
-            this_operate	= null;
+
             this_refer_url	= null;
             this_first_referrer_domain	= null;
             this_is_return	= null;
             this_first_page_url	= null;
             this_out_page   = null;
-            this_country_code = null;
-            this_country_name = null;
             this_data = [];
-            this_color_depth = null;
-            this_resolution  = null;
-            this_device_pixel_ratio = null;
+            
             for(var i in emits){
                 
                 if(emits[i].uuid){
                     this_uuid 			=  emits[i].uuid;
                 }
                 
-                if(emits[i].mid){
-                    this_mid 			=  emits[i].mid;
-                }
-                
-                    
-                if(emits[i].fec_content){
-                    this_fec_content 			=  emits[i].fec_content;
-                }
                 if(emits[i].fec_market_group){
-                    this_fec_market_group 			=  emits[i].fec_market_group;
+                    fec_market_group = emits[i].fec_market_group;
+                    for(brower_ne in fec_market_group){
+                        count = fec_market_group[brower_ne];
+                        if(!this_fec_market_group[brower_ne]){
+                            this_fec_market_group[brower_ne] = count;
+                        }else{
+                            this_fec_market_group[brower_ne] += count;
+                        }
+                    }
                 }
-                if(emits[i].fec_campaign){
-                    this_fec_campaign 			=  emits[i].fec_campaign;
-                }
-                if(emits[i].fec_source){
-                    this_fec_source 			=  emits[i].fec_source;
-                }
-                if(emits[i].fec_medium){
-                    this_fec_medium 			=  emits[i].fec_medium;
-                }
-                if(emits[i].fec_design){
-                    this_fec_design 			=  emits[i].fec_design;
+                if(emits[i].fec_content){
+                    fec_content = emits[i].fec_content;
+                    for(brower_ne in fec_content){
+                        count = fec_content[brower_ne];
+                        if(!this_fec_content[brower_ne]){
+                            this_fec_content[brower_ne] = count;
+                        }else{
+                            this_fec_content[brower_ne] += count;
+                        }
+                    }
                 }
                 
-            
+                if(emits[i].fec_source){
+                    fec_source = emits[i].fec_source;
+                    for(brower_ne in fec_source){
+                        count = fec_source[brower_ne];
+                        if(!this_fec_source[brower_ne]){
+                            this_fec_source[brower_ne] = count;
+                        }else{
+                            this_fec_source[brower_ne] += count;
+                        }
+                    }
+                }
+                
+                if(emits[i].fec_medium){
+                    fec_medium = emits[i].fec_medium;
+                    for(brower_ne in fec_medium){
+                        count = fec_medium[brower_ne];
+                        if(!this_fec_medium[brower_ne]){
+                            this_fec_medium[brower_ne] = count;
+                        }else{
+                            this_fec_medium[brower_ne] += count;
+                        }
+                    }
+                }
+                
+                if(emits[i].fid){
+                    fid = emits[i].fid;
+                    for(brower_ne in fid){
+                        count = fid[brower_ne];
+                        if(!this_fid[brower_ne]){
+                            this_fid[brower_ne] = count;
+                        }else{
+                            this_fid[brower_ne] += count;
+                        }
+                    }
+                }
+                
+                if(emits[i].fec_design){
+                    fec_design = emits[i].fec_design;
+                    for(brower_ne in fec_design){
+                        count = fec_design[brower_ne];
+                        if(!this_fec_design[brower_ne]){
+                            this_fec_design[brower_ne] = count;
+                        }else{
+                            this_fec_design[brower_ne] += count;
+                        }
+                    }
+                }
+                
+                if(emits[i].fec_campaign){
+                    fec_campaign = emits[i].fec_campaign;
+                    for(brower_ne in fec_campaign){
+                        count = fec_campaign[brower_ne];
+                        if(!this_fec_campaign[brower_ne]){
+                            this_fec_campaign[brower_ne] = count;
+                        }else{
+                            this_fec_campaign[brower_ne] += count;
+                        }
+                    }
+                }
+                
+                if(emits[i].fec_app){
+                    fec_app = emits[i].fec_app;
+                    for(brower_ne in fec_app){
+                        
+                        count = fec_app[brower_ne];
+                        if(!this_fec_app[brower_ne]){
+                            this_fec_app[brower_ne] = count;
+                        }else{
+                            this_fec_app[brower_ne] += count;
+                        }
+                    }
+                }
+                
+                if(emits[i].search){
+                    search = emits[i].search;
+                    for(brower_ne in search){
+                        count = search[brower_ne];
+                        if(!this_search[brower_ne]){
+                            this_search[brower_ne] = count;
+                        }else{
+                            this_search[brower_ne] += count;
+                        }
+                    }
+                }
+                
                 if(emits[i].customer_id){	
                     if(!this_customer_id){
                         this_customer_id	=  emits[i].customer_id;
@@ -366,15 +645,32 @@ func UuidMapReduct(dbName string, collName string, outCollName string, website_i
                 }
                 
                 // this_sku
-                emits_sku = emits[i].sku;
-                if(emits_sku &&  (emits_sku.length > 0) ){
-                    for(x in emits_sku){
-                        e_sku = emits_sku[x];
-                        if(this_sku.indexOf(e_sku) == -1){
-                            this_sku.push(e_sku);
+                if(emits[i].sku){
+                    sku = emits[i].sku;
+                    for(brower_ne in sku){
+                        
+                        count = sku[brower_ne];
+                        if(!this_sku[brower_ne]){
+                            this_sku[brower_ne] = count;
+                        }else{
+                            this_sku[brower_ne] += count;
                         }
                     }
                 }
+                
+                if(emits[i].category){
+                    category = emits[i].category;
+                    for(brower_ne in category){
+                        
+                        count = category[brower_ne];
+                        if(!this_category[brower_ne]){
+                            this_category[brower_ne] = count;
+                        }else{
+                            this_category[brower_ne] += count;
+                        }
+                    }
+                }
+                
                 
                 emits_customer_email = emits[i].customer_email;
                 if(emits_customer_email &&  (emits_customer_email.length > 0) ){
@@ -386,57 +682,46 @@ func UuidMapReduct(dbName string, collName string, outCollName string, website_i
                     }
                 }
                 
-                
-                
                 // this_sku_cart			= [];
-                
-                emits_sku_cart = emits[i].sku_cart;
-                if(emits_sku_cart &&  (emits_sku_cart.length > 0) ){
-                    //this_sku			=  this_sku.concat(emits[i].sku);
-                    for(x in emits_sku_cart){
-                        e_sku = emits_sku_cart[x];
-                        if(this_sku_cart.indexOf(e_sku) == -1){
-                            this_sku_cart.push(e_sku);
+                if(emits[i].sku_cart){
+                    sku_cart = emits[i].sku_cart;
+                    for(brower_ne in sku_cart){
+                        count = sku_cart[brower_ne];
+                        if(!this_sku_cart[brower_ne]){
+                            this_sku_cart[brower_ne] = count;
+                        }else{
+                            this_sku_cart[brower_ne] += count;
                         }
                     }
                 }
                 
                 // this_sku_order			= [];
-                
-                emits_sku_order = emits[i].sku_order;
-                if(emits_sku_order &&  (emits_sku_order.length > 0) ){
-                    //this_sku			=  this_sku.concat(emits[i].sku);
-                    for(x in emits_sku_order){
-                        e_sku = emits_sku_order[x];
-                        if(this_sku_order.indexOf(e_sku) == -1){
-                            this_sku_order.push(e_sku);
+                if(emits[i].sku_order){
+                    sku_order = emits[i].sku_order;
+                    for(brower_ne in sku_order){
+                        count = sku_order[brower_ne];
+                        if(!this_sku_order[brower_ne]){
+                            this_sku_order[brower_ne] = count;
+                        }else{
+                            this_sku_order[brower_ne] += count;
                         }
                     }
                 }
                 
                 // this_sku_order_success	= [];
-                emits_sku_order_success = emits[i].sku_order_success;
-                if(emits_sku_order_success &&  (emits_sku_order_success.length > 0) ){
-                    //this_sku			=  this_sku.concat(emits[i].sku);
-                    for(x in emits_sku_order_success){
-                        e_sku = emits_sku_order_success[x];
-                        if(this_sku_order_success.indexOf(e_sku) == -1){
-                            this_sku_order_success.push(e_sku);
+                if(emits[i].sku_order_success){
+                    sku_order_success = emits[i].sku_order_success;
+                    for(brower_ne in sku_order_success){
+                        count = sku_order_success[brower_ne];
+                        if(!this_sku_order_success[brower_ne]){
+                            this_sku_order_success[brower_ne] = count;
+                        }else{
+                            this_sku_order_success[brower_ne] += count;
                         }
                     }
                 }
                 
                 
-                
-                
-                if(emits[i].category){
-                    this_category			=  this_category.concat(emits[i].category);
-                }
-                if(emits[i].search && emits[i].search.length > 0){
-                    if(Object.prototype.toString.call( emits[i].search ) === '[object Array]'){
-                        this_search			=  this_search.concat(emits[i].search);
-                    }
-                }
                 if(emits[i].cart && emits[i].cart.length > 0){
                     if(Object.prototype.toString.call( emits[i].cart ) === '[object Array]'){
                         this_cart			=  this_cart.concat(emits[i].cart);
@@ -482,42 +767,109 @@ func UuidMapReduct(dbName string, collName string, outCollName string, website_i
                     this_visit_page_order_pending_amount	+=  emits[i].visit_page_order_pending_amount;
                 }
                 
-                
-                
                 if(emits[i].ip){
-                    this_ip				=  emits[i].ip;
-                }
-                if(emits[i].color_depth){
-                    this_color_depth	=  emits[i].color_depth;
-                }
-                if(emits[i].resolution){
-                    this_resolution		=  emits[i].resolution;
-                }
-                if(emits[i].device_pixel_ratio){
-                    this_device_pixel_ratio =  emits[i].device_pixel_ratio;
-                }
-                if(emits[i].country_code){
-                    this_country_code   =  emits[i].country_code;
-                }
-                if(emits[i].country_name){
-                    this_country_name   =  emits[i].country_name;
+                    ip = emits[i].ip;
+                    for(brower_ne in ip){
+                        
+                        count = ip[brower_ne];
+                        if(!this_ip[brower_ne]){
+                            this_ip[brower_ne] = count;
+                        }else{
+                            this_ip[brower_ne] += count;
+                        }
+                    }
                 }
                 
-                if(emits[i].devide){	
-                    this_devide			=  emits[i].devide;
+                if(emits[i].color_depth){
+                    color_depth = emits[i].color_depth;
+                    for(brower_ne in color_depth){
+                        
+                        count = color_depth[brower_ne];
+                        if(!this_color_depth[brower_ne]){
+                            this_color_depth[brower_ne] = count;
+                        }else{
+                            this_color_depth[brower_ne] += count;
+                        }
+                    }
                 }
-                if(emits[i].browser_name){	
-                    this_browser_name	=  emits[i].browser_name;
+                if(emits[i].language){
+                    language = emits[i].language;
+                    for(brower_ne in language){
+                        
+                        count = language[brower_ne];
+                        if(!this_language[brower_ne]){
+                            this_language[brower_ne] = count;
+                        }else{
+                            this_language[brower_ne] += count;
+                        }
+                    }
                 }
-                if(emits[i].browser_lang){	
-                    this_browser_lang	=  emits[i].browser_lang;
+                
+                if(emits[i].resolution){
+                    resolution = emits[i].resolution;
+                    for(brower_ne in resolution){
+                        count = resolution[brower_ne];
+                        if(!this_resolution[brower_ne]){
+                            this_resolution[brower_ne] = count;
+                        }else{
+                            this_resolution[brower_ne] += count;
+                        }
+                    }
                 }
-                if(emits[i].browser_version){	
-                    this_browser_version	=  emits[i].browser_version;
+                
+                
+                if(emits[i].country_code){
+                    country_code = emits[i].country_code;
+                    for(brower_ne in country_code){
+                        
+                        count = country_code[brower_ne];
+                        if(!this_country_code[brower_ne]){
+                            this_country_code[brower_ne] = count;
+                        }else{
+                            this_country_code[brower_ne] += count;
+                        }
+                    }
                 }
-                if(emits[i].operate){	
-                    this_operate		=  emits[i].operate;
+                
+                if(emits[i].devide){
+                    devide = emits[i].devide;
+                    for(brower_ne in devide){
+                        
+                        count = devide[brower_ne];
+                        if(!this_devide[brower_ne]){
+                            this_devide[brower_ne] = count;
+                        }else{
+                            this_devide[brower_ne] += count;
+                        }
+                    }
                 }
+                
+                if(emits[i].browser_name){
+                    browser_name = emits[i].browser_name;
+                    for(brower_ne in browser_name){
+                        
+                        count = browser_name[brower_ne];
+                        if(!this_browser_name[brower_ne]){
+                            this_browser_name[brower_ne] = count;
+                        }else{
+                            this_browser_name[brower_ne] += count;
+                        }
+                    }
+                }
+                
+                if(emits[i].operate){
+                    operate = emits[i].operate;
+                    for(brower_ne in operate){
+                        
+                        count = operate[brower_ne];
+                        if(!this_operate[brower_ne]){
+                            this_operate[brower_ne] = count;
+                        }else{
+                            this_operate[brower_ne] += count;
+                        }
+                    }
+                }
+                
                 if(emits[i].refer_url){
                     this_refer_url		=  emits[i].refer_url;
                 }
@@ -541,11 +893,10 @@ func UuidMapReduct(dbName string, collName string, outCollName string, website_i
                 
             }
             
-
             
             return {	
                 uuid:this_uuid,
-                mid:this_mid,
+                fid:this_fid,
                 
                 fec_content:this_fec_content,
                 fec_market_group:this_fec_market_group,
@@ -563,11 +914,21 @@ func UuidMapReduct(dbName string, collName string, outCollName string, website_i
                 login_email:this_login_email,
                 
                 sku:this_sku,
+                language: this_language,
                 sku_cart:this_sku_cart,
                 sku_order:this_sku_order,
                 sku_order_success:this_sku_order_success,
                 
-            
+                ip:this_ip,
+                browser_name:this_browser_name,
+                devide:this_devide,
+                country_code:this_country_code,
+                operate:this_operate,
+                fec_app: this_fec_app,
+                resolution:this_resolution,
+                color_depth:this_color_depth,
+                
+                
                 category:this_category,
                 search:this_search,
                 cart:this_cart,
@@ -586,22 +947,19 @@ func UuidMapReduct(dbName string, collName string, outCollName string, website_i
                 visit_page_order_pending_amount:this_visit_page_order_pending_amount,
                 
                 
-                color_depth:this_color_depth,
-                ip:this_ip,
-                country_code:this_country_code,
-                country_name:this_country_name,
-                devide:this_devide,
-                browser_name:this_browser_name,
-                browser_lang:this_browser_lang,
-                browser_version:this_browser_version,
-                operate:this_operate,
+                
+
+                
+                
+                
+                
+                
                 refer_url:this_refer_url,
                 first_referrer_domain:this_first_referrer_domain,
                 is_return:this_is_return,
                 first_page_url:this_first_page_url,
                 out_page:this_out_page,
-                resolution:this_resolution,
-                device_pixel_ratio:this_device_pixel_ratio,
+                
                 data:this_data
             };
         }
@@ -699,8 +1057,8 @@ func UuidMapReduct(dbName string, collName string, outCollName string, website_i
                     log.Println("888")
                     log.Println(esIndexName)
                     log.Println(esCustomerUuidTypeName)
-                    log.Println(customerUuid.Id_)
-                    log.Println(customerUuidValue)
+                    //log.Println(customerUuid.Id_)
+                    //log.Println(customerUuidValue)
                     req := esdb.BulkUpsertTypeDoc(esIndexName, esCustomerUuidTypeName, customerUuid.Id_, customerUuidValue)
                     bulkRequest = bulkRequest.Add(req)
                 }
@@ -746,7 +1104,6 @@ type MapReduce struct {
 type resultValue struct{
     BrowserNameCount int64 `browser_name`
 }
-
 var result []struct { 
     Id string `_id`
     Value resultValue 

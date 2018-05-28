@@ -1004,6 +1004,11 @@ func GetEsAdvertiseEdmTypeMapping() (string){
                 "fec_edm":          {"type":"keyword"},
                 "fid":              {"type":"keyword"},
                 
+                "fec_design":       {"type":"keyword"},
+                "fec_content":      {"type":"keyword"},
+                "fec_market_group": {"type":"keyword"},
+                "fec_medium":       {"type":"keyword"},
+                
                 "success_order_c_all_uv_rate":      {"type":"float"},
                 "success_order_c_success_uv_rate":  {"type":"float"},
                 
@@ -1049,6 +1054,23 @@ func GetEsCustomerUuidTypeName() (string){
 }
 
 
+/*
+
+"fec_content":               {"type":"keyword"},
+"fec_market_group":          {"type":"keyword"},
+"fec_campaign":              {"type":"keyword"},
+"fec_source":                {"type":"keyword"},
+"fec_medium":                {"type":"keyword"},
+"fec_design":                {"type":"keyword"},
+"fid":                       {"type":"keyword"},
+
+"country_code":                         {"type":"keyword"},
+"ip":                                   {"type":"keyword"},
+"devide":                               {"type":"keyword"},
+"browser_name":                         {"type":"keyword"},
+"operate":                              {"type":"keyword"},   
+*/
+
 func GetEsCustomerUuidTypeMapping() (string){
     return `{
 		"customer_uuid_data":{
@@ -1062,14 +1084,6 @@ func GetEsCustomerUuidTypeMapping() (string){
                 "register_email":   {"type":"keyword"},
                 "login_email":      {"type":"keyword"},
                 "service_date_str": {"type":"date"},
-                
-                "fec_content":               {"type":"keyword"},
-                "fec_market_group":          {"type":"keyword"},
-                "fec_campaign":              {"type":"keyword"},
-                "fec_source":                {"type":"keyword"},
-                "fec_medium":                {"type":"keyword"},
-                "fec_design":                {"type":"keyword"},
-                "fid":                       {"type":"keyword"},
                 
                 "visit_page_sku":           {"type":"integer"},
                 "visit_page_category":      {"type":"integer"},
@@ -1085,16 +1099,10 @@ func GetEsCustomerUuidTypeMapping() (string){
                 "visit_page_order_pending_amount":      {"type":"float"},
                 
                 "domain":                               {"type":"keyword"},
-                "country_code":                         {"type":"keyword"},
-                "ip":                                   {"type":"keyword"},
-                "devide":                               {"type":"keyword"},
-                "browser_name":                         {"type":"keyword"},
-                "operate":                              {"type":"keyword"},
+                
                 "is_return":                            {"type":"integer"},
                 "first_page_url":                       {"type":"keyword"},
-                "out_page":                             {"type":"keyword"},
-                "service_date_str":                     {"type":"keyword"},
-                
+                "out_page":                             {"type":"keyword"}
             }
         }
 	}`

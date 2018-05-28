@@ -593,11 +593,10 @@ type AdvertiseEdmValue struct{
     FecCampaign string `form:"fec_campaign" json:"fec_campaign" bson:"fec_campaign"`
     Fid string `form:"fid" json:"fid" bson:"fid"`
     
-    FecMedium map[string]int64 `form:"fec_medium" json:"fec_medium" bson:"fec_medium"`
-    FecContent map[string]int64 `form:"fec_content" json:"fec_content" bson:"fec_content"`
-    FecDesign map[string]int64 `form:"fec_design" json:"fec_design" bson:"fec_design"`
-    
-    FecMarketGroup map[string]int64 `form:"fec_market_group" json:"fec_market_group" bson:"fec_market_group"`
+    FecMedium string `form:"fec_medium" json:"fec_medium" bson:"fec_medium"`
+    FecContent string `form:"fec_content" json:"fec_content" bson:"fec_content"`
+    FecDesign string `form:"fec_design" json:"fec_design" bson:"fec_design"`
+    FecMarketGroup string `form:"fec_market_group" json:"fec_market_group" bson:"fec_market_group"`
     
     // FecMediumMain string `form:"fec_medium_main" json:"fec_medium_main" bson:"fec_medium_main"`
     SuccessOrderCAllUvRate float64 `form:"success_order_c_all_uv_rate" json:"success_order_c_all_uv_rate" bson:"success_order_c_all_uv_rate"`

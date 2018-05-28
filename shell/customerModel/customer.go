@@ -38,26 +38,26 @@ type CustomerUuidValue struct{
     StaySeconds float64 `form:"stay_seconds" json:"stay_seconds" bson:"stay_seconds"`
     ServiceDateStr string `form:"service_date_str" json:"service_date_str" bson:"service_date_str"`
     
-    
     RegisterEmail string `form:"register_email" json:"register_email" bson:"register_email"`
     LoginEmail string `form:"login_email" json:"login_email" bson:"login_email"`
     CustomerEmail []string `form:"customer_email" json:"customer_email" bson:"customer_email"`
     
-    Fid string `form:"fid" json:"fid" bson:"fid"`
+    Fid map[string]int64 `form:"fid" json:"fid" bson:"fid"`
     FecContent map[string]int64 `form:"fec_content" json:"fec_content" bson:"fec_content"`
     FecMarketGroup map[string]int64 `form:"fec_market_group" json:"fec_market_group" bson:"fec_market_group"`
-    FecCampaign string `form:"fec_campaign" json:"fec_campaign" bson:"fec_campaign"`
-    FecSource string `form:"fec_source" json:"fec_source" bson:"fec_source"`
+    FecCampaign map[string]int64 `form:"fec_campaign" json:"fec_campaign" bson:"fec_campaign"`
+    FecSource map[string]int64 `form:"fec_source" json:"fec_source" bson:"fec_source"`
     FecMedium map[string]int64 `form:"fec_medium" json:"fec_medium" bson:"fec_medium"`
     FecDesign map[string]int64 `form:"fec_design" json:"fec_design" bson:"fec_design"`
     
-    Sku []string `form:"sku" json:"sku" bson:"sku"`
-    SkuCart []string `form:"sku_cart" json:"sku_cart" bson:"sku_cart"`
-    SkuOrder []string `form:"sku_order" json:"sku_order" bson:"sku_order"`
-    SkuOrderSuccess []string `form:"sku_order_success" json:"sku_order_success" bson:"sku_order_success"`
-    Category []string `form:"category" json:"category" bson:"category"`
+    Sku map[string]int64 `form:"sku" json:"sku" bson:"sku"`
+    SkuCart map[string]int64 `form:"sku_cart" json:"sku_cart" bson:"sku_cart"`
+    SkuOrder map[string]int64 `form:"sku_order" json:"sku_order" bson:"sku_order"`
+    SkuOrderSuccess map[string]int64 `form:"sku_order_success" json:"sku_order_success" bson:"sku_order_success"`
+    Category map[string]int64 `form:"category" json:"category" bson:"category"`
     
-    Search []SearchInfo `form:"search" json:"search" bson:"search"`
+    Search map[string]int64 `form:"search" json:"search" bson:"search"`
+    
     Cart []CartItem `form:"cart" json:"cart" bson:"cart"`
     Order []OrderInfo `form:"order" json:"order" bson:"order"`
     
@@ -72,21 +72,22 @@ type CustomerUuidValue struct{
     VisitPageOrderPending int64 `form:"visit_page_order_pending" json:"visit_page_order_pending" bson:"visit_page_order_pending"`
     VisitPageOrderPendingAmount float64 `form:"visit_page_order_pending_amount" json:"visit_page_order_pending_amount" bson:"visit_page_order_pending_amount"`
     
+    Ip map[string]int64 `form:"ip" json:"ip" bson:"ip"`
+    BrowserName map[string]int64 `form:"browser_name" json:"browser_name" bson:"browser_name"`
+    Devide map[string]int64 `form:"devide" json:"devide" bson:"devide"`
+    CountryCode map[string]int64 `form:"country_code" json:"country_code" bson:"country_code"`
+    Operate map[string]int64 `form:"operate" json:"operate" bson:"operate"`
+    FecApp map[string]int64 `form:"fec_app" json:"fec_app" bson:"fec_app"`
+    Resolution map[string]int64 `form:"resolution" json:"resolution" bson:"resolution"`
+    ColorDepth map[string]int64 `form:"color_depth" json:"color_depth" bson:"color_depth"`
+    Language map[string]int64 `form:"language" json:"language" bson:"language"`
+    
     Domain string `form:"domain" json:"domain" bson:"domain"`
-    CountryCode string `form:"country_code" json:"country_code" bson:"country_code"`
-    CountryName string `form:"country_name" json:"country_name" bson:"country_name"`
-    Ip string `form:"ip" json:"ip" bson:"ip"`
-    Devide string `form:"devide" json:"devide" bson:"devide"`
-    BrowserName string `form:"browser_name" json:"browser_name" bson:"browser_name"`
-    BrowserVersion string `form:"browser_version" json:"browser_version" bson:"browser_version"`
-    BrowserLang string `form:"browser_lang" json:"browser_lang" bson:"browser_lang"`
-    Operate string `form:"operate" json:"operate" bson:"operate"`
     
     ReferUrl string `form:"refer_url" json:"refer_url" bson:"refer_url"`
     FirstReferrerDomain string `form:"first_referrer_domain" json:"first_referrer_domain" bson:"first_referrer_domain"`
     IsReturn int `form:"is_return" json:"is_return" bson:"is_return"`
-    ColorDepth string `form:"color_depth" json:"color_depth" bson:"color_depth"`
-    Resolution string `form:"resolution" json:"resolution" bson:"resolution"`
+    
     FirstPageUrl string `form:"first_page_url" json:"first_page_url" bson:"first_page_url"`
     OutPage string `form:"out_page" json:"out_page" bson:"out_page"`
     DevicePixelRatio string `form:"device_pixel_ratio" json:"device_pixel_ratio" bson:"device_pixel_ratio"`
@@ -123,6 +124,9 @@ type CustomerUuidData struct{
     Url string `form:"url" json:"url" bson:"url"`
     Title string `form:"title" json:"title" bson:"title"`
     ReferUrl string `form:"refer_url" json:"refer_url" bson:"refer_url"`
+    
+    FecApp string `form:"fec_app" json:"fec_app" bson:"fec_app"`
+    Language string `form:"language" json:"language" bson:"language"`
     
     FirstReferrerDomain string `form:"first_referrer_domain" json:"first_referrer_domain" bson:"first_referrer_domain"`
     Resolution string `form:"resolution" json:"resolution" bson:"resolution"`

@@ -63,10 +63,10 @@ func mapReduceByDate(dateStr string) error{
         return err
     }
     // 删除所有的elasticSearch Index
-    // err = RemoveSpecialEsIndex()
-    if err != nil {
-        return err
-    }
+    //err = RemoveSpecialEsIndex()
+    //if err != nil {
+    //    return err
+    //}
     for i:=0; i<len(websiteInfos); i++ {
         websiteInfo := websiteInfos[i]
         websiteId := websiteInfo.SiteUid
@@ -235,6 +235,8 @@ func mapReduceByDate(dateStr string) error{
         }
         
         // 处理 Advertise Edm （source + campaign）
+        log.Println("###########")
+        log.Println("Advertise Edm")
         OutAdvertiseEdmCollName := helper.GetOutAdvertiseEdmCollName(websiteId)
         err = advertise.EdmMapReduct(dbName, collName, OutAdvertiseEdmCollName, websiteId)
         if err != nil {
@@ -242,6 +244,8 @@ func mapReduceByDate(dateStr string) error{
         }
         
         // 处理 customer Uuid
+        log.Println("###########")
+        log.Println("customer Uuid")
         OutCustomerUuidCollName := helper.GetOutCustomerUuidCollName(websiteId)
         err = customer.UuidMapReduct(dbName, collName, OutCustomerUuidCollName, websiteId)
         if err != nil {

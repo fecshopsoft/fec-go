@@ -47,6 +47,12 @@ func EdmList(c *gin.Context){
     fec_edm := c.DefaultQuery("fec_edm", "")
     fec_campaign := c.DefaultQuery("fec_campaign", "")
     fid := c.DefaultQuery("fid", "")
+    
+    fec_market_group := c.DefaultQuery("fec_market_group", "")
+    fec_content := c.DefaultQuery("fec_content", "")
+    fec_design := c.DefaultQuery("fec_design", "")
+    fec_medium := c.DefaultQuery("fec_medium", "")
+    
     uv_begin := c.DefaultQuery("uv_begin", "")
     uv_end := c.DefaultQuery("uv_end", "")
     // 搜索条件
@@ -71,6 +77,23 @@ func EdmList(c *gin.Context){
     if fec_campaign != "" {
         q = q.Must(elastic.NewTermQuery("fec_campaign", fec_campaign))
     }
+    // fec_market_group 搜索
+    if fec_market_group != "" {
+        q = q.Must(elastic.NewTermQuery("fec_market_group", fec_market_group))
+    }
+    // fec_content 搜索
+    if fec_content != "" {
+        q = q.Must(elastic.NewTermQuery("fec_content", fec_content))
+    }
+    // fec_design 搜索
+    if fec_design != "" {
+        q = q.Must(elastic.NewTermQuery("fec_design", fec_design))
+    }
+    // fec_medium 搜索
+    if fec_medium != "" {
+        q = q.Must(elastic.NewTermQuery("fec_medium", fec_medium))
+    }
+    
     // fid 搜索
     if fid != "" {
         q = q.Must(elastic.NewTermQuery("fid", fid))
@@ -99,16 +122,16 @@ func EdmList(c *gin.Context){
         return
     }
     // 查询出来当前的员工和设计者
-    //contentNames, designNames, err := getContentAndDesign(c, chosen_own_id)
-    //if err != nil{
-    //    c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
-    //    return
-    //}
-    //marketGroups, err := getMarketGroup(chosen_own_id)
-    //if err != nil{
-    //    c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
-    //    return
-    //}
+    contentNames, designNames, err := getContentAndDesign(c, chosen_own_id)
+    if err != nil{
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+        return
+    }
+    marketGroups, err := getMarketGroup(chosen_own_id)
+    if err != nil{
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+        return
+    }
     
     // 添加 website_id 搜索条件
     q = q.Must(elastic.NewTermQuery("website_id", chosen_website_id))
@@ -186,31 +209,26 @@ func EdmList(c *gin.Context){
                 return
             }
             ts = append(ts, advertiseEdm)
-            
-            fecDesign := advertiseEdm.FecDesign
-            for k,_ := range fecDesign{
-                if _,ok := s1[k]; !ok {
-                    s1[k] = k
-                    fecDesignInt64, _ := helper.Int64(k)
-                    designGroupVal := initialization.CustomerIdWithName[fecDesignInt64]
-                    designGroupArr = append(designGroupArr, helper.VueSelectOps{Key: fecDesignInt64, DisplayName: designGroupVal})
-                    
-                }
+            var k string
+            k = advertiseEdm.FecDesign
+            if _,ok := s1[k]; !ok {
+                s1[k] = k
+                fecDesignInt64, _ := helper.Int64(k)
+                designGroupVal := initialization.CustomerIdWithName[fecDesignInt64]
+                designGroupArr = append(designGroupArr, helper.VueSelectOps{Key: fecDesignInt64, DisplayName: designGroupVal})
+                
             }
             
             
-            fecContent := advertiseEdm.FecContent
-            for k,_ := range fecContent{
+            k = advertiseEdm.FecContent
                 if _,ok := s2[k]; !ok {
                     s2[k] = k
                     fecContentInt64, _ := helper.Int64(k)
                     contentGroupVal := initialization.CustomerIdWithName[fecContentInt64]
                     contentGroupArr = append(contentGroupArr, helper.VueSelectOps{Key: fecContentInt64, DisplayName: contentGroupVal})
                 }
-            }
             
-            fecMarketGroup := advertiseEdm.FecMarketGroup
-            for k,_ := range fecMarketGroup{
+            k = advertiseEdm.FecMarketGroup
                 if _,ok := s3[k]; !ok {
                     s3[k] = k
                     fecMarketGroup64, _ := helper.Int64(k)
@@ -218,7 +236,6 @@ func EdmList(c *gin.Context){
                     marketGroupArr = append(marketGroupArr, helper.VueSelectOps{Key: fecMarketGroup64, DisplayName: marketGroupVal})
                
                 }
-            }
             
             
         }
@@ -250,9 +267,9 @@ func EdmList(c *gin.Context){
         "designGroupOps": designGroupArr,
         "contentGroupOps": contentGroupArr,
         "marketGroupOps": marketGroupArr,
-        //"contentSelectOps": contentNames,
-        //"designSelectOps": designNames,
-        //"marketGroupSelectOps": marketGroups,
+        "contentSelectOps": contentNames,
+        "designSelectOps": designNames,
+        "marketGroupSelectOps": marketGroups,
     })
     // 返回json
     c.JSON(http.StatusOK, result)
