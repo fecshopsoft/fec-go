@@ -968,6 +968,294 @@ func UuidMapReduct(dbName string, collName string, outCollName string, website_i
     finalizeStr := `
         function (key, reducedVal) {
             reducedVal.website_id        = "` + website_id + `"
+            
+            
+            language = reducedVal.language;
+            language_main = null;
+            max_count = 0;
+            for(language_name in language){
+                language_count = language[language_name];
+                if(!language_main){
+                    max_count = language_count;
+                    language_main = language_name;
+                }else{
+                    if(max_count < language_count){
+                        language_main = language_name;
+                        max_count = language_count;
+                    }
+                }
+            }
+            reducedVal.language_main = language_main;
+            
+            
+            color_depth = reducedVal.color_depth;
+            color_depth_main = null;
+            max_count = 0;
+            for(color_depth_name in color_depth){
+                color_depth_count = color_depth[color_depth_name];
+                if(!color_depth_main){
+                    max_count = color_depth_count;
+                    color_depth_main = color_depth_name;
+                }else{
+                    if(max_count < color_depth_count){
+                        color_depth_main = color_depth_name;
+                        max_count = color_depth_count;
+                    }
+                }
+            }
+            reducedVal.color_depth_main = color_depth_main;
+            
+            
+            resolution = reducedVal.resolution;
+            resolution_main = null;
+            max_count = 0;
+            for(resolution_name in resolution){
+                resolution_count = resolution[resolution_name];
+                if(!resolution_main){
+                    max_count = resolution_count;
+                    resolution_main = resolution_name;
+                }else{
+                    if(max_count < resolution_count){
+                        resolution_main = resolution_name;
+                        max_count = resolution_count;
+                    }
+                }
+            }
+            reducedVal.resolution_main = resolution_main;
+            
+            fec_app = reducedVal.fec_app;
+            fec_app_main = null;
+            max_count = 0;
+            for(fec_app_name in fec_app){
+                fec_app_count = fec_app[fec_app_name];
+                if(!fec_app_main){
+                    max_count = fec_app_count;
+                    fec_app_main = fec_app_name;
+                }else{
+                    if(max_count < fec_app_count){
+                        fec_app_main = fec_app_name;
+                        max_count = fec_app_count;
+                    }
+                }
+            }
+            reducedVal.fec_app_main = fec_app_main;
+            
+            
+            operate = reducedVal.operate;
+            operate_main = null;
+            max_count = 0;
+            for(operate_name in operate){
+                operate_count = operate[operate_name];
+                if(!operate_main){
+                    max_count = operate_count;
+                    operate_main = operate_name;
+                }else{
+                    if(max_count < operate_count){
+                        operate_main = operate_name;
+                        max_count = operate_count;
+                    }
+                }
+            }
+            reducedVal.operate_main = operate_main;
+            
+            country_code = reducedVal.country_code;
+            country_code_main = null;
+            max_count = 0;
+            for(country_code_name in country_code){
+                country_code_count = country_code[country_code_name];
+                if(!country_code_main){
+                    max_count = country_code_count;
+                    country_code_main = country_code_name;
+                }else{
+                    if(max_count < country_code_count){
+                        country_code_main = country_code_name;
+                        max_count = country_code_count;
+                    }
+                }
+            }
+            reducedVal.country_code_main = country_code_main;
+            
+            
+            devide = reducedVal.devide;
+            devide_main = null;
+            max_count = 0;
+            for(devide_name in devide){
+                devide_count = devide[devide_name];
+                if(!devide_main){
+                    max_count = devide_count;
+                    devide_main = devide_name;
+                }else{
+                    if(max_count < devide_count){
+                        devide_main = devide_name;
+                        max_count = devide_count;
+                    }
+                }
+            }
+            reducedVal.devide_main = devide_main;
+            
+            browser_name = reducedVal.browser_name;
+            browser_name_main = null;
+            max_count = 0;
+            for(browser_name_name in browser_name){
+                browser_name_count = browser_name[browser_name_name];
+                if(!browser_name_main){
+                    max_count = browser_name_count;
+                    browser_name_main = browser_name_name;
+                }else{
+                    if(max_count < browser_name_count){
+                        browser_name_main = browser_name_name;
+                        max_count = browser_name_count;
+                    }
+                }
+            }
+            reducedVal.browser_name_main = browser_name_main;
+            
+            ip = reducedVal.ip;
+            ip_main = null;
+            max_count = 0;
+            for(ip_name in ip){
+                ip_count = ip[ip_name];
+                if(!ip_main){
+                    max_count = ip_count;
+                    ip_main = ip_name;
+                }else{
+                    if(max_count < ip_count){
+                        ip_main = ip_name;
+                        max_count = ip_count;
+                    }
+                }
+            }
+            reducedVal.ip_main = ip_main;
+            
+            fec_design = reducedVal.fec_design;
+            fec_design_main = null;
+            max_count = 0;
+            for(fec_design_name in fec_design){
+                fec_design_count = fec_design[fec_design_name];
+                if(!fec_design_main){
+                    max_count = fec_design_count;
+                    fec_design_main = fec_design_name;
+                }else{
+                    if(max_count < fec_design_count){
+                        fec_design_main = fec_design_name;
+                        max_count = fec_design_count;
+                    }
+                }
+            }
+            reducedVal.fec_design_main = fec_design_main;
+            
+            fec_medium = reducedVal.fec_medium;
+            fec_medium_main = null;
+            max_count = 0;
+            for(fec_medium_name in fec_medium){
+                fec_medium_count = fec_medium[fec_medium_name];
+                if(!fec_medium_main){
+                    max_count = fec_medium_count;
+                    fec_medium_main = fec_medium_name;
+                }else{
+                    if(max_count < fec_medium_count){
+                        fec_medium_main = fec_medium_name;
+                        max_count = fec_medium_count;
+                    }
+                }
+            }
+            reducedVal.fec_medium_main = fec_medium_main;
+            
+            
+            fec_source = reducedVal.fec_source;
+            fec_source_main = null;
+            max_count = 0;
+            for(fec_source_name in fec_source){
+                fec_source_count = fec_source[fec_source_name];
+                if(!fec_source_main){
+                    max_count = fec_source_count;
+                    fec_source_main = fec_source_name;
+                }else{
+                    if(max_count < fec_source_count){
+                        fec_source_main = fec_source_name;
+                        max_count = fec_source_count;
+                    }
+                }
+            }
+            reducedVal.fec_source_main = fec_source_main;
+            
+            
+            fec_campaign = reducedVal.fec_campaign;
+            fec_campaign_main = null;
+            max_count = 0;
+            for(fec_campaign_name in fec_campaign){
+                fec_campaign_count = fec_campaign[fec_campaign_name];
+                if(!fec_campaign_main){
+                    max_count = fec_campaign_count;
+                    fec_campaign_main = fec_campaign_name;
+                }else{
+                    if(max_count < fec_campaign_count){
+                        fec_campaign_main = fec_campaign_name;
+                        max_count = fec_campaign_count;
+                    }
+                }
+            }
+            reducedVal.fec_campaign_main = fec_campaign_main;
+            
+            
+            fec_market_group = reducedVal.fec_market_group;
+            fec_market_group_main = null;
+            max_count = 0;
+            for(fec_market_group_name in fec_market_group){
+                fec_market_group_count = fec_market_group[fec_market_group_name];
+                if(!fec_market_group_main){
+                    max_count = fec_market_group_count;
+                    fec_market_group_main = fec_market_group_name;
+                }else{
+                    if(max_count < fec_market_group_count){
+                        fec_market_group_main = fec_market_group_name;
+                        max_count = fec_market_group_count;
+                    }
+                }
+            }
+            reducedVal.fec_market_group_main = fec_market_group_main;
+            
+            
+            fec_content = reducedVal.fec_content;
+            fec_content_main = null;
+            max_count = 0;
+            for(fec_content_name in fec_content){
+                fec_content_count = fec_content[fec_content_name];
+                if(!fec_content_main){
+                    max_count = fec_content_count;
+                    fec_content_main = fec_content_name;
+                }else{
+                    if(max_count < fec_content_count){
+                        fec_content_main = fec_content_name;
+                        max_count = fec_content_count;
+                    }
+                }
+            }
+            reducedVal.fec_content_main = fec_content_main;
+            
+            
+            fid = reducedVal.fid;
+            fid_main = null;
+            max_count = 0;
+            for(fid_name in fid){
+                fid_count = fid[fid_name];
+                if(!fid_main){
+                    max_count = fid_count;
+                    fid_main = fid_name;
+                }else{
+                    if(max_count < fid_count){
+                        fid_main = fid_name;
+                        max_count = fid_count;
+                    }
+                }
+            }
+            reducedVal.fid_main = fid_main;
+            
+            
+            
+            
+            
+            
             return reducedVal;
         }
     `

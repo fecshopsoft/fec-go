@@ -31,6 +31,7 @@ type CustomerUuid struct{
 
 type CustomerUuidValue struct{
     Id string `form:"id" json:"id" bson:"id"`
+    WebsiteId string `form:"website_id" json:"website_id" bson:"website_id"`
     
     Uuid string `form:"uuid" json:"uuid" bson:"uuid"`
     CustomerId string `form:"customer_id" json:"customer_id" bson:"customer_id"`
@@ -49,6 +50,15 @@ type CustomerUuidValue struct{
     FecSource map[string]int64 `form:"fec_source" json:"fec_source" bson:"fec_source"`
     FecMedium map[string]int64 `form:"fec_medium" json:"fec_medium" bson:"fec_medium"`
     FecDesign map[string]int64 `form:"fec_design" json:"fec_design" bson:"fec_design"`
+    
+    FidMain string `form:"fid_main" json:"fid_main" bson:"fid_main"`
+    FecContentMain string `form:"fec_content_main" json:"fec_content_main" bson:"fec_content_main"`
+    FecMarketGroupMain string `form:"fec_market_group_main" json:"fec_market_group_main" bson:"fec_market_group_main"`
+    FecCampaignMain string `form:"fec_campaign_main" json:"fec_campaign_main" bson:"fec_campaign_main"`
+    FecSourceMain string `form:"fec_source_main" json:"fec_source_main" bson:"fec_source_main"`
+    FecMediumMain string `form:"fec_medium_main" json:"fec_medium_main" bson:"fec_medium_main"`
+    FecDesignMain string `form:"fec_design_main" json:"fec_design_main" bson:"fec_design_main"`
+    
     
     Sku map[string]int64 `form:"sku" json:"sku" bson:"sku"`
     SkuCart map[string]int64 `form:"sku_cart" json:"sku_cart" bson:"sku_cart"`
@@ -81,6 +91,16 @@ type CustomerUuidValue struct{
     Resolution map[string]int64 `form:"resolution" json:"resolution" bson:"resolution"`
     ColorDepth map[string]int64 `form:"color_depth" json:"color_depth" bson:"color_depth"`
     Language map[string]int64 `form:"language" json:"language" bson:"language"`
+    
+    IpMain string `form:"ip_main" json:"ip_main" bson:"ip_main"`
+    BrowserNameMain string `form:"browser_name_main" json:"browser_name_main" bson:"browser_name_main"`
+    DevideMain string `form:"devide_main" json:"devide_main" bson:"devide_main"`
+    CountryCodeMain string `form:"country_code_main" json:"country_code_main" bson:"country_code_main"`
+    OperateMain string `form:"operate_main" json:"operate_main" bson:"operate_main"`
+    FecAppMain string `form:"fec_app_main" json:"fec_app_main" bson:"fec_app_main"`
+    ResolutionMain string `form:"resolution_main" json:"resolution_main" bson:"resolution_main"`
+    ColorDepthMain string `form:"color_depth_main" json:"color_depth_main" bson:"color_depth_main"`
+    LanguageMain string `form:"language_main" json:"language_main" bson:"language_main"`
     
     Domain string `form:"domain" json:"domain" bson:"domain"`
     

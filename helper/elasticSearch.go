@@ -1076,7 +1076,7 @@ func GetEsCustomerUuidTypeMapping() (string){
 		"customer_uuid_data":{
             "properties":{
                 "id":               {"type":"keyword"},
-                
+                "website_id":       {"type":"keyword"},
                 "customer_id":      {"type":"keyword"},
                 "uuid":             {"type":"keyword"},
                 "pv":               {"type":"integer"},
@@ -1084,6 +1084,24 @@ func GetEsCustomerUuidTypeMapping() (string){
                 "register_email":   {"type":"keyword"},
                 "login_email":      {"type":"keyword"},
                 "service_date_str": {"type":"date"},
+                
+                "ip_main":              {"type":"keyword"},
+                "browser_name_main":    {"type":"keyword"},
+                "devide_main":          {"type":"keyword"},
+                "country_code_main":    {"type":"keyword"},
+                "operate_main":         {"type":"keyword"},
+                "fec_app_main":         {"type":"keyword"},
+                "resolution_main":      {"type":"keyword"},
+                "color_depth_main":     {"type":"keyword"},
+                "language_main":        {"type":"keyword"},
+                
+                "fid_main":             {"type":"keyword"},
+                "fec_content_main":     {"type":"keyword"},
+                "fec_market_group_main":{"type":"keyword"},
+                "fec_campaign_main":    {"type":"keyword"},
+                "fec_source_main":      {"type":"keyword"},
+                "fec_medium_main":      {"type":"keyword"},
+                "fec_design_main":      {"type":"keyword"},
                 
                 "visit_page_sku":           {"type":"integer"},
                 "visit_page_category":      {"type":"integer"},

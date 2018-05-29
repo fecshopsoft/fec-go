@@ -259,6 +259,10 @@ func Listen(listenIp string) {
         v1.GET("/advertise/edm/list",            middleware.PermissionLoginToken, middleware.CommonAdminChildRole, advertiseHandler.EdmList)
         v1.GET("/advertise/edm/fetchtrendinfo",  middleware.PermissionLoginToken, middleware.CommonAdminChildRole, advertiseHandler.EdmTrendInfo)
         
+        // #### Customer Uuid
+        v1.GET("/customer/uuid/list",            middleware.PermissionLoginToken, middleware.CommonAdminChildRole, advertiseHandler.UuidList)
+        v1.GET("/customer/uuid/fetchtrendinfo",  middleware.PermissionLoginToken, middleware.CommonAdminChildRole, advertiseHandler.UuidTrendInfo)
+        
         /*
         v1.GET("/customer/list", func(c *gin.Context) {
             item := []gin.H{}
