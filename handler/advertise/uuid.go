@@ -7,6 +7,9 @@ import(
     "github.com/fecshopsoft/fec-go/helper"
     model "github.com/fecshopsoft/fec-go/shell/customerModel"
     "github.com/fecshopsoft/fec-go/initialization"
+    "github.com/fecshopsoft/fec-go/db/mongodb"
+    "github.com/globalsign/mgo"
+    "github.com/globalsign/mgo/bson"
     "context"
     "strconv"
     "log"
@@ -44,6 +47,9 @@ func UuidList(c *gin.Context){
     service_date_str_begin := c.DefaultQuery("service_date_str_begin", "")
     service_date_str_end := c.DefaultQuery("service_date_str_end", "")
     customer_id := c.DefaultQuery("customer_id", "")
+    customer_email := c.DefaultQuery("customer_email", "")
+    fec_content := c.DefaultQuery("fec_content", "")
+    fec_design := c.DefaultQuery("fec_design", "")
     
     uv_begin := c.DefaultQuery("uv_begin", "")
     uv_end := c.DefaultQuery("uv_end", "")
@@ -60,9 +66,16 @@ func UuidList(c *gin.Context){
         }
         q = q.Must(newRangeQuery)
     }
+    
     // customer_id 搜索
     if customer_id != "" {
         q = q.Must(elastic.NewTermQuery("customer_id", customer_id))
+    }
+    if fec_content != "" {
+        q = q.Must(elastic.NewTermQuery("fec_content_main", fec_content))
+    }
+    if fec_design != "" {
+        q = q.Must(elastic.NewTermQuery("fec_design_main", fec_design))
     }
     
     // uv 范围搜索
@@ -88,6 +101,7 @@ func UuidList(c *gin.Context){
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("website id is empty"))
         return
     }
+    
     // 查询出来当前的员工和设计者
     contentNames, designNames, err := getContentAndDesign(c, chosen_own_id)
     if err != nil{
@@ -96,6 +110,20 @@ func UuidList(c *gin.Context){
     }
     // 添加website_id 搜索条件
     q = q.Must(elastic.NewTermQuery("website_id", chosen_website_id))
+    
+    if customer_email != "" {
+        // 做查询
+        customerDbName := helper.GetCustomerDbName()
+        customerCollName := helper.GetCustomerCollName(chosen_website_id)
+        var uuidCustomer model.UuidCustomer
+        _ = mongodb.MDC(customerDbName, customerCollName, func(coll *mgo.Collection) error {
+             _ = coll.Find(bson.M{"emails": customer_email}).One(&uuidCustomer)
+            return nil
+        })
+        if uuidCustomer.CustomerId != "" {
+            q = q.Must(elastic.NewTermQuery("customer_id", uuidCustomer.CustomerId))   
+        }
+    }
     
     // esIndexName := helper.GetEsIndexName(chosen_website_id)
     esCustomerUuidTypeName :=  helper.GetEsCustomerUuidTypeName()
