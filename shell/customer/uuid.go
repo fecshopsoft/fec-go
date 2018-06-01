@@ -60,11 +60,6 @@ func UuidMapReduct(dbName string, collName string, outCollName string, website_i
                 cart = null
             }
             
-            if (this.order) {
-                order		= this.order.invoice ? [this.order] : null;
-            }else {
-                order = null
-            }
             
             customer_email		= [];
             if(login_email){
@@ -165,8 +160,9 @@ func UuidMapReduct(dbName string, collName string, outCollName string, website_i
             
             first_referrer_domain= this.first_referrer_domain ? this.first_referrer_domain : null;
             
-            is_return= this.is_return ? this.is_return : 0;
-            
+            is_return = Number(this.is_return);
+            is_return = isNaN(is_return) ? 0 : is_return
+                    
             first_page_url= (this.first_page == 1 ) ? this.url : null;
             
             refer_url = null;
@@ -178,34 +174,14 @@ func UuidMapReduct(dbName string, collName string, outCollName string, website_i
             }else{
                 out_page = null;
             }
-            visit_page_order_processing = 2;
-            visit_page_order_pending = 2;
+            visit_page_order = 0;
+            visit_page_order_processing = 0;
+            visit_page_order_pending = 0;
             visit_page_order_processing_amount = 0;
             visit_page_order_pending_amount = 0;
             visit_page_order_amount = 0;
-            if(v_order = this.order && this.order.invoice){
-                if(v_order['amount']){
-                    visit_page_order_amount = v_order['amount'];
-                }
-                if(v_order['payment_status'] == 'payment_confirmed'){
-                    visit_page_order_processing = 1;
-                    if(v_order['amount']){
-                        visit_page_order_processing_amount = v_order['amount'];
-                    }
-                }else{
-                    visit_page_order_pending = 1;
-                    if(v_order['amount']){
-                        visit_page_order_pending_amount = v_order['amount'];
-                    }
-                }
-                
-                if(v_order['email']){
-                    customer_email.push(v_order['email']);
-                }
-                
-            }
             
-            
+           
             
             sku_cart = {};
             sku_order = {};
@@ -225,17 +201,23 @@ func UuidMapReduct(dbName string, collName string, outCollName string, website_i
                     sku_cart = null;
                 }
             }
-            thisorder = this.order;
-            if(thisorder && this.order.invoice){ 
-                c_products = thisorder.products;
-                o_payment_status = thisorder.payment_status;
+            
+            t_order = null;
+            order = this.order ? this.order : null;
+            if(order && order['invoice'] && order['products']){
+                visit_page_order = 1;
+                t_order = [order];
+                products = order['products'];
+                payment_status = order['payment_status'];
+                amount = order['amount'];
+                
                 ii = 0 ;
                 jj = 0;
-                for(x in c_products){
-                    o_product = c_products[x];
+                for(x in products){
+                    o_product = products[x];
                     o_sku = o_product['sku'];
                     if(o_sku){
-                        if(o_payment_status == 'payment_confirmed'){
+                        if(payment_status == 'payment_confirmed'){
                             ii++;
                             sku_order_success[o_sku] = o_product['qty'];
                         }else{
@@ -250,7 +232,24 @@ func UuidMapReduct(dbName string, collName string, outCollName string, website_i
                 if (jj == 0) {
                     sku_order = null;
                 }
+                
+                
+                if(amount){
+                    visit_page_order_amount = amount;
+                }
+                
+                if(payment_status == 'payment_confirmed'){
+                    visit_page_order_processing = 1;
+                    visit_page_order_processing_amount = amount;
+                } else {
+                    visit_page_order_pending = 1;
+                    visit_page_order_pending_amount = amount;
+                }
+                if(order['email']){
+                    customer_email.push(order['email']);
+                }
             }
+            
             
             fid 	= this.fid;
             if(fid){
@@ -315,6 +314,19 @@ func UuidMapReduct(dbName string, collName string, outCollName string, website_i
             }else{
                 fec_design = null;
             }
+            dataUrl = this.url ? this.url : null;
+            if (!dataUrl) {
+                if (register_email) {
+                    dataUrl = 'register account';
+                } else if (login_email) {
+                    dataUrl = 'login account';
+                } else if (cart) {
+                    dataUrl = 'add to cart';
+                } else if (t_order) {
+                    dataUrl = 'generate order';
+                }
+            }
+            
             
             if(customer_id){
                 emit(this.service_date_str+"_"+this.customer_id,{
@@ -356,17 +368,18 @@ func UuidMapReduct(dbName string, collName string, outCollName string, website_i
                     category:category,
                     search:search,
                     cart:cart,
-                    order:order,
+                    order:t_order,
                     
-                    visit_page_sku:this.sku ? 1 : 2,
-                    visit_page_category:this.category ? 1 : 2,
-                    visit_page_search:this.search ? 1 : 2,
-                    visit_page_cart:this.cart ? 1 : 2,
-                    visit_page_order:this.order ? 1 : 2,
-                    visit_page_order_amount:visit_page_order_amount,
-                    visit_page_order_processing:visit_page_order_processing,
-                    visit_page_order_processing_amount:visit_page_order_processing_amount,
+                    visit_page_sku:this.sku ? 1 : 0,
+                    visit_page_category:this.category ? 1 : 0,
+                    visit_page_search: search ? 1 : 0,
+                    visit_page_cart:cart ? 1 : 0,
+                    visit_page_order:visit_page_order,
                     visit_page_order_pending:visit_page_order_pending,
+                    visit_page_order_processing:visit_page_order_processing,
+                    
+                    visit_page_order_amount:visit_page_order_amount,
+                    visit_page_order_processing_amount:visit_page_order_processing_amount,
                     visit_page_order_pending_amount:visit_page_order_pending_amount,
                     
                     domain:this.domain ? this.domain : null,
@@ -380,55 +393,20 @@ func UuidMapReduct(dbName string, collName string, outCollName string, website_i
                     out_page:out_page,
                     service_date_str:service_date_str,
                     
-                    
                     data:[{
                         _id:this._id ? this._id.valueOf() : null,
-                        ip:this.ip ? this.ip : null,
-                        country_code:this.country_code ? this.country_code : null,
-                        country_name:this.country_name ? this.country_name : null,
                         service_datetime:this.service_datetime ? this.service_datetime : null,
-                        //service_timestamp:this.service_timestamp ? this.service_timestamp : null,
-                        devide:this.devide ? this.devide : null,
-                        uuid:this.uuid ? this.uuid : null,
-                        fid:this.fid ? this.fid : null,
-                        fec_content:this.fec_content ? this.fec_content : null,
-                        fec_market_group:this.fec_market_group ? this.fec_market_group : null,
-                        fec_campaign:this.fec_campaign ? this.fec_campaign : null,
-                        fec_source:this.fec_source ? this.fec_source : null,
-                        fec_medium:this.fec_medium ? this.fec_medium : null,
-                        fec_design:this.fec_design ? this.fec_design : null,
-                        
-                        // 新添加
-                        fec_app:this.fec_app ?  this.fec_app : null,
-                        language:this.language ?  this.language : null,
-                    
-                        is_return:is_return,
-                        user_agent:this.user_agent ? this.user_agent : null,
-                        browser_name:this.browser_name ? this.browser_name : null,
-                        browser_version:this.browser_version ? this.browser_version : null,
-                        browser_date:this.browser_date ? this.browser_date : null,
-                        browser_lang:this.browser_lang ? this.browser_lang : null,
-                        operate:this.operate ?  this.operate : null,
-                        operate_relase:this.operate_relase ? this.operate_relase : null,
-                        domain:this.domain ? this.domain : null,
-                        url:this.url ? this.url : null,
+                        url:dataUrl,
                         title:this.title ? this.title : null,
                         refer_url:this.refer_url ? this.refer_url  : null,
-                        first_referrer_domain:this.first_referrer_domain ? this.first_referrer_domain : null,
-                        resolution:this.resolution ? this.resolution : null,
-                        color_depth:this.color_depth ? this.color_depth : null,
-                        
-                        first_page:this.first_page ? this.first_page : null,
-                        url_new:this.url_new ? this.url_new : null,
-                        login_email:this.login_email ? this.login_email : null ,
-                        register_email:this.register_email ? this.register_email : null ,
                         sku:this.sku ? this.sku.replace(" ","") : null,
                         category:this.category ? this.category: null,
                         search:this.search ? this.search : null ,
                         cart:this.cart ? this.cart : null ,
                         stay_seconds : this.stay_seconds ? this.stay_seconds : null,
-                        order:this.order ? this.order : null 
-                        
+                        order:this.order ? this.order : null ,
+                        register_email:register_email,
+                        login_email:login_email
                     }]
                     
                 });
@@ -488,18 +466,20 @@ func UuidMapReduct(dbName string, collName string, outCollName string, website_i
             this_order		= [];
             
             
-            this_visit_page_sku			= 2;
-            this_visit_page_category	= 2;
-            this_visit_page_search		= 2;
-            this_visit_page_cart		= 2;
-            this_visit_page_order		= 2;
+            this_visit_page_sku			= 0;
+            this_visit_page_category	= 0;
+            this_visit_page_search		= 0;
+            this_visit_page_cart		= 0;
+            this_visit_page_order		= 0;
+            this_visit_page_order_processing		= 0;
+            this_visit_page_order_pending			= 0;
             
-            this_visit_page_order_processing		= 2;
-            this_visit_page_order_pending			= 2;
             this_visit_page_order_amount			= 0;
             this_visit_page_order_processing_amount	= 0;
             this_visit_page_order_pending_amount	= 0;
 
+           
+                    
             this_refer_url	= null;
             this_first_referrer_domain	= null;
             this_is_return	= null;
@@ -733,29 +713,30 @@ func UuidMapReduct(dbName string, collName string, outCollName string, website_i
                     }
                 }
                 
-                if(emits[i].visit_page_sku  == 1){
-                    this_visit_page_sku	=  emits[i].visit_page_sku;
+                if(emits[i].visit_page_sku){
+                    this_visit_page_sku	+=  emits[i].visit_page_sku;
                 }
-                if(emits[i].visit_page_category  == 1){
-                    this_visit_page_category	=  emits[i].visit_page_category;
+                if(emits[i].visit_page_category){
+                    this_visit_page_category	+=  emits[i].visit_page_category;
                 }
-                if(emits[i].visit_page_search  == 1){
-                    this_visit_page_search	=  emits[i].visit_page_search;
+                if(emits[i].visit_page_search){
+                    this_visit_page_search	+=  emits[i].visit_page_search;
                 }
-                if(emits[i].visit_page_cart  == 1){
-                    this_visit_page_cart	=  emits[i].visit_page_cart;
-                }
-                
-                if(emits[i].visit_page_order == 1){
-                    this_visit_page_order	=  emits[i].visit_page_order;
+                if(emits[i].visit_page_cart){
+                    this_visit_page_cart	+=  emits[i].visit_page_cart;
                 }
                 
-                if(emits[i].visit_page_order_processing == 1){
-                    this_visit_page_order_processing	=  emits[i].visit_page_order_processing;
+                if(emits[i].visit_page_order){
+                    this_visit_page_order	+=  emits[i].visit_page_order;
                 }
-                if(emits[i].visit_page_order_pending == 1){
-                    this_visit_page_order_pending	=  emits[i].visit_page_order_pending;
+                
+                if(emits[i].visit_page_order_processing ){
+                    this_visit_page_order_processing	+=  emits[i].visit_page_order_processing;
                 }
+                if(emits[i].visit_page_order_pending){
+                    this_visit_page_order_pending	+=  emits[i].visit_page_order_pending;
+                }
+                
                 
                 if(emits[i].visit_page_order_amount){
                     this_visit_page_order_amount	+=  emits[i].visit_page_order_amount;
@@ -945,12 +926,6 @@ func UuidMapReduct(dbName string, collName string, outCollName string, website_i
                 visit_page_order_amount:this_visit_page_order_amount,
                 visit_page_order_processing_amount:this_visit_page_order_processing_amount,
                 visit_page_order_pending_amount:this_visit_page_order_pending_amount,
-                
-                
-                
-
-                
-                
                 
                 
                 

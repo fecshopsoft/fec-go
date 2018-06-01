@@ -7,6 +7,7 @@ import(
     "github.com/gin-gonic/gin"
     "net/http"
     "errors"
+    "log"
     "github.com/globalsign/mgo"
     "github.com/globalsign/mgo/bson"
     "github.com/fecshopsoft/fec-go/initialization"
@@ -51,6 +52,7 @@ type TraceApiInfo struct{
     RegisterEmail string `form:"register_email" json:"register_email" bson:"register_email"`
     PaymentPendingOrder OrderInfo `form:"payment_pending_order" json:"payment_pending_order" bson:"payment_pending_order"`
     PaymentSuccessOrder OrderInfo `form:"payment_success_order" json:"payment_success_order" bson:"payment_success_order"`
+    
     
     Cart []CartItem `form:"cart" json:"cart" bson:"cart"`
 }
@@ -222,8 +224,10 @@ func SaveApiData(c *gin.Context){
     }
     // 得到collection name
     collName := helper.GetTraceDataCollName(traceApiInfo.WebsiteId)
+    log.Println("order invoice11")
     
     if traceApiInfo.Uuid != "" && traceApiInfo.PaymentSuccessOrder.Invoice == "" {
+        log.Println("order invoice")
         // 除了订单状态更新，其他的都是插入数据，也就是下面的赋值
         traceApiDbInfo.Id_ = bson.NewObjectId()
         traceApiDbInfo.Uuid = traceApiInfo.Uuid
@@ -361,26 +365,31 @@ func SaveApiData(c *gin.Context){
     // 添加customer Id
     var emailArr []string
     
-    if traceApiDbInfo.LoginEmail != "" {
-        emailArr = append(emailArr, traceApiDbInfo.LoginEmail)
+    if traceApiInfo.LoginEmail != "" {
+        emailArr = append(emailArr, traceApiInfo.LoginEmail)
     }
-    if traceApiDbInfo.RegisterEmail != "" {
-        emailArr = append(emailArr, traceApiDbInfo.RegisterEmail)
+    if traceApiInfo.RegisterEmail != "" {
+        emailArr = append(emailArr, traceApiInfo.RegisterEmail)
     }
-    if traceApiDbInfo.Order.Email != "" {
-        emailArr = append(emailArr, traceApiDbInfo.Order.Email)
+    if traceApiInfo.PaymentSuccessOrder.Email != "" {
+        emailArr = append(emailArr, traceApiInfo.PaymentSuccessOrder.Email)
     }
+    if traceApiInfo.PaymentPendingOrder.Email != "" {
+        emailArr = append(emailArr, traceApiInfo.PaymentPendingOrder.Email)
+    }
+     
+    
     var customerId string
-    customerId, err = getCustomerId(traceApiDbInfo.WebsiteId, traceApiDbInfo.Uuid, emailArr)
+    
+    customerId, err = getCustomerId(traceApiInfo.WebsiteId, traceApiInfo.Uuid, emailArr)
     if err != nil {
+        
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return
     } 
     traceApiDbInfo.CustomerId = customerId
     //  ##############
-    
-            
-            
+         
     err = mongodb.MDC(dbName, collName, func(coll *mgo.Collection) error {
         // 如果传递了订单，那么将订单保存到这个变量中
         // var orderInfo OrderInfo
@@ -407,10 +416,12 @@ func SaveApiData(c *gin.Context){
         }
         // 进行赋值。 // bsonObjectID := bson.ObjectIdHex("573ce4451e02f4bae78788aa")
     })
+    log.Println("order invoice999")
     if err != nil {
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return
     } 
+    log.Println("order invoice000")
     // 生成返回结果
     result := util.BuildSuccessResult(gin.H{
         "success": "success",

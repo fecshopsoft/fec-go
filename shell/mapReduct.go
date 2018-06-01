@@ -63,10 +63,10 @@ func mapReduceByDate(dateStr string) error{
         return err
     }
     // 删除所有的elasticSearch Index
-    err = RemoveSpecialEsIndex()
-    if err != nil {
-        return err
-    }
+    //err = RemoveSpecialEsIndex()
+    //if err != nil {
+    //    return err
+    //}
     for i:=0; i<len(websiteInfos); i++ {
         websiteInfo := websiteInfos[i]
         websiteId := websiteInfo.SiteUid
@@ -88,9 +88,6 @@ func mapReduceByDate(dateStr string) error{
         if err != nil {
             return err
         }
-        
-        
-        
         
         
         // 处理：Whole Browser
