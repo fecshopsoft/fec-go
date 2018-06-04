@@ -55,9 +55,20 @@ func UuidList(c *gin.Context){
     fec_source := c.DefaultQuery("fec_source", "")
     fec_campaign := c.DefaultQuery("fec_campaign", "")
     
+    isReturn, _  := strconv.Atoi(c.DefaultQuery("is_return", ""))
+    
     
     pv_begin := c.DefaultQuery("pv_begin", "")
     pv_end := c.DefaultQuery("pv_end", "")
+     
+    visit_page_sku_begin := c.DefaultQuery("visit_page_sku_begin", "")
+    visit_page_sku_end := c.DefaultQuery("visit_page_sku_end", "")
+    visit_page_cart_begin := c.DefaultQuery("visit_page_cart_begin", "")
+    visit_page_cart_end := c.DefaultQuery("visit_page_cart_end", "")
+    visit_page_order_begin := c.DefaultQuery("visit_page_order_begin", "")
+    visit_page_order_end := c.DefaultQuery("visit_page_order_end", "")
+    visit_page_order_processing_begin := c.DefaultQuery("visit_page_order_processing_begin", "")
+    visit_page_order_processing_end := c.DefaultQuery("visit_page_order_processing_end", "")
     // 搜索条件
     q := elastic.NewBoolQuery()
     // service_date_str 范围搜索
@@ -71,7 +82,12 @@ func UuidList(c *gin.Context){
         }
         q = q.Must(newRangeQuery)
     }
-    
+    if isReturn != 0 {
+        if isReturn != 1 {
+            isReturn = 0
+        }
+        q = q.Must(elastic.NewTermQuery("is_return", isReturn))
+    }
     // customer_id 搜索
     if customer_id != "" {
         q = q.Must(elastic.NewTermQuery("customer_id", customer_id))
@@ -106,6 +122,64 @@ func UuidList(c *gin.Context){
         }
         q = q.Must(newRangeQuery)
     }
+    
+    // visit_page_sku 范围搜索
+    if visit_page_sku_begin != "" || visit_page_sku_end != "" {
+        newRangeQuery := elastic.NewRangeQuery("visit_page_sku")
+        if visit_page_sku_begin != "" {
+            pvEndInt, _  := strconv.Atoi(visit_page_sku_begin)
+            newRangeQuery.Gte(pvEndInt)
+        }
+        if visit_page_sku_end != "" {
+            pvEndInt, _  := strconv.Atoi(visit_page_sku_end)
+            newRangeQuery.Lt(pvEndInt)
+        }
+        q = q.Must(newRangeQuery)
+    }
+    
+    // visit_page_cart 范围搜索
+    if visit_page_cart_begin != "" || visit_page_cart_end != "" {
+        newRangeQuery := elastic.NewRangeQuery("visit_page_cart")
+        if visit_page_cart_begin != "" {
+            pvEndInt, _  := strconv.Atoi(visit_page_cart_begin)
+            newRangeQuery.Gte(pvEndInt)
+        }
+        if visit_page_cart_end != "" {
+            pvEndInt, _  := strconv.Atoi(visit_page_cart_end)
+            newRangeQuery.Lt(pvEndInt)
+        }
+        q = q.Must(newRangeQuery)
+    }
+    
+    // visit_page_order 范围搜索
+    if visit_page_order_begin != "" || visit_page_order_end != "" {
+        newRangeQuery := elastic.NewRangeQuery("visit_page_order")
+        if visit_page_order_begin != "" {
+            pvEndInt, _  := strconv.Atoi(visit_page_order_begin)
+            newRangeQuery.Gte(pvEndInt)
+        }
+        if visit_page_order_end != "" {
+            pvEndInt, _  := strconv.Atoi(visit_page_order_end)
+            newRangeQuery.Lt(pvEndInt)
+        }
+        q = q.Must(newRangeQuery)
+    }    
+    
+    // visit_page_order_processing 范围搜索
+    if visit_page_order_processing_begin != "" || visit_page_order_processing_end != "" {
+        newRangeQuery := elastic.NewRangeQuery("visit_page_order_processing")
+        if visit_page_order_processing_begin != "" {
+            pvEndInt, _  := strconv.Atoi(visit_page_order_processing_begin)
+            newRangeQuery.Gte(pvEndInt)
+        }
+        if visit_page_order_processing_end != "" {
+            pvEndInt, _  := strconv.Atoi(visit_page_order_processing_end)
+            newRangeQuery.Lt(pvEndInt)
+        }
+        q = q.Must(newRangeQuery)
+    } 
+    
+        
     //////
     chosen_own_id, chosen_website_id, selectOwnIds, selectWebsiteIds, err := ActiveOwnIdAndWebsite(c)
     if err != nil{

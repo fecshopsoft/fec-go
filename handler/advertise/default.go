@@ -93,7 +93,7 @@ func ActiveOwnIdAndWebsite(c *gin.Context) (int64, string, []int64, []string, er
         if err != nil{
             return chosen_own_id, chosen_website_id, selectOwnIds, selectWebsiteIds, err
         }
-        chosen_own_id := customer.ParentId
+        chosen_own_id = customer.ParentId
         selectOwnIds = append(selectOwnIds, chosen_own_id)
         for ownId, websiteIds := range ownIdWithWebsiteId {
             if chosen_own_id == ownId {

@@ -5,6 +5,22 @@
 
 2016 (c) FecShop Software LLC。
 
+Trace系统介绍
+-------------
+
+* [关于Trace系统](trace-about.md)
+* [Trace系统收集数据](trace-get-data.md)
+
+
+
+
+
+
+
+
+
+
+
 
 基础信息
 ----------

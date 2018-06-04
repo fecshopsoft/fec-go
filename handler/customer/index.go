@@ -61,8 +61,7 @@ var ReqMehdArr = map[int]string{
  * 得到Request Method的ops数组
  */
 func ReqMethodOps() ([]VueSelectOps){
-    once.Do(func() {
-        reqMethodArr = []VueSelectOps{
+    return []VueSelectOps{
             VueSelectOps{
                 Key: 1,
                 DisplayName: ReqMehdArr[1],
@@ -84,8 +83,6 @@ func ReqMethodOps() ([]VueSelectOps){
                 DisplayName: ReqMehdArr[5],
             },
         }
-    })
-    return reqMethodArr
 }
 
 /**
