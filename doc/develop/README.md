@@ -8,50 +8,30 @@
 Trace系统介绍
 -------------
 
-* [关于Trace系统](trace-about.md)
-* [Trace系统收集数据](trace-get-data.md)
+* [Trace关于](trace-about.md)
+* [Trace技术选型](trace-jishu.md)
+* [Trace数据收集](trace_get_data.md)
+* [Trace数据统计](trace_data_tj.md)
+* [Trace数据展示](trace_data_view.md)
+
+Trace配置简叙
+-------------
+
+* [Fecshop和Trace系统对接](trace-fecshop-connect.md)
+
+
+Trace菜单功能
+-----------
+
+* [控制面板](trace-kzmb.md)
+* [基础信息](trace-menu-base.md)
+* [广告管理](trace-menu-advertise.md)
+* [全部流量统计](trace-all-ll.md)
+* [广告维度统计](trace-advertise-ll.md)
+* [用户数据统计](trace-user-ll.md)
 
 
 
-
-
-
-
-
-
-
-
-
-基础信息
-----------
-*  [关于平台账户](platform-account.md)
-*  [数据对接原理](site_relate_yuanli.md)
-*  [Cookie说明](trace_cookie.md)
-*  [Trace系统添加新平台](trace_add_new.md)
-*  [接收数据安全验证](trace_data_get_verify.md)
-*  [数据库字段介绍](trace_db_data.md)
-
-
-
-Mongodb
-----------
-
-*  [Mongo分表](trace_db_share_coll.md)
-*  [Mongo表索引](trace_db_coll_index.md)
-
-数据传递
-------------
-
-*  [数据接收验证](data_get_verify.md)
-
-
-
-
-商城对接
-----------
-
-*  [Fecshop对接](fecshop_relate.md)
-*  [其他电商网站对接](site_relate.md)
 
 
 
