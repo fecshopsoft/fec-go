@@ -9,6 +9,7 @@ Trace系统介绍
 -------------
 
 * [Trace关于](trace-about.md)
+* [Trace业务场景](trace-changjing.md)
 * [Trace技术选型](trace-jishu.md)
 * [Trace数据收集](trace_get_data.md)
 * [Trace数据统计](trace_data_tj.md)

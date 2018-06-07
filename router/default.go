@@ -168,13 +168,13 @@ func Listen(listenIp string) {
         // 得到 marketGroup 列表
         v1.GET("/common/website/list",           middleware.PermissionLoginToken, middleware.CommonAdminChildRole, commonHandler.WebsiteList)
         // 增加一个 marketGroup
-        v1.POST("/common/website/addone",        middleware.PermissionLoginToken, middleware.CommonAdminChildRole, commonHandler.WebsiteAddOne)
+        v1.POST("/common/website/addone",        middleware.PermissionLoginToken, middleware.SuperAdminRole, commonHandler.WebsiteAddOne)
         // 更新一个 marketGroup
-        v1.PATCH("/common/website/updateone",    middleware.PermissionLoginToken, middleware.CommonAdminChildRole, commonHandler.WebsiteUpdateById)
+        v1.PATCH("/common/website/updateone",    middleware.PermissionLoginToken, middleware.SuperAdminRole, commonHandler.WebsiteUpdateById)
         // 删除一个 marketGroup
-        v1.DELETE("/common/website/deleteone",   middleware.PermissionLoginToken, middleware.CommonAdminChildRole, commonHandler.WebsiteDeleteById)
+        v1.DELETE("/common/website/deleteone",   middleware.PermissionLoginToken, middleware.SuperAdminRole, commonHandler.WebsiteDeleteById)
         // 批量删除 marketGroup
-        v1.DELETE("/common/website/deletebatch", middleware.PermissionLoginToken, middleware.CommonAdminChildRole, commonHandler.WebsiteDeleteByIds)
+        v1.DELETE("/common/website/deletebatch", middleware.PermissionLoginToken, middleware.SuperAdminRole, commonHandler.WebsiteDeleteByIds)
         
         // 得到 marketGroup 列表
         v1.GET("/common/website/jscode",         middleware.PermissionLoginToken, middleware.CommonAdminChildRole, commonHandler.WebsiteJsCode)
