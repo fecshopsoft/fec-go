@@ -1130,6 +1130,38 @@ func GetEsCustomerUuidTypeMapping() (string){
 
 
 
+// Advertise Eid Type Name
+func GetEsAdvertiseEidTypeName() (string){
+    return "advertise_eid_data"
+}
+// Advertise Eid Type Mapping
+func GetEsAdvertiseEidTypeMapping() (string){
+    return `{
+		"advertise_eid_data":{
+            "properties":{
+                "id":               {"type":"keyword"},
+                "eid":              {"type":"keyword"},
+                "website_id":       {"type":"keyword"},
+                "app":              {"type":"keyword"},
+                "pv":               {"type":"integer"},
+                "uv":               {"type":"integer"},
+                "ip_count":         {"type":"integer"},
+                "jump_out_count":   {"type":"integer"},
+                "drop_out_count":   {"type":"integer"},
+                "stay_seconds":     {"type":"integer"},
+                "is_return":        {"type":"integer"},
+                "service_date_str": {"type":"date"},
+                "stay_seconds_rate":{"type":"float"},
+                "jump_out_rate":    {"type":"float"},
+                "drop_out_rate":    {"type":"float"},
+                "is_return_rate":   {"type":"float"},
+                "pv_rate":          {"type":"float"}
+            }
+        }
+	}`
+}
+
+
 
 
 

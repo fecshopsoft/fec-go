@@ -199,6 +199,23 @@ func getIpFirstCategory(dbName string, collName string, ipStr string, categoryNa
     return ipFirstCategory, err
 }  
 
+func getUuidFirstEid(dbName string, collName string, uuid string, eid string) (int, error) {
+    var uuidFirstEid int = 0
+    err := mongodb.MDC(dbName, collName, func(coll *mgo.Collection) error {
+        var traceInfo TraceMiddInfo
+        
+        _ = coll.Find(bson.M{"uuid": uuid, "eid": eid}).One(&traceInfo)
+        
+        // 如果查询不到，则说明该ip为首次访问
+        if traceInfo.Uuid == "" {
+            uuidFirstEid = 1
+        } else {
+            return nil
+        }
+        return nil
+    })
+    return uuidFirstEid, err
+} 
 
 
 func getUuidFirstFid(dbName string, collName string, uuid string, fid string) (int, error) {

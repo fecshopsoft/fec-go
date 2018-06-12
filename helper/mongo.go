@@ -159,5 +159,22 @@ func GetOutCustomerUuidCollName(websiteId string) (string){
     return GetCollName("trace_customer_uuid_data", websiteId)
 }
 
+// 得到 Advertise Eid 统计后的数据输出的collection
+func GetOutAdvertiseEidCollName(websiteId string) (string){
+    return GetCollName("trace_advertise_eid_data", websiteId)
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

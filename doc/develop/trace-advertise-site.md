@@ -42,7 +42,7 @@ url：http://fecshop.appfront.fancyecommerce.com/men?color=khaki
 ，否则将会导致统计不到数据，或者统计出错
 
 
-
+4.在菜单中可以查看各个站内广告的点击情况，设备浏览器，停留时间，跳出率等等
 
 
 

@@ -662,6 +662,41 @@ type AdvertiseEdmValue struct{
 
 
 
+type AdvertiseEid struct{
+    Id_ string `form:"_id" json:"_id" bson:"_id"`
+    Value AdvertiseEidValue `form:"value" json:"value" bson:"value"`
+}
+// eid
+type AdvertiseEidValue struct{
+    Id string `form:"id" json:"id" bson:"id"`
+    Eid string `form:"eid" json:"eid" bson:"eid"`
+    WebsiteId string `form:"website_id" json:"website_id" bson:"website_id"`
+    BrowserName map[string]int64 `form:"browser_name" json:"browser_name" bson:"browser_name"`
+    Pv int64 `form:"pv" json:"pv" bson:"pv"`
+    Uv int64 `form:"uv" json:"uv" bson:"uv"`
+    RatePv float64 `form:"rate_pv" json:"rate_pv" bson:"rate_pv"`
+    StaySeconds float64 `form:"stay_seconds" json:"stay_seconds" bson:"stay_seconds"`
+    JumpOutCount int64 `form:"jump_out_count" json:"jump_out_count" bson:"jump_out_count"`
+    DropOutCount int64 `form:"drop_out_count" json:"drop_out_count" bson:"drop_out_count"`
+    CountryCode map[string]int64 `form:"country_code" json:"country_code" bson:"country_code"`
+    
+    Resolution map[string]int64 `form:"resolution" json:"resolution" bson:"resolution"`
+    ColorDepth map[string]int64 `form:"color_depth" json:"color_depth" bson:"color_depth"`
+    Language map[string]int64 `form:"language" json:"language" bson:"language"`
+    IpCount int64 `form:"ip_count" json:"ip_count" bson:"ip_count"`
+    
+    Devide map[string]int64 `form:"devide" json:"devide" bson:"devide"`
+    Operate map[string]int64 `form:"operate" json:"operate" bson:"operate"`
+    FecApp map[string]int64 `form:"fec_app" json:"fec_app" bson:"fec_app"`
+    IsReturn int64 `form:"is_return" json:"is_return" bson:"is_return"`
+    FirstPage int64 `form:"first_page" json:"first_page" bson:"first_page"`
+    ServiceDateStr string `form:"service_date_str" json:"service_date_str" bson:"service_date_str"`
+    IsReturnRate float64 `form:"is_return_rate" json:"is_return_rate" bson:"is_return_rate"`
+    StaySecondsRate float64 `form:"stay_seconds_rate" json:"stay_seconds_rate" bson:"stay_seconds_rate"`
+    JumpOutRate float64 `form:"jump_out_rate" json:"jump_out_rate" bson:"jump_out_rate"`
+    DropOutRate float64 `form:"drop_out_rate" json:"drop_out_rate" bson:"drop_out_rate"`
+    PvRate float64 `form:"pv_rate" json:"pv_rate" bson:"pv_rate"`
+}
 
 
 

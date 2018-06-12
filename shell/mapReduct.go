@@ -42,6 +42,8 @@ func MapReductAndSyncDataToEsMutilDay(){
     for i:=0; i < day; i++ {
         preDayTimeStamps := timestamps - 86400 * int64(i)
         preDateStr := helper.GetDateTimeUtcByTimestamps(preDayTimeStamps)
+        log.Println(preDateStr)
+        log.Println("mapReduceByDate ... ")
         err := mapReduceByDate(preDateStr)
         if err != nil {
             log.Println(err.Error())
@@ -249,6 +251,14 @@ func mapReduceByDate(dateStr string) error{
             return err
         }
         
+        
+        // 处理：Advertise Eid
+        OutAdvertiseEidCollName := helper.GetOutAdvertiseEidCollName(websiteId)
+        err = advertise.EidMapReduct(dbName, collName, OutAdvertiseEidCollName, websiteId)
+        if err != nil {
+            return err
+        }
+        
     }
     return err
 
@@ -325,6 +335,9 @@ func RemoveSpecialEsIndex() error{
         s = append(s, t )
         
         t =  helper.GetEsWholeBrowserTypeName()
+        s = append(s, t )
+        
+        t =  helper.GetEsAdvertiseEidTypeName()
         s = append(s, t )
         
         for i:=0; i<len(s); i++ {

@@ -45,6 +45,7 @@ type TraceGetInfo struct{
     Resolution string `form:"resolution" json:"resolution" bson:"resolution"`
     ColorDepth string `form:"color_depth" json:"color_depth" bson:"color_depth"`
     /**
+     * eid  站内广告id
      * fid  广告id
      * fec_source   渠道
      * fec_medium   子渠道
@@ -52,6 +53,7 @@ type TraceGetInfo struct{
      * fec_content  推广员
      * fec_design   广告设计员
      */
+    Eid string `form:"eid" json:"eid" bson:"eid"`
     Fid string `form:"fid" json:"fid" bson:"fid"`
     FecSource string `form:"fec_source" json:"fec_source" bson:"fec_source"`
     FecMedium string `form:"fec_medium" json:"fec_medium" bson:"fec_medium"`
@@ -114,6 +116,7 @@ type TraceInfo struct{
     Resolution string `form:"resolution" json:"resolution" bson:"resolution"`
     ColorDepth string `form:"color_depth" json:"color_depth" bson:"color_depth"`
     /**
+     * eid  站内广告id
      * fid  广告id
      * fec_source   渠道
      * fec_medium   子渠道
@@ -121,6 +124,7 @@ type TraceInfo struct{
      * fec_content  推广员
      * fec_design   广告设计员
      */
+    Eid string `form:"eid" json:"eid" bson:"eid"`
     Fid string `form:"fid" json:"fid" bson:"fid"`
     FecSource string `form:"fec_source" json:"fec_source" bson:"fec_source"`
     FecMedium string `form:"fec_medium" json:"fec_medium" bson:"fec_medium"`
@@ -149,6 +153,8 @@ type TraceInfo struct{
     IpFirstPage int `form:"ip_first_page" json:"ip_first_page" bson:"ip_first_page"`
     // uuid 
     UuidFirstFid int `form:"uuid_first_fid" json:"uuid_first_fid" bson:"uuid_first_fid"`
+    // uuid 
+    UuidFirstEid int `form:"uuid_first_eid" json:"uuid_first_eid" bson:"uuid_first_eid"`
     
     UuidCampaignFirstFid int `form:"uuid_campaign_first_fid" json:"uuid_campaign_first_fid" bson:"uuid_campaign_first_fid"`
     //
@@ -193,6 +199,7 @@ type TraceMiddInfo struct{
     UuidFirstPage int `form:"uuid_first_page" json:"uuid_first_page" bson:"uuid_first_page"`
     // Ip First Page ，类似上面的 uuid_first_page
     IpFirstPage int `form:"ip_first_page" json:"ip_first_page" bson:"ip_first_page"`
+    UuidFirstEid int `form:"uuid_first_eid" json:"uuid_first_eid" bson:"uuid_first_eid"`
     // uuid 
     UuidFirstFid int `form:"uuid_first_fid" json:"uuid_first_fid" bson:"uuid_first_fid"`
     //
@@ -276,6 +283,7 @@ func SaveJsData(c *gin.Context){
     traceInfo.Resolution, _ = url.QueryUnescape(traceGetInfo.Resolution)
     traceInfo.ColorDepth, _ = url.QueryUnescape(traceGetInfo.ColorDepth)
     
+    traceInfo.Eid, _ = url.QueryUnescape(traceGetInfo.Eid)
     traceInfo.Fid, _ = url.QueryUnescape(traceGetInfo.Fid)
     traceInfo.FecSource, _ = url.QueryUnescape(traceGetInfo.FecSource)
     traceInfo.FecMedium, _ = url.QueryUnescape(traceGetInfo.FecMedium)
@@ -367,6 +375,15 @@ func SaveJsData(c *gin.Context){
             return
         }
         
+    }
+    
+    if traceInfo.Eid != "" {
+        // UuidFirstEid
+        traceInfo.UuidFirstEid, err = getUuidFirstEid(dbName, collName, traceInfo.Uuid, traceInfo.Eid)
+        if err != nil {
+            c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+            return
+        }
     }
     
     if traceInfo.Category != "" {
