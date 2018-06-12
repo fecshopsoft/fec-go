@@ -12,19 +12,34 @@
 
 1.站内广告后缀生成
 
+站内广告的格式如下：
+
+1.1、url的后缀加一个`eid=xxx`即可
 
 
+1.2、eid的值自己定义，长度为10位之内，字符串和数字都可以
+
+1.3、每一个站内广告的`eid必须唯一`
+
+2.示例
+
+2.1 
+
+url：http://fecshop.appfront.fancyecommerce.com/men
+
+站内广告url：http://fecshop.appfront.fancyecommerce.com/men?eid=1000001
+
+2.2
+
+url：http://fecshop.appfront.fancyecommerce.com/men?color=khaki
+
+站内广告url：http://fecshop.appfront.fancyecommerce.com/men?color=khaki&eid=1000002
 
 
+3.将生成好的url，挂到广告图片上即可
 
-
-
-
-
-
-
-
-
+一定要注意，每一个站内广告的`eid`这个参数不要写错，`eid的值`要`唯一`
+，否则将会导致统计不到数据，或者统计出错
 
 
 
