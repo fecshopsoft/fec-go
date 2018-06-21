@@ -57,6 +57,11 @@ go run main.go
 
 
 
+### 设置网站数和pv数
+
+shell/mapReduct.go
+
+initdata/default.go
 
 
 

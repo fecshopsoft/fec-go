@@ -81,14 +81,14 @@ func verifyWebsiteId(c *gin.Context, websiteId string) (bool){
     
     log.Println(siteInfo)
     
-    paymentEndTime := initialization.WebsiteInfos[websiteId].PaymentEndTime
-    websiteDayMaxCount := initialization.WebsiteInfos[websiteId].WebsiteDayMaxCount
+    // paymentEndTime := initialization.WebsiteInfos[websiteId].PaymentEndTime
+    // websiteDayMaxCount := initialization.WebsiteInfos[websiteId].WebsiteDayMaxCount
     // 如果当前时间 > paymentEndTime , 则说明过期
     nowTime := time.Now().Unix()
-    if nowTime > paymentEndTime {
-        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("Your payment time has expired, please contact the administrator to recharge"))
-        return false
-    }
+    // if nowTime > paymentEndTime {
+    //    c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("Your payment time has expired, please contact the administrator to recharge"))
+    //    return false
+    //}
     nowTimeStr := time.Unix(nowTime, 0).Format("2006-01-02 03:04:05")
     log.Println(nowTimeStr)
     nowTimeStr = nowTimeStr[0:10]
@@ -104,10 +104,10 @@ func verifyWebsiteId(c *gin.Context, websiteId string) (bool){
     }
     
     
-    if websiteDayMaxCount < initialization.DaySiteCount[nowTimeStr][websiteId] {
-        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("max limit "))
-        return false
-    }
+    //if websiteDayMaxCount < initialization.DaySiteCount[nowTimeStr][websiteId] {
+    //    c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("max limit "))
+    //    return false
+    //}
     nowCount := initialization.DaySiteCount[nowTimeStr][websiteId];
     log.Println("nowCount")
     log.Println(nowCount)

@@ -7,10 +7,17 @@ import(
     "github.com/fecshopsoft/fec-go/shell/customer"
     "github.com/fecshopsoft/fec-go/db/esdb"
     "log"
+    "github.com/globalsign/mgo"
     "os"
+    "errors"
     "sync"
+     "github.com/fecshopsoft/fec-go/db/mongodb"
     commonHandler "github.com/fecshopsoft/fec-go/handler/common"
 )
+
+var WebsiteCount int = 1
+var PvCount int = 200
+
 
 // 计算数据，以及把数据同步到ES
 func MapReductAndSyncDataToEs(){
@@ -55,6 +62,7 @@ func MapReductAndSyncDataToEsMutilDay(){
 }
 
 
+
 // 处理某一天的数据
 func mapReduceByDate(dateStr string) error{
     var err error
@@ -69,6 +77,11 @@ func mapReduceByDate(dateStr string) error{
     //if err != nil {
     //    return err
     //}
+    // 判断网站数量
+    if WebsiteCount < len(websiteInfos) {
+        return errors.New("website count is Limit Exceeded ")
+    }
+    
     for i:=0; i<len(websiteInfos); i++ {
         websiteInfo := websiteInfos[i]
         websiteId := websiteInfo.SiteUid
@@ -76,6 +89,18 @@ func mapReduceByDate(dateStr string) error{
         collName := helper.GetTraceDataCollName(websiteId)
         log.Println("###########")
         log.Println("OutWholeBrowserCollName")
+        
+        // 判断数据的pv数，是否超出限制？
+        collCount := 0
+        err = mongodb.MDC(dbName, collName, func(coll *mgo.Collection) error {
+            collCount, err = coll.Count()
+            return err
+        })
+        if collCount > PvCount {
+            return errors.New("pv count is Limit Exceeded ")
+        }
+        
+        
         // 处理用户部分，合并email相同的用户。
         // 1.首先做email计数统计
         customerDbName := helper.GetCustomerDbName()

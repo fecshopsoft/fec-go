@@ -67,6 +67,7 @@ func WebsiteAddOne(c *gin.Context){
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return
     }
+    /*
     // 查看创建site是否达到最大数
     sites, err := GetWebsiteByOwnId(own_id)
     if err != nil {
@@ -80,6 +81,7 @@ func WebsiteAddOne(c *gin.Context){
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("max site count limit"))
         return
     }
+    */
     
     websiteInfo.SiteUid = helper.RandomUUID()
     // access_token, err := helper.GenerateAccessToken()
@@ -636,4 +638,3 @@ func WebsiteJsCode(c *gin.Context){
     // 返回json
     c.JSON(http.StatusOK, result)
 }
-
