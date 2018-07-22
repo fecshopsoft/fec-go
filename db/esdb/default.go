@@ -9,11 +9,16 @@ import (
     "errors"
     "github.com/fecshopsoft/fec-go/helper"
 	"github.com/olivere/elastic"
+    "github.com/fecshopsoft/fec-go/config"
 )
 
 var once sync.Once
 var esClient *(elastic.Client)
-var esUrl string = "http://127.0.0.1:9200"
+var esUrl string
+
+func init(){
+    esUrl = config.Get("elastic_host")
+}
 
 
 func Client() (*(elastic.Client), error){

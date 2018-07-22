@@ -15,11 +15,20 @@ Trace系统介绍
 * [Trace数据统计](trace_data_tj.md)
 * [Trace数据展示](trace_data_view.md)
 
+Trace系统安装
+------------- 
+* [Trace系统安装环境](trace-install.md)
+* [Trace系统配置](trace-system-config.md)
+
+
 Trace配置简叙
 -------------
 
+* [trace 后台账户介绍](trace-fecshop-account.md)
+* [trace 如何添加网站](trace-fecshop-config.md)
 * [Fecshop和Trace系统对接](trace-fecshop-connect.md)
-
+* [trace 配置基础信息](trace-fecshop-base-config.md)
+* [trace 生成广告](trace-fecshop-ads.md)
 
 Trace菜单功能
 -----------

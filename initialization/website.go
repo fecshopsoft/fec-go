@@ -34,6 +34,7 @@ func init(){
 // 初始化 WebsiteInfos
 func InitWebsiteInfo() error{
     var webInfos SiteInfos = make(SiteInfos)
+    // 得到激活状态的所有的用户
 	customers, err:= customerHandler.GetPaymentActiveCustomers()
     if err != nil {
         return err

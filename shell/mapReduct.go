@@ -1,5 +1,16 @@
 package shell
-
+/**
+ * shell脚本处理文件
+ * 1.从脚本传递的第一个参数获取处理N天的数据
+ * 2.从脚本的第二个参数，获取是否要删除原来的es的所有index，是否重新跑es的数据
+ *    譬如  go run fec-go-shell.go 1 removeEsAllIndex 将会删除掉 es中的所有index
+ *    删除掉后，因此每个部分在执行脚本统计前都会进行initMapping操作，因此，不会存在其他的问题
+ *    删除后，您可以将历史数据重新跑一次进行恢复，譬如跑最近一个月的数据： go run fec-go-shell.go 30
+ * 3.根据第一步骤循环遍历，开始按照天数循环处理数据
+ * 4.将当前日期下的所有网站，遍历，进行数据统计。
+ * 5.依次遍历，处理各个部分的数据统计，将mongodb中的数据进行mapreduce处理，将结果数据复制到elasticSearch中。
+ 
+ */
 import(
     "github.com/fecshopsoft/fec-go/helper"
     "github.com/fecshopsoft/fec-go/shell/whole"
@@ -15,11 +26,15 @@ import(
     commonHandler "github.com/fecshopsoft/fec-go/handler/common"
 )
 
+
+// 网站数量默认值
 var WebsiteCount int = 1
-var PvCount int = 200
+// 网站pv数最大值
+var PvCount int = 5000
 
-
+// 废弃函数
 // 计算数据，以及把数据同步到ES
+// 该函数只能处理一天的数据处理，因此废弃
 func MapReductAndSyncDataToEs(){
     dateStr := helper.DateUTCStr()
     err := mapReduceByDate(dateStr)
@@ -29,6 +44,7 @@ func MapReductAndSyncDataToEs(){
 }
 
 // 计算数据，以及把数据同步到ES
+// 根据脚本传递的第一个参数，决定处理当前时间前n天的数据统计。
 func MapReductAndSyncDataToEsMutilDay(){
     var day int
     if len(os.Args) > 1 {
@@ -46,6 +62,21 @@ func MapReductAndSyncDataToEsMutilDay(){
     dateStr := helper.DateUTCStr()
     timestamps := helper.GetTimestampsByDate(dateStr)
     
+	// 删除所有的elasticSearch Index, 
+	// 对于新建mapping部分，在计算脚本的时候，都会init相应的mapping
+	// 譬如：对于./shell/advertise/eid.go 444行代码出：  esAdvertiseEidTypeMapping := helper.GetEsAdvertiseEidTypeMapping()
+	// 因此删除原来的所有的es index，只需要将下面的
+	operateType := os.Args[2]
+	if operateType == "removeEsAllIndex" {
+		log.Println("begin remove es all index")
+		err := RemoveSpecialEsIndex()
+		if err != nil {
+			log.Println(err.Error())
+		}
+	}
+    
+	
+	
     for i:=0; i < day; i++ {
         preDayTimeStamps := timestamps - 86400 * int64(i)
         preDateStr := helper.GetDateTimeUtcByTimestamps(preDayTimeStamps)
@@ -72,11 +103,7 @@ func mapReduceByDate(dateStr string) error{
     if err != nil {
         return err
     }
-    // 删除所有的elasticSearch Index
-    //err = RemoveSpecialEsIndex()
-    //if err != nil {
-    //    return err
-    //}
+    
     // 判断网站数量
     if WebsiteCount < len(websiteInfos) {
         return errors.New("website count is Limit Exceeded ")
@@ -91,6 +118,8 @@ func mapReduceByDate(dateStr string) error{
         log.Println("OutWholeBrowserCollName")
         
         // 判断数据的pv数，是否超出限制？
+		// 不做数据限制
+		/*
         collCount := 0
         err = mongodb.MDC(dbName, collName, func(coll *mgo.Collection) error {
             collCount, err = coll.Count()
@@ -99,6 +128,7 @@ func mapReduceByDate(dateStr string) error{
         if collCount > PvCount {
             return errors.New("pv count is Limit Exceeded ")
         }
+		*/
         
         
         // 处理用户部分，合并email相同的用户。
@@ -273,14 +303,18 @@ func mapReduceByDate(dateStr string) error{
         OutCustomerUuidCollName := helper.GetOutCustomerUuidCollName(websiteId)
         err = customer.UuidMapReduct(dbName, collName, OutCustomerUuidCollName, websiteId)
         if err != nil {
+			log.Println("########: customer Uuid error")
             return err
         }
         
         
         // 处理：Advertise Eid
+		log.Println("###########")
+        log.Println("Advertise Eid")
         OutAdvertiseEidCollName := helper.GetOutAdvertiseEidCollName(websiteId)
         err = advertise.EidMapReduct(dbName, collName, OutAdvertiseEidCollName, websiteId)
         if err != nil {
+			log.Println("########: Advertise Eid error")
             return err
         }
         

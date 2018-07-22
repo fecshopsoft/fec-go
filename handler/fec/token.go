@@ -66,6 +66,7 @@ func PermisstionWebsiteId(c *gin.Context){
 }
 
 func verifyWebsiteId(c *gin.Context, websiteId string) (bool){
+    // websiteId是否存在的判断
     if websiteId == "" {
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("website_id is empty"))
         return false
