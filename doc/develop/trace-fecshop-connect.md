@@ -12,19 +12,19 @@ Fecshop和Trace系统对接
 
 ```
 'trace' => [
-    'class' => 'fecshop\services\page\Trace',
-    // 关闭和打开Trace功能，默认关闭，打开前，请先联系申请下面的信息，QQ：2358269014
-    'traceJsEnable' => true,
-    // trace系统的 站点唯一标示  website id
-    'website_id'    => '9b17f5b4-b06f-46fd-abe6-a579837ccdd9',
-    // trace系统的Token，当fecshop给trace通过curl发送数据的时候，需要使用该token进行安全认证。
-    'access_token'  => 'eyJhbGciOifdfdf323IkpXVCJ9.eyJ3ZWJzaXRlX3VpZCI6IjliMTdmNWI0LWI5NmYtNDZmZC1hYmU2LWE1Nzk4MzdjY2RkOSJ9.-HsUq-qKcn2dhvGoxSYHVqMxNTH0cBcLsUl-R_utaCo',
-    // 当fecshop给trace通过curl发送数据，最大的超时时间，该时间是为了防止
-    'api_time_out' => 1.5, // 秒
-    // 追踪js url，这个是在统计系统，由管理员提供
-    'trace_url'     => 'trace.fecshop.com/fec_trace.js',
-    // 管理员提供，用于发送登录注册邮件，下单信息等。
-    'trace_api_url' => 'http://120.24.37.249:3000/fec/trace/api',
+	'class' => 'fecshop\services\page\Trace',
+	// 关闭和打开Trace功能，默认关闭，打开前，请先联系申请下面的信息，QQ：2358269014
+	'traceJsEnable' => false,
+	// trace系统的 站点唯一标示  website id
+	'website_id'    => '9b17f5b4-b96f-46fd-abe6-a579837ccdd9',
+	// trace系统的Token，当fecshop给trace通过curl发送数据的时候，需要使用该token进行安全认证。
+	'access_token'  => 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ3ZWJzaXRlX3VpZCI6IjliMTdmNWI0LWI5NmYtNDZmZC1hYmU2LWE1Nzk4MzdjY2RkOSJ9.-HsUq-qKcn2dhvGoxSYHVqMxNTH0cBcLsUl-R_utaCo',
+	// 当fecshop给trace通过curl发送数据，最大的超时时间，该时间是为了防止
+	'api_time_out' => 1.5, // 秒
+	// 追踪js url，这个是在统计系统，由管理员提供
+	'trace_url'     => 'trace.fecshop.com/fec_trace.js',
+	// 管理员提供，用于发送登录注册邮件，下单信息等。
+	'trace_api_url' => 'http://tracejs.fecshop.com/fec/trace/api',
 ],
 ```
 
@@ -43,8 +43,8 @@ Fecshop和Trace系统对接
 的域名
 
 `trace_api_url`：`追踪Api Url`，这个就是您前面配置的部分，将
-`http://120.24.37.249:3000/fec/trace/api`,中的`120.24.37.249`替换成您自己
-的IP即可。
+`http://tracejs.fecshop.com/fec/trace/api`,中的`tracejs.fecshop.com`替换成您自己
+的域名即可。
 
 填写完成后，保存即可完成
 

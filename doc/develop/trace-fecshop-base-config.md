@@ -28,10 +28,9 @@ trace 配置基础信息
 
 ![xx](images/c2.png)
 
-当使用super admin添加了网站，并且网站的拥有者是当前的 common admin
-账户，您在这里就可以看到相应的网站信息
 
-网站的编辑，只有super admin账户才行，common admin账户只能查看，不能编辑
+
+网站的编辑，只有super admin账户才有权限操作
 
 
 4.渠道管理

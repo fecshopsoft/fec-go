@@ -20,26 +20,8 @@ trace 如何添加网站
 
 ![xxx](images/b1.png)
 
-默认账户是  `admin  admin123` , 您修改成您自己的账户
+默认账户是  `admin  fecshop1234` , 您修改成您自己的账户
 
-
-
-3.添加 common admin账户
-
-因为网站是和common admin 绑定的，因此，您需要先创建一个 common admin账户
-
-1.您登陆您的admin超级账户
-
-2.点击菜单 控制面板  --> 账户列表 ， 
-
-![xx](images/a0.png)
-
-点击添加，新建一个 common admin账户，
-账户类型选择 Common Admin，如图 
-
-![xx](images/a1.png)
-
-保存即可，这样就添加了一个common admin账户，
 
 
 ### 添加网站
@@ -72,8 +54,6 @@ fecshop.appfront.fancyecommerce.com/catalog/product/image，
 
 `状态`：设置成enable
 
-
-`拥有者`，设置您上面添加的 common admin即可。
 
 
 填写完成后，保存即可完成
