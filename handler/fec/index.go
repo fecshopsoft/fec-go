@@ -482,7 +482,7 @@ func InitTraceDataCollIndex() error{
     // websiteId := "9b17f5b4-b96f-46fd-abe6-a579837ccdd9"
     // 得到今天以及未来15天的日期
     var j int64
-    websiteInfos, err := commonHandler.GetAllActiveWebsiteId()
+    websiteInfos, err := commonHandler.GetAllActiveWebsites()
     if err != nil {
         return err
     }

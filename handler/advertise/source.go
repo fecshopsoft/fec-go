@@ -78,8 +78,8 @@ func SourceList(c *gin.Context){
         }
         q = q.Must(newRangeQuery)
     }
-    //////
-    chosen_own_id, chosen_website_id, selectOwnIds, selectWebsiteIds, err := ActiveOwnIdAndWebsite(c)
+    ////// chosen_own_id,  selectOwnIds, 
+    chosen_website_id, selectWebsiteIds, err := ActiveWebsite(c)
     if err != nil{
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return
@@ -182,7 +182,7 @@ func SourceList(c *gin.Context){
                 if _,ok := s1[k]; !ok {
                     s1[k] = k
                     fecDesignInt64, _ := helper.Int64(k)
-                    designGroupVal := initialization.CustomerIdWithName[fecDesignInt64]
+                    designGroupVal := initialization.CustomerIdWithUsername[fecDesignInt64]
                     designGroupArr = append(designGroupArr, helper.VueSelectOps{Key: fecDesignInt64, DisplayName: designGroupVal})
                     
                 }
@@ -194,7 +194,7 @@ func SourceList(c *gin.Context){
                 if _,ok := s2[k]; !ok {
                     s2[k] = k
                     fecContentInt64, _ := helper.Int64(k)
-                    contentGroupVal := initialization.CustomerIdWithName[fecContentInt64]
+                    contentGroupVal := initialization.CustomerIdWithUsername[fecContentInt64]
                     contentGroupArr = append(contentGroupArr, helper.VueSelectOps{Key: fecContentInt64, DisplayName: contentGroupVal})
                 }
             }
@@ -213,12 +213,7 @@ func SourceList(c *gin.Context){
             
         }
     }
-    ownNameOptions, err := getOwnNames(c, selectOwnIds)
-    if err != nil{
-        log.Println("###2")
-        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
-        return
-    }
+    
     siteNameOptions, siteImgUrls, err := getSiteNameAndImgUrls(c, selectWebsiteIds)
     if err != nil{
         log.Println("###3")
@@ -230,11 +225,8 @@ func SourceList(c *gin.Context){
         "success": "success",
         "total": searchResult.Hits.TotalHits,
         "items": ts,
-        "chosen_own_id": chosen_own_id,
         "chosen_website_id": chosen_website_id,
-        "selectOwnIds": selectOwnIds,
         "selectWebsiteIds": selectWebsiteIds,
-        "ownNameOptions": ownNameOptions,
         "siteIdOptions": siteNameOptions,
         "siteImgUrls": siteImgUrls,
         "designGroupOps": designGroupArr,

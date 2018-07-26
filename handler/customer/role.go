@@ -19,7 +19,6 @@ import(
 type Role struct {
     Id int64 `form:"id" json:"id"`
     Name string `form:"name" json:"name" binding:"required"`
-    OwnId int64 `form:"own_id" json:"own_id"`
     CreatedAt int64 `xorm:"created" form:"created_at" json:"created_at"`
     UpdatedAt int64 `xorm:"updated" form:"updated_at" json:"updated_at"`
     CreatedCustomerId  int64 `form:"created_customer_id" json:"created_customer_id"`
@@ -28,7 +27,6 @@ type Role struct {
 type RoleUpdate struct {
     Id int64 `form:"id" json:"id"`
     Name string `form:"name" json:"name" binding:"required"`
-    OwnId int64 `form:"own_id" json:"own_id"`
     UpdatedAt int64 `xorm:"updated" form:"updated_at" json:"updated_at"`
 }
 
@@ -53,13 +51,7 @@ func RoleAddOne(c *gin.Context){
     customerId := helper.GetCurrentCustomerId(c)
     
     role.CreatedCustomerId = customerId
-    // 添加own_id
-    ownId, err := GetCustomerOwnId(c, role.OwnId)
-    if err != nil {
-        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
-        return
-    } 
-    role.OwnId = ownId
+  
     // 插入
     affected, err := engine.Insert(&role)
     if err != nil {
@@ -83,19 +75,10 @@ func RoleUpdateById(c *gin.Context){
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return
     }
-    // 添加own_id
-    ownId, err := GetCustomerOwnId(c, role.OwnId)
-    if err != nil {
-        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
-        return
-    } 
-    role.OwnId = ownId
+   
     // 根据用户级别，得到更新的条件。
     roleUpdate := &RoleUpdate{Id:role.Id}
-    customerType := helper.GetCurrentCustomerType(c)
-    if customerType != helper.AdminSuperType {
-        roleUpdate.OwnId = ownId
-    }
+   
     // 进行更新。
     affected, err := engine.Update(&role, roleUpdate)
     if err != nil {
@@ -180,13 +163,9 @@ func RoleList(c *gin.Context){
         whereParam["name"] = []string{"like", name}
     }
     whereParam["created_at"] = []string{"scope", created_at_begin, created_at_end}
-    // 根据用户的级别，通过own_id字段进行数据的过滤
+    // 根据用户的级别，通过 own_id 字段进行数据的过滤
     
-    whereParam, err := OwnIdQueryFilter(c, whereParam)
-    if err != nil{
-        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
-        return  
-    }
+    
     //whereParam["own_id"] = 93
     log.Println(whereParam)
     
@@ -218,11 +197,7 @@ func RoleList(c *gin.Context){
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return  
     }
-    ownIdOps, err := GetCustomerOwnIdOps(c)
-    if err != nil{
-        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
-        return  
-    }
+    
     createdCustomerOps, err := GetRoleCreatedCustomerOps(roles)
     if err != nil{
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
@@ -235,7 +210,6 @@ func RoleList(c *gin.Context){
         "items": roles,
         "total": counts,
         "createdCustomerOps": createdCustomerOps,
-        "ownIdOps": ownIdOps,
         "customerUsername": customerUsername,
         "customerType": customerType,
     })
@@ -265,10 +239,10 @@ func GetRoleCreatedCustomerOps(roles []Role) ([]VueSelectOps, error){
     return groupArr, nil
 }
 
-// 通过 own_id 得到所有的roles
-func GetRolesByOwnId(own_id int64) ([]Role, error){
+// 得到所有的roles
+func GetRoles() ([]Role, error){
     var roles []Role
-    err := engine.Where("own_id = ?", own_id).Find(&roles) 
+    err := engine.Find(&roles) 
     if err != nil{
         return roles, err 
     }

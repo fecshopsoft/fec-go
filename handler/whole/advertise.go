@@ -33,7 +33,7 @@ type Advertise struct {
     AdvertiseUrl string `form:"advertise_url" json:"advertise_url"`
     
     MarketGroup int64 `form:"market_group" json:"market_group"`
-    OwnId int64 `form:"own_id" json:"own_id"`
+    //OwnId int64 `form:"own_id" json:"own_id"`
     
     AdvertiseBeginDate int64 `xorm:"created"  form:"advertise_begin_date" json:"advertise_begin_date"`
     CreatedAt int64 `xorm:"created" form:"created_at" json:"created_at"`
@@ -52,17 +52,17 @@ func AdvertiseInit(c *gin.Context){
     is_create := c.DefaultQuery("is_create", "")
     log.Println("AdvertiseInit###########")
     // 得到用户的主id
-    main_id := customer.GetCustomerMainId(c)
-    log.Println(main_id)
+    //main_id := customer.GetCustomerMainId(c)
+    //log.Println(main_id)
     // 通过主id，在表：base_channel_info 通过own_id查询，得到channel数据
-    channelOps, err := common.GetChannelOpsByOwnId(main_id)
+    channelOps, err := common.GetChannelOps()
     log.Println("######1")
     if err != nil{
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return  
     }
     if channel != "" {
-        channelChildOps, err = common.GetChannelChildOpsByOwnIdAndChannel(main_id, channel)
+        channelChildOps, err = common.GetChannelChildOpsByChannel(channel)
         if err != nil{
             c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
             return  
@@ -72,14 +72,14 @@ func AdvertiseInit(c *gin.Context){
     // 得到design person
     var designOptions []helper.VueSelectOps
     if is_create == "1" {
-        customers, err := customer.GetDesigiPersonByOwnId(main_id)
+        customers, err := customer.GetDesigiPerson()
         if err != nil{
             c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
             return  
         }
         for i:=0; i<len(customers); i++ {
             customer := customers[i]
-            designOptions = append(designOptions, helper.VueSelectOps{Key: customer.Id, DisplayName: customer.Name})
+            designOptions = append(designOptions, helper.VueSelectOps{Key: customer.Id, DisplayName: customer.Username})
         }
     }
      log.Println("######3")
@@ -109,7 +109,7 @@ func AdvertiseGenerateUrl(c *gin.Context){
     
     // 其他信息
     currentCustomerId := helper.GetCurrentCustomerId(c)
-    own_id := customer.GetCustomerMainId(c)
+   
     
     customerOne, err := customer.GetCustomerOneById(currentCustomerId)
     if err != nil {
@@ -117,7 +117,7 @@ func AdvertiseGenerateUrl(c *gin.Context){
     }
     marketGroupId := customerOne.MarketGroupId
     
-    errStr, warnStr, successInfo, _ := generateAdvertiseInfo(channel, channel_child, campaign, design_person, advertise_url,  advertise_cost, remark, currentCustomerId, own_id, marketGroupId, errStr, "")
+    errStr, warnStr, successInfo, _ := generateAdvertiseInfo(channel, channel_child, campaign, design_person, advertise_url,  advertise_cost, remark, currentCustomerId, marketGroupId, errStr, "")
     result := util.BuildSuccessResult(gin.H{
         "error": errStr,
         "warning": warnStr,
@@ -127,7 +127,7 @@ func AdvertiseGenerateUrl(c *gin.Context){
     c.JSON(http.StatusOK, result)
 }
 
-func generateAdvertiseInfo(channel string, channel_child string, campaign string, design_person string, advertise_url string,  advertise_cost string, remark string, currentCustomerId int64, own_id int64, marketGroupId int64, errStr string, fid string) (string, string, gin.H, string) {
+func generateAdvertiseInfo(channel string, channel_child string, campaign string, design_person string, advertise_url string,  advertise_cost string, remark string, currentCustomerId int64, marketGroupId int64, errStr string, fid string) (string, string, gin.H, string) {
     engine := mysqldb.GetEngine()
     warnStr := ""
     successInfo := gin.H{}
@@ -188,7 +188,6 @@ func generateAdvertiseInfo(channel string, channel_child string, campaign string
         advertise.AdvertiseCost = advertiseCost
         advertise.Remark = remark
         advertise.MarketGroup = int64(marketGroupId)  //
-        advertise.OwnId = own_id
         advertise.CreatedCustomerId =  currentCustomerId //
         // 插入
         affected, err := engine.Insert(&advertise)
@@ -244,8 +243,8 @@ func generateAdvertiseInfo(channel string, channel_child string, campaign string
                     "channel": advertise.FecSource,
                     "channel_child": advertise.FecMedium,
                     "campaign": advertise.FecCampaign,
-                    "design_person": initialization.CustomerIdWithName[fecDesignInt64],
-                    "advertise_person": initialization.CustomerIdWithName[fecContent64],
+                    "design_person": initialization.CustomerIdWithUsername[fecDesignInt64],
+                    "advertise_person": initialization.CustomerIdWithUsername[fecContent64],
                     "advertise_market_group": initialization.MarketGroupIdWithName[advertise.MarketGroup],
                     "advertise_cost": advertise.AdvertiseCost,
                     "advertise_remark": advertise.Remark,
@@ -285,7 +284,6 @@ func AdvertiseList(c *gin.Context){
     // 获取参数并处理
     var sortD string
     var sortColumns string
-    var own_id int64
     defaultPageNum:= c.GetString("defaultPageNum")
     defaultPageCount := c.GetString("defaultPageCount")
     page, _  := strconv.Atoi(c.DefaultQuery("page", defaultPageNum))
@@ -293,10 +291,7 @@ func AdvertiseList(c *gin.Context){
     advertise_id     := c.DefaultQuery("advertise_id", "")
     fec_source     := c.DefaultQuery("fec_source", "")
     fec_medium     := c.DefaultQuery("fec_medium", "")
-    own_id_i, _ := strconv.Atoi(c.DefaultQuery("own_id", ""))
-    own_id = int64(own_id_i)
-    // own_id = customer.GetCustomerMainId(c)
-    
+   
     sort     := c.DefaultQuery("sort", "")
     created_at_begin := c.DefaultQuery("created_begin_timestamps", "")
     created_at_end   := c.DefaultQuery("created_end_timestamps", "")
@@ -314,14 +309,7 @@ func AdvertiseList(c *gin.Context){
     if fec_medium != "" {
         whereParam["fec_medium"] = fec_medium
     }  
-    own_id, err := customer.Get3OwnId(c, own_id)
-    if err != nil{
-        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
-        return  
-    }
-    if own_id != 0 {
-        whereParam["own_id"] = own_id
-    }
+    
     whereParam["created_at"] = []string{"scope", created_at_begin, created_at_end}
     whereStr, whereVal := mysqldb.GetXOrmWhere(whereParam)
     // 进行查询
@@ -349,11 +337,7 @@ func AdvertiseList(c *gin.Context){
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return  
     }
-    ownNameOps, err := customer.Get3OwnNameOps(c)
-    if err != nil{
-        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
-        return  
-    }
+    
     var designGroupArr  []helper.VueSelectOps
     var contentGroupArr []helper.VueSelectOps
     var marketGroupArr  []helper.VueSelectOps
@@ -361,11 +345,11 @@ func AdvertiseList(c *gin.Context){
     for i:=0; i<len(advertises); i++ {
         advertise := advertises[i]
         fecDesignInt64, _ := helper.Int64(advertise.FecDesign)
-        designGroupVal := initialization.CustomerIdWithName[fecDesignInt64]
+        designGroupVal := initialization.CustomerIdWithUsername[fecDesignInt64]
         designGroupArr = append(designGroupArr, helper.VueSelectOps{Key: fecDesignInt64, DisplayName: designGroupVal})
         
         fecContent64, _ := helper.Int64(advertise.FecContent)
-        contentGroupVal := initialization.CustomerIdWithName[fecContent64]
+        contentGroupVal := initialization.CustomerIdWithUsername[fecContent64]
         contentGroupArr = append(contentGroupArr, helper.VueSelectOps{Key: fecContent64, DisplayName: contentGroupVal})
         
         marketGroup := advertise.MarketGroup
@@ -379,7 +363,6 @@ func AdvertiseList(c *gin.Context){
     result := util.BuildSuccessResult(gin.H{
         "items": advertises,
         "total": counts,
-        "ownNameOps": ownNameOps,
         "designGroupOps": designGroupArr,
         "contentGroupOps": contentGroupArr,
         "marketGroupOps": marketGroupArr,
@@ -457,7 +440,7 @@ func GenerateMutilAdvertise(c *gin.Context){
     //
     errStr := ""
     currentCustomerId := helper.GetCurrentCustomerId(c)
-    own_id := customer.GetCustomerMainId(c)
+    
     customerOne, err := customer.GetCustomerOneById(currentCustomerId)
     if err != nil {
         errStr += err.Error()
@@ -526,7 +509,7 @@ func GenerateMutilAdvertise(c *gin.Context){
                 cell2 = row2.AddCell()
                 cell2.Value = remark
                 // 计算信息
-                errStr, warnStr, successInfo, _ := generateAdvertiseInfo(source, medium, campaign, design, url,  cost, remark, currentCustomerId, own_id, marketGroupId, errStr, "")
+                errStr, warnStr, successInfo, _ := generateAdvertiseInfo(source, medium, campaign, design, url,  cost, remark, currentCustomerId, marketGroupId, errStr, "")
                 cell2 = row2.AddCell()
                 cell2.Value = errStr
                 cell2 = row2.AddCell()
@@ -632,7 +615,7 @@ func GenerateMutilLinkAdvertise(c *gin.Context){
     //
     errStr := ""
     currentCustomerId := helper.GetCurrentCustomerId(c)
-    own_id := customer.GetCustomerMainId(c)
+    
     customerOne, err := customer.GetCustomerOneById(currentCustomerId)
     if err != nil {
         errStr += err.Error()
@@ -704,7 +687,7 @@ func GenerateMutilLinkAdvertise(c *gin.Context){
                 var warnStr string
                 var successInfo gin.H
                 
-                errStr, warnStr, successInfo, fid = generateAdvertiseInfo(source, medium, campaign, design, url,  cost, remark, currentCustomerId, own_id, marketGroupId, errStr, fid)
+                errStr, warnStr, successInfo, fid = generateAdvertiseInfo(source, medium, campaign, design, url,  cost, remark, currentCustomerId, marketGroupId, errStr, fid)
                 cell2 = row2.AddCell()
                 cell2.Value = errStr
                 cell2 = row2.AddCell()

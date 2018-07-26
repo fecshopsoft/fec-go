@@ -1,6 +1,7 @@
 package customer
 
 import(
+	/*
     "github.com/gin-gonic/gin"
     "net/http"
     "strconv"
@@ -11,9 +12,10 @@ import(
     "github.com/fecshopsoft/fec-go/util"
     "github.com/fecshopsoft/fec-go/db/mysqldb"
     "github.com/fecshopsoft/fec-go/helper"
+	*/
     //"fmt"
 )
-
+/*
 type CustomerChildAdd struct {
     Id int64 `form:"id" json:"id"`
     Username string `form:"username" json:"username" binding:"required"`
@@ -61,9 +63,11 @@ func (customerChildAdd CustomerChildAdd) TableName() string {
 func (customerChildUpdate CustomerChildUpdate) TableName() string {
     return "customer"
 }
+*/
 /**
  * 增加一条记录
  */
+/*
 func CustomerChildAddOne(c *gin.Context){
     var customer CustomerChildAdd
     err := c.ShouldBindJSON(&customer);
@@ -103,9 +107,11 @@ func CustomerChildAddOne(c *gin.Context){
     })
     c.JSON(http.StatusOK, result)
 }
+*/
 /**
  * 通过id为条件，更新一条记录
  */
+/*
 func CustomerChildUpdateById(c *gin.Context){
     var customer CustomerChildUpdate
     err := c.ShouldBindJSON(&customer);
@@ -145,10 +151,11 @@ func CustomerChildUpdateById(c *gin.Context){
     })
     c.JSON(http.StatusOK, result)
 }
-
+ */
 /**
  * 对密码进行处理，得到加密后的密码字符串
  */
+/*
 func getCustomerChildPassword(password string) (string, error){
     if password == "" {
         return "", nil
@@ -162,9 +169,11 @@ func getCustomerChildPassword(password string) (string, error){
     }
     return encryptionPassStr, nil
 }
+ */
 /**
  * 删除一条记录
  */
+/*
 func CustomerChildDeleteById(c *gin.Context){
     var customer Customer
     var id DeleteId
@@ -198,9 +207,11 @@ func CustomerChildDeleteById(c *gin.Context){
     })
     c.JSON(http.StatusOK, result)
 }
+ */
 /**
  * 通过ids批量删除数据
  */
+/*
 func CustomerChildDeleteByIds(c *gin.Context){
     engine := mysqldb.GetEngine()
     var customer Customer
@@ -231,10 +242,11 @@ func CustomerChildDeleteByIds(c *gin.Context){
     })
     c.JSON(http.StatusOK, result)
 }
-
+*/
 /**
  * 列表查询
  */
+/*
 func CustomerChildList(c *gin.Context){
     // log.Println(&CustomerToken{Username:"xxxx"})
     // log.Println(CustomerToken{Username:"xxxx"})
@@ -318,42 +330,9 @@ func (cMarketGroup CMarketGroup) TableName() string {
 }
 
 // 2,3用户对应的marketGroups
-func GetCurrentMarketGroupOps(c *gin.Context) ([]VueSelectOps, error){
-    var own_id int64
-    var MGArr []VueSelectOps
-    currentCustomerId := helper.GetCurrentCustomerId(c)
-    GetCurrentCustomerType := helper.GetCurrentCustomerType(c)
-    if GetCurrentCustomerType == helper.AdminCommonType {
-        own_id = currentCustomerId
-    } else if GetCurrentCustomerType == helper.AdminChildType {
-        parent_id, err := GetCurrentCustomerParentId(c)
-        if err != nil{
-            return nil, err
-        }
-        own_id = parent_id
-    }
-    if GetCurrentCustomerType != helper.AdminSuperType && own_id == 0 {
-        return nil, errors.New(" current own id is empty ")
-    }
-    
-    var cMarketGroups []CMarketGroup
-    var err error
-    if own_id != 0 {
-        err = engine.Where("own_id = ?", own_id).Find(&cMarketGroups) 
-    } else {
-        err = engine.Find(&cMarketGroups) 
-    }
-    if err != nil{
-        return nil, err  
-    }
-    for i:=0; i<len(cMarketGroups); i++ {
-        cMarketGroup := cMarketGroups[i]
-        MGArr = append(MGArr, VueSelectOps{Key: cMarketGroup.Id, DisplayName: cMarketGroup.Name})
-    }
-    return MGArr, nil
-}
 
 
+*/
 /**
  * 通过ids，查询customer表，得到
  */
@@ -372,7 +351,7 @@ func GetCustomerChildUsernameByIds(ids []int64) ([]CustomerUsername, error){
 
 /**
  * 通过id查询一条记录
- */
+ */ /*
 func GetCustomerChildOneById(id int64) (Customer, error){
     var customer Customer
     has, err := engine.Where("id = ?", id).Get(&customer)
@@ -384,10 +363,10 @@ func GetCustomerChildOneById(id int64) (Customer, error){
     }
     return customer, nil
 }
-
+ */
 /**
  * 得到enable的common  admin 
- */
+ */ /*
 func GetAllEnableCommonCustomerChild() ([]CustomerUsername, error){
     // 得到结果数据
     var customers []CustomerUsername
@@ -398,10 +377,11 @@ func GetAllEnableCommonCustomerChild() ([]CustomerUsername, error){
     }
     return customers, nil
 }
-
+ */
 /**
  * 得到enable的common  admin  by own_id
  */
+/*
 func GetEnableCustomerChild(own_id int64) ([]CustomerUsername, error){
     // 得到结果数据
     var customers []CustomerUsername
@@ -412,5 +392,5 @@ func GetEnableCustomerChild(own_id int64) ([]CustomerUsername, error){
     }
     return customers, nil
 }
-
+ */
 

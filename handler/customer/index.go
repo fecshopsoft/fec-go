@@ -2,10 +2,10 @@ package customer
 
 import(
     // "net/http"
-    "errors"
+    //"errors"
     "log"
     "sync"
-    "github.com/gin-gonic/gin"
+   // "github.com/gin-gonic/gin"
     "github.com/go-xorm/xorm"
     // "github.com/fecshopsoft/fec-go/util"
     // "github.com/fecshopsoft/fec-go/config"
@@ -85,20 +85,6 @@ func ReqMethodOps() ([]VueSelectOps){
         }
 }
 
-/**
- * 根据用户的级别，通过own_id字段进行数据的过滤
- */
-func OwnIdQueryFilter(c *gin.Context, whereParam mysqldb.XOrmWhereParam) (mysqldb.XOrmWhereParam, error){
-    customerType := helper.GetCurrentCustomerType(c)
-    if customerType == helper.AdminCommonType {
-        whereParam["own_id"] = helper.GetCurrentCustomerId(c)
-    } else if customerType != helper.AdminSuperType {
-        return  nil, errors.New("you donot have role")
-    }
-    return whereParam, nil
-}
-
-
 
 /**
  * 得到customer type 对应的name
@@ -107,16 +93,12 @@ func GetCustomerTypeName() ([]VueSelectOps){
     once.Do(func() {
         typeArr = []VueSelectOps{
             VueSelectOps{
-                Key: int64(helper.AdminSuperType),
+                Key: int64(helper.AdminType),
                 DisplayName: "Super Admin",
             },
             VueSelectOps{
-                Key: int64(helper.AdminCommonType),
+                Key: int64(helper.CommonType),
                 DisplayName: "Common Admin",
-            },
-            VueSelectOps{
-                Key: int64(helper.AdminChildType),
-                DisplayName: "Child Account",
             },
         }
     })

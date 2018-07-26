@@ -12,6 +12,7 @@ import(
 /**
  * 验证用户是否登录
  * 如果登录成功，将 currentCustomer, currentCustomerId, currentCustomerType, currentCustomerUsername 添加到上下文
+ * 
  */
 func PermissionLoginToken(c *gin.Context){
     //c.AbortWithStatusJSON(http.StatusOK, c.Request.Header)
@@ -76,6 +77,7 @@ func PermissionLoginToken(c *gin.Context){
     c.Set("currentCustomerUsername", customerUsername)
     
     // 设置currentCustomerType
+	
     customerTypeFloat64, ok := customer["type"].(float64)
     if ok == false {
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("get current customer type fail"))
@@ -87,6 +89,7 @@ func PermissionLoginToken(c *gin.Context){
         return
     }
     c.Set("currentCustomerType", customerType)
+	
     //currentCustomer = data
 }
 

@@ -19,7 +19,7 @@ type ChannelInfo struct {
     Id int64 `form:"id" json:"id"`
     Channel string `form:"channel" json:"channel" binding:"required"`
     ChannelChild string `form:"channel_child" json:"channel_child" binding:"required"`
-    OwnId int64 `form:"own_id" json:"own_id"`
+    //OwnId int64 `form:"own_id" json:"own_id"`
     CreatedAt int64 `xorm:"created" form:"created_at" json:"created_at"`
     UpdatedAt int64 `xorm:"updated" form:"updated_at" json:"updated_at"`
     CreatedCustomerId  int64 `form:"created_customer_id" json:"created_customer_id"`
@@ -40,13 +40,7 @@ func ChannelAddOne(c *gin.Context){
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return
     }
-    // 处理own_id
-    own_id, err := customer.Get3SaveDataOwnId(c, channelInfo.OwnId)
-    if err != nil {
-        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
-        return
-    }
-    channelInfo.OwnId = own_id
+    
     customerId := helper.GetCurrentCustomerId(c)
     channelInfo.CreatedCustomerId = customerId
     // 插入
@@ -71,15 +65,9 @@ func ChannelUpdateById(c *gin.Context){
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return
     }
-    // 处理own_id
-    own_id, err := customer.Get3SaveDataOwnId(c, channelInfo.OwnId)
-    if err != nil {
-        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
-        return
-    }
-    channelInfo.OwnId = own_id
+    
     // 更新
-    affected, err := engine.Where("id = ?",channelInfo.Id).Cols("name,own_id,updated_at").Update(&channelInfo)
+    affected, err := engine.Where("id = ?",channelInfo.Id).Cols("channel, channel_child, updated_at").Update(&channelInfo)
     if err != nil {
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return
@@ -142,14 +130,12 @@ func ChannelList(c *gin.Context){
     // 获取参数并处理
     var sortD string
     var sortColumns string
-    var own_id int64
     defaultPageNum:= c.GetString("defaultPageNum")
     defaultPageCount := c.GetString("defaultPageCount")
     page, _  := strconv.Atoi(c.DefaultQuery("page", defaultPageNum))
     limit, _ := strconv.Atoi(c.DefaultQuery("limit", defaultPageCount))
     channel     := c.DefaultQuery("channel", "")
-    own_id_i, _ := strconv.Atoi(c.DefaultQuery("own_id", ""))
-    own_id = int64(own_id_i)
+    
     sort     := c.DefaultQuery("sort", "")
     created_at_begin := c.DefaultQuery("created_begin_timestamps", "")
     created_at_end   := c.DefaultQuery("created_end_timestamps", "")
@@ -161,14 +147,7 @@ func ChannelList(c *gin.Context){
     if channel != "" {
         whereParam["channel"] = []string{"like", channel}
     }  
-    own_id, err := customer.Get3OwnId(c, own_id)
-    if err != nil{
-        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
-        return  
-    }
-    if own_id != 0 {
-        whereParam["own_id"] = own_id
-    }
+    
     whereParam["created_at"] = []string{"scope", created_at_begin, created_at_end}
     whereStr, whereVal := mysqldb.GetXOrmWhere(whereParam)
     // 进行查询
@@ -196,11 +175,7 @@ func ChannelList(c *gin.Context){
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return  
     }
-    ownNameOps, err := customer.Get3OwnNameOps(c)
-    if err != nil{
-        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
-        return  
-    }
+    
     createdCustomerOps, err := GetChannelCreatedCustomerOps(channelInfos)
     if err != nil{
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
@@ -211,7 +186,6 @@ func ChannelList(c *gin.Context){
         "items": channelInfos,
         "total": counts,
         "createdCustomerOps": createdCustomerOps,
-        "ownNameOps": ownNameOps,
     })
     // 返回json
     c.JSON(http.StatusOK, result)
@@ -240,9 +214,9 @@ func GetChannelCreatedCustomerOps(channelInfos []ChannelInfo) ([]helper.VueSelec
 }
 
 // 得到channel child Ops
-func GetChannelChildOpsByOwnIdAndChannel(own_id int64, channel string) ([]helper.VueSelectStrOps, error){
+func GetChannelChildOpsByChannel(channel string) ([]helper.VueSelectStrOps, error){
     var groupArr []helper.VueSelectStrOps
-    channelInfos, err := GetChannelByOwnIdAndChannel(own_id, channel)
+    channelInfos, err := GetChildChannelByChannel(channel)
     if err != nil{
         return nil, err
     }
@@ -254,9 +228,9 @@ func GetChannelChildOpsByOwnIdAndChannel(own_id int64, channel string) ([]helper
 
 } 
 // 得到channel ops
-func GetChannelOpsByOwnId(own_id int64)([]helper.VueSelectStrOps, error){
+func GetChannelOps()([]helper.VueSelectStrOps, error){
     var groupArr []helper.VueSelectStrOps
-    channelInfos, err := GetChannelByOwnId(own_id)
+    channelInfos, err := GetChannels()
     if err != nil{
         return nil, err
     }
@@ -272,12 +246,12 @@ func GetChannelOpsByOwnId(own_id int64)([]helper.VueSelectStrOps, error){
 }
 
 /**
- * 根据 own_id 查询得到 ChannelInfo
+ * 查询得到 ChannelInfo
  */
-func GetChannelByOwnId(own_id int64) ([]ChannelInfo, error){
+func GetChannels() ([]ChannelInfo, error){
     // 得到结果数据
     var channelInfos []ChannelInfo
-    err := engine.Where("own_id = ? ",own_id).Find(&channelInfos) 
+    err := engine.Find(&channelInfos) 
     if err != nil{
         return channelInfos, err
     }
@@ -285,12 +259,12 @@ func GetChannelByOwnId(own_id int64) ([]ChannelInfo, error){
 }
 
 /**
- * 根据 own_id, channel 查询得到 ChannelInfo
+ * channel 查询得到 ChannelInfo
  */
-func GetChannelByOwnIdAndChannel(own_id int64, channel string) ([]ChannelInfo, error){
+func GetChildChannelByChannel(channel string) ([]ChannelInfo, error){
     // 得到结果数据
     var channelInfos []ChannelInfo
-    err := engine.Where("own_id = ? and channel = ? ", own_id, channel).Find(&channelInfos) 
+    err := engine.Where("channel = ? ", channel).Find(&channelInfos) 
     if err != nil{
         return channelInfos, err
     }

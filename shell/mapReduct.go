@@ -18,11 +18,11 @@ import(
     "github.com/fecshopsoft/fec-go/shell/customer"
     "github.com/fecshopsoft/fec-go/db/esdb"
     "log"
-    "github.com/globalsign/mgo"
+   // "github.com/globalsign/mgo"
     "os"
     "errors"
     "sync"
-     "github.com/fecshopsoft/fec-go/db/mongodb"
+   //  "github.com/fecshopsoft/fec-go/db/mongodb"
     commonHandler "github.com/fecshopsoft/fec-go/handler/common"
 )
 
@@ -66,12 +66,14 @@ func MapReductAndSyncDataToEsMutilDay(){
 	// 对于新建mapping部分，在计算脚本的时候，都会init相应的mapping
 	// 譬如：对于./shell/advertise/eid.go 444行代码出：  esAdvertiseEidTypeMapping := helper.GetEsAdvertiseEidTypeMapping()
 	// 因此删除原来的所有的es index，只需要将下面的
-	operateType := os.Args[2]
-	if operateType == "removeEsAllIndex" {
-		log.Println("begin remove es all index")
-		err := RemoveSpecialEsIndex()
-		if err != nil {
-			log.Println(err.Error())
+	if len(os.Args) > 2 {
+		operateType := os.Args[2]
+		if operateType == "removeEsAllIndex" {
+			log.Println("begin remove es all index")
+			err := RemoveSpecialEsIndex()
+			if err != nil {
+				log.Println(err.Error())
+			}
 		}
 	}
     
@@ -99,7 +101,7 @@ func mapReduceByDate(dateStr string) error{
     var err error
     // 通过时间，得到数据库name
     dbName := helper.GetTraceDbNameByDate(dateStr)
-    websiteInfos, err := commonHandler.GetAllActiveWebsiteId()
+    websiteInfos, err := commonHandler.GetAllActiveWebsites()
     if err != nil {
         return err
     }
@@ -114,6 +116,8 @@ func mapReduceByDate(dateStr string) error{
         websiteId := websiteInfo.SiteUid
         //esIndexName := helper.GetEsIndexName(websiteId)
         collName := helper.GetTraceDataCollName(websiteId)
+		log.Println("websiteId:")
+		log.Println(websiteId)
         log.Println("###########")
         log.Println("OutWholeBrowserCollName")
         

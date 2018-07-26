@@ -19,55 +19,26 @@ import(
 
 type CustomerToken struct {
     Id int64 `form:"id" json:"id"`
+	Type int `form:"type" json:"type"`
     Username string `form:"username" json:"username" binding:"required"`
-    Email string `form:"email" json:"email"`
-    Name string `form:"name" json:"name"`
-    Type int `form:"type" json:"type"`
-    ParentId int `form:"parent_id" json:"parent_id"`
 }
 
 type CustomerUsername struct {
     Id int64 `form:"id" json:"id"`
     Username string `form:"username" json:"username" binding:"required"`
-    Name string `form:"name" json:"name"`
     JobType int `form:"job_type" json:"job_type"`
-    
 }
 
 type Customer struct {
     Id int64 `form:"id" json:"id"`
     Username string `form:"username" json:"username" binding:"required"`
-    Email string `form:"email" json:"email"`
-    Sex int `form:"sex" json:"sex"`
-    Name string `form:"name" json:"name"`
-    Telephone string `form:"telephone" json:"telephone"`
-    Remark string `form:"remark" json:"remark"`
     Status int `form:"status" json:"status"`
-    Age int `form:"age" json:"age"`
-    Type int `form:"type" json:"type"`
-    
     MarketGroupId int64 `form:"market_group_id" json:"market_group_id"`
-    JobType int `form:"job_type" json:"job_type"`
-    
-    ParentId int64 `form:"parent_id" json:"parent_id" xorm:"int null"`
     CreatedAt int64 `xorm:"created" form:"created_at" json:"created_at"`
     UpdatedAt int64 `xorm:"updated" form:"updated_at" json:"updated_at"`
-    BirthDate  int64 `form:"birth_date" json:"birth_date"`
-    
-    PaymentEndTime int64 `xorm:"payment_end_time" form:"payment_end_time" json:"payment_end_time"`
-    WebsiteCount int64 `xorm:"website_count" form:"website_count" json:"website_count"`
-    WebsiteDayMaxCount int64 `xorm:"website_day_max_count" form:"website_day_max_count" json:"website_day_max_count"`
-    
+    Type int `form:"type" json:"type"`
+	JobType int `form:"job_type" json:"job_type"`
 }
-
-type CustomerUpdatePayInfo struct {
-    Id int64 `form:"id" json:"id"`
-    PaymentEndTime int64 `xorm:"payment_end_time" form:"payment_end_time" json:"payment_end_time"`
-    WebsiteCount int64 `xorm:"website_count" form:"website_count" json:"website_count"`
-    WebsiteDayMaxCount int64 `xorm:"website_day_max_count" form:"website_day_max_count" json:"website_day_max_count"`
-    
-}
-
 
 type CustomerPassword struct {
     Password string `form:"password" json:"password" binding:"required"`
@@ -84,40 +55,37 @@ type CustomerLogin struct {
 type CustomerAdd struct {
     Id int64 `form:"id" json:"id"`
     Username string `form:"username" json:"username" binding:"required"`
-    Email string `form:"email" json:"email"`
-    Sex int `form:"sex" json:"sex"`
-    Name string `form:"name" json:"name"`
-    Telephone string `form:"telephone" json:"telephone"`
-    Type int `form:"type" json:"type" binding:"required"`
-    ParentId int64 `form:"parent_id" json:"parent_id" `
-    Remark string `form:"remark" json:"remark"`
+    JobType int `form:"job_type" json:"job_type"`
+	MarketGroupId int64 `form:"market_group_id" json:"market_group_id"`
     Status int `form:"status" json:"status"`
-    Age int `form:"age" json:"age"`
+    Type int `form:"type" json:"type" binding:"required"`
     CreatedAt int64 `xorm:"created" form:"created_at" json:"created_at"`
     UpdatedAt int64 `xorm:"updated" form:"updated_at" json:"updated_at"`
-    BirthDate  int64 `form:"birth_date" json:"birth_date"`
+    
     Password string `xorm:"varchar(200)" form:"password" json:"password" binding:"required"`
 }
 
 type CustomerUpdate struct {
     Id int64 `form:"id" json:"id"`
     Username string `form:"username" json:"username" binding:"required"`
-    Email string `form:"email" json:"email"`
-    Sex int `form:"sex" json:"sex"`
-    Name string `form:"name" json:"name" binding:"required"`
-    Telephone string `form:"telephone" json:"telephone"`
-    Type int `form:"type" json:"type" binding:"required"`
-    ParentId int64 `form:"parent_id" json:"parent_id"`
-    Remark string `form:"remark" json:"remark"`
+    JobType int `form:"job_type" json:"job_type"`
+	MarketGroupId int64 `form:"market_group_id" json:"market_group_id"`
     Status int `form:"status" json:"status" binding:"required"`
-    Age int `form:"age" json:"age"`
+    Type int `form:"type" json:"type" binding:"required"`
     CreatedAt int64 `xorm:"created" form:"created_at" json:"created_at"`
     UpdatedAt int64 `xorm:"updated" form:"updated_at" json:"updated_at"`
-    BirthDate  int64 `form:"birth_date" json:"birth_date"`
+   
     Password string `xorm:"varchar(200)" form:"password" json:"password"`
 }
 
-
+type CMarketGroup struct {
+    Id int64 `form:"id" json:"id"`
+    Name string `form:"name" json:"name" binding:"required"`
+    OwnId int64 `form:"own_id" json:"own_id"`
+}
+func (cMarketGroup CMarketGroup) TableName() string {
+    return "base_market_group"
+}
 
 // 账户激活状态的值
 var statusEnable int = 1
@@ -144,9 +112,7 @@ func (customerToken CustomerToken) TableName() string {
 func (customerUsername CustomerUsername) TableName() string {
     return "customer"
 }
-func (customerUpdatePayInfo CustomerUpdatePayInfo) TableName() string {
-    return "customer"
-}
+
 
 /**
  * 增加一条记录
@@ -165,24 +131,6 @@ func CustomerAddOne(c *gin.Context){
         return
     } 
     customer.Password = passwordEncry
-    // 处理账户类型
-    if customer.Type == helper.AdminChildType {
-        if customer.ParentId == 0 {
-            c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("child admin account , Must fill in parent account "))
-            return
-        }
-        parentCustomer, err := GetCustomerOneById(customer.ParentId)
-        if err != nil {
-            c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
-            return
-        } 
-        if parentCustomer.Type != helper.AdminCommonType {
-            c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("parent account is incorrect"))
-            return
-        }
-    } else {
-        customer.ParentId = 0
-    }
     
     // 插入
     affected, err := engine.Insert(&customer)
@@ -213,25 +161,6 @@ func CustomerUpdateById(c *gin.Context){
     } 
     customer.Password = passwordEncry
     
-    // 处理账户类型
-    if customer.Type == helper.AdminChildType {
-        if customer.ParentId == 0 {
-            c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("child admin account , Must fill in parent account "))
-            return
-        }
-        parentCustomer, err := GetCustomerOneById(customer.ParentId)
-        if err != nil {
-            c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
-            return
-        } 
-        if parentCustomer.Type != helper.AdminCommonType {
-            c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("parent account is incorrect"))
-            return
-        }
-    } else {
-        customer.ParentId = 0
-    }
-    
     affected, err := engine.Where("id = ?", customer.Id).MustCols("parent_id").Update(&customer)
     if err != nil {
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
@@ -248,6 +177,7 @@ func CustomerUpdateById(c *gin.Context){
 /**
  * 通过id为条件，更新一条记录
  */
+/*
 func CustomerUpdatePayInfoById(c *gin.Context){
     var customer CustomerUpdatePayInfo
     err := c.ShouldBindJSON(&customer);
@@ -267,7 +197,7 @@ func CustomerUpdatePayInfoById(c *gin.Context){
     })
     c.JSON(http.StatusOK, result)
 }
-
+*/
 
 /**
  * 更新密码的格式等信息是否满足要求
@@ -412,6 +342,7 @@ func CustomerAccountLogin(c *gin.Context){
         return  
     }
     // 如果用户类型是 helper.AdminChildType,则判断他的主账户是否是有效的
+	/*
     if customerToken.Type == helper.AdminChildType {
         parentId := customerToken.ParentId
         var customerParentToken CustomerToken
@@ -427,6 +358,7 @@ func CustomerAccountLogin(c *gin.Context){
             return  
         }
     }
+	*/
     
     token, err := security.JwtSignToken(customerToken)
     result := util.BuildSuccessResult(gin.H{
@@ -440,19 +372,17 @@ func CustomerAccountLogin(c *gin.Context){
 func CustomerAccountIndex(c *gin.Context){
     var roles []string
     customerType := helper.GetCurrentCustomerType(c)
-    if customerType == helper.AdminSuperType {
-        roles = append(roles, helper.VueUserRoles[helper.AdminSuperType])
-    } else if customerType == helper.AdminCommonType {
-        roles = append(roles, helper.VueUserRoles[helper.AdminCommonType])
-    } else if customerType == helper.AdminChildType {
-        roles = append(roles, helper.VueUserRoles[helper.AdminChildType])
-    }
+    if customerType == helper.AdminType {
+        roles = append(roles, helper.VueUserRoles[helper.AdminType])
+    } else  {
+        roles = append(roles, helper.VueUserRoles[helper.CommonType])
+    } 
+	
     // roles = append(roles, "editor")
     // cCustomer := currentCustomer.(map[string]interface{})
     cCustomer := helper.GetCurrentCustomer(c)
     result := util.BuildSuccessResult(gin.H{
         "name": cCustomer["username"],
-        "persion_name": cCustomer["name"],
         "avatar": "https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif",
         "roles": roles,
     })
@@ -486,7 +416,7 @@ func CustomerList(c *gin.Context){
     defaultPageCount := c.GetString("defaultPageCount")
     page, _  := strconv.Atoi(c.DefaultQuery("page", defaultPageNum))
     limit, _ := strconv.Atoi(c.DefaultQuery("limit", defaultPageCount))
-    parent_id, _    := strconv.Atoi(c.DefaultQuery("parent_id", ""))
+    //parent_id, _    := strconv.Atoi(c.DefaultQuery("parent_id", ""))
     status, _    := strconv.Atoi(c.DefaultQuery("status", ""))
     accountType, _    := strconv.Atoi(c.DefaultQuery("type", ""))
     username := c.DefaultQuery("username", "")
@@ -498,7 +428,7 @@ func CustomerList(c *gin.Context){
         sortColumns = string([]byte(sort)[1:])
     } 
     whereParam := make(mysqldb.XOrmWhereParam)
-    whereParam["parent_id"] = parent_id
+    //whereParam["parent_id"] = parent_id
     whereParam["status"] = status
     whereParam["type"] = accountType
     if username != "" {
@@ -533,22 +463,44 @@ func CustomerList(c *gin.Context){
         return  
     }
     // 
-    commonAdminAccount, err := GetCustomerOwnIdOps(c)
+    //commonAdminAccount, err := GetCustomerOwnIdOps(c)
     if err != nil{
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return  
     }
-    customerType := helper.GetCurrentCustomerType(c)
+	marketGroupOps, err := GetCurrentMarketGroupOps(c)
+    if err != nil{
+        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
+        return  
+    }
+    //customerType := helper.GetCurrentCustomerType(c)
     // 生成返回结果
     result := util.BuildSuccessResult(gin.H{
         "items": customers,
         "total":counts,
         "typeOps": GetCustomerTypeName(),
-        "commonAdminOps": commonAdminAccount,
-        "customerType": customerType,
+		"marketGroupOps": marketGroupOps,
+    //    "commonAdminOps": commonAdminAccount,
+        //"customerType": customerType,
+		
     })
     // 返回json
     c.JSON(http.StatusOK, result)
+}
+
+func GetCurrentMarketGroupOps(c *gin.Context) ([]VueSelectOps, error){
+    var MGArr []VueSelectOps
+    var cMarketGroups []CMarketGroup
+    var err error
+    err = engine.Find(&cMarketGroups) 
+    if err != nil{
+        return nil, err  
+    }
+    for i:=0; i<len(cMarketGroups); i++ {
+        cMarketGroup := cMarketGroups[i]
+        MGArr = append(MGArr, VueSelectOps{Key: cMarketGroup.Id, DisplayName: cMarketGroup.Name})
+    }
+    return MGArr, nil
 }
 
 
@@ -571,6 +523,24 @@ func GetCustomerUsernameByIds(ids []int64) ([]CustomerUsername, error){
 /**
  * 通过ids，查询customer表，得到
  */
+func GetActiveCustomers() ([]Customer, error){
+    // newTime := time.Now().Unix()
+    enableStatus := 1
+    // 得到结果数据
+    var customers []Customer
+    engine := mysqldb.GetEngine()
+    err := engine.Where("status = ? ", enableStatus).Find(&customers) 
+    if err != nil{
+        return nil, err 
+    }
+    return customers, nil
+}
+
+
+/**
+ * 通过ids，查询customer表，得到
+ */
+/*
 func GetPaymentActiveCustomers() ([]Customer, error){
     // newTime := time.Now().Unix()
     enableStatus := 1
@@ -583,6 +553,7 @@ func GetPaymentActiveCustomers() ([]Customer, error){
     }
     return customers, nil
 }
+*/
 
 
 /**
@@ -601,12 +572,13 @@ func GetCustomerOneById(id int64) (Customer, error){
 }
 
 // 找到own_id下的美工员工 job_type = 2
-func GetDesigiPersonByOwnId(own_id int64) ([]CustomerUsername, error) {
+
+func GetDesigiPerson() ([]CustomerUsername, error) {
     var customers []CustomerUsername
     enableStatus := 1
     jobType := 2
     err := engine.
-        Where("parent_id = ? and job_type = ? and status = ?", own_id, jobType, enableStatus).
+        Where("job_type = ? and status = ?", jobType, enableStatus).
         Find(&customers)
     if err != nil {
         return customers, err
@@ -616,9 +588,11 @@ func GetDesigiPersonByOwnId(own_id int64) ([]CustomerUsername, error) {
 }
 
 
+
 /**
  * 得到enable的common  admin 
  */
+/*
 func GetAllEnableCommonCustomer() ([]CustomerUsername, error){
     // 得到结果数据
     var customers []CustomerUsername
@@ -629,6 +603,7 @@ func GetAllEnableCommonCustomer() ([]CustomerUsername, error){
     }
     return customers, nil
 }
+*/
 
 /**
  * 通过id查询customer

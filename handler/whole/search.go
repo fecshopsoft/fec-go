@@ -75,8 +75,8 @@ func SearchList(c *gin.Context){
         }
         q = q.Must(newRangeQuery)
     }
-    //////
-    chosen_own_id, chosen_website_id, selectOwnIds, selectWebsiteIds, err := ActiveOwnIdAndWebsite(c)
+    ////// chosen_own_id,  selectOwnIds, 
+    chosen_website_id, selectWebsiteIds, err := ActiveWebsite(c)
     if err != nil{
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return
@@ -155,11 +155,7 @@ func SearchList(c *gin.Context){
             ts = append(ts, wholeSearch)
         }
     }
-    ownNameOptions, err := getOwnNames(c, selectOwnIds)
-    if err != nil{
-        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
-        return
-    }
+    
     siteNameOptions, siteImgUrls, err := getSiteNameAndImgUrls(c, selectWebsiteIds)
     if err != nil{
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
@@ -172,11 +168,8 @@ func SearchList(c *gin.Context){
         "items": ts,
         "page": page,
         "limit": limit,
-        "chosen_own_id": chosen_own_id,
         "chosen_website_id": chosen_website_id,
-        "selectOwnIds": selectOwnIds,
         "selectWebsiteIds": selectWebsiteIds,
-        "ownNameOptions": ownNameOptions,
         "siteIdOptions": siteNameOptions,
         "siteImgUrls": siteImgUrls,
         

@@ -7,7 +7,7 @@ import(
 )
 // https://studygolang.com/articles/7973
 
-var customerResourceCache CustomerResourceCache
+var CustomerResourceCacheX CustomerResourceCache
 
 type CustomerResourceCache struct {
 	//count int
@@ -38,6 +38,13 @@ func (this *CustomerResourceCache) Get(customer_id int64) ([]customerH.ResourceR
 	return resources, ok
 }
 
+
+// 由key检索value
+func (this *CustomerResourceCache) Clear()  {
+	this.lock.RLock()
+	defer this.lock.RUnlock()
+	this.resources = nil
+}
 
 // 获取数据长度
 /*

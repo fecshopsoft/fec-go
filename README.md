@@ -65,14 +65,26 @@ initdata/default.go
 
 
 
+### 使用
+
+
+1.开启服务
 
 
 
 
 
+2.数据处理脚本
 
 
+```
+go run fec-go-shell.go 1 removeEsAllIndex
 
+```
+
+第一个参数：`1`,代表处理N天内的数据统计
+
+第二个参数： `removeEsAllIndex`,如果删除elasticSearch里面的数据，加上这个参数值。
 
 
 

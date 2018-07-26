@@ -14,9 +14,9 @@ import(
 /**
  * 【超级admin】权限验证，只有【超级admin】账户才可以通过
  */
-func SuperAdminRole(c *gin.Context){
+func AdminRole(c *gin.Context){
     customerType := helper.GetCurrentCustomerType(c)
-    if customerType != helper.AdminSuperType {
+    if customerType != helper.AdminType {
         c.AbortWithStatusJSON(http.StatusOK, util.BuildNeedPermissionResult())
         return
     }
@@ -25,6 +25,7 @@ func SuperAdminRole(c *gin.Context){
 /**
  * 【普通admin】权限验证，【超级admin】和【普通admin】都可以通过
  */
+/*
 func CommonAdminRole(c *gin.Context){
     customerType := helper.GetCurrentCustomerType(c)
     if customerType != helper.AdminSuperType && customerType != helper.AdminCommonType {
@@ -32,42 +33,36 @@ func CommonAdminRole(c *gin.Context){
         return
     }
 }
+*/
 
 /**
  * 【普通admin子账户】权限验证，【超级admin】，【普通admin】，都可以通过
  * 【普通admin子账户】需要进行数据库查询权限认证。
  */
-func CommonAdminChildRole(c *gin.Context){
+func CommonRole(c *gin.Context){
     // 当前用户信息
     customer_id := helper.GetCurrentCustomerId(c)
-    resources, ok := customerResourceCache.Get(customer_id)
+    resources, ok := CustomerResourceCacheX.Get(customer_id)
     if ok == false {
         // 如果是 【超级admin】和【普通admin】，直接返回
         customerType := helper.GetCurrentCustomerType(c)
-        if customerType == helper.AdminSuperType || customerType == helper.AdminCommonType {
+        if customerType == helper.AdminType {
             return
         }
-        // 如果还不是 AdminChildType ， 则说明该账户的类型有问题。
-        if customerType != helper.AdminChildType {
-            c.AbortWithStatusJSON(http.StatusOK, util.BuildNeedPermissionResult())
-            return
-        }
+        /*
         customer, err := customerH.GetCustomerOneById(customer_id)
         if err != nil{
             c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
             return
         }
-        parent_id := customer.ParentId
-        own_id := parent_id
-        // 根据用户的customer_id 得到用户的role_ids
-        
-        role_ids, err := customerH.GetRoleIdsByCustomerOwnId(own_id, customer_id)
+        */
+        role_ids, err := customerH.GetRoleIdsByCustomerId(customer_id)
         if err != nil{
             c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
             return
         }
         // 根据用户的role_ids ， 得到用户的可用的resource_ids
-        resource_ids, err := customerH.GetResourceIdsByRoleOwnIds(own_id, role_ids)
+        resource_ids, err := customerH.GetResourceIdsByRoles(role_ids)
         if err != nil{
             c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
             return
@@ -79,7 +74,7 @@ func CommonAdminChildRole(c *gin.Context){
             return
         }
         // 将 resources 保存到channels里面。
-        customerResourceCache.Set(customer_id, resources)
+        CustomerResourceCacheX.Set(customer_id, resources)
     }
     // 计算权限
     /**

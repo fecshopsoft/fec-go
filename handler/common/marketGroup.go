@@ -18,7 +18,7 @@ import(
 type MarketGroup struct {
     Id int64 `form:"id" json:"id"`
     Name string `form:"name" json:"name" binding:"required"`
-    OwnId int64 `form:"own_id" json:"own_id"`
+    //OwnId int64 `form:"own_id" json:"own_id"`
     CreatedAt int64 `xorm:"created" form:"created_at" json:"created_at"`
     UpdatedAt int64 `xorm:"updated" form:"updated_at" json:"updated_at"`
     CreatedCustomerId  int64 `form:"created_customer_id" json:"created_customer_id"`
@@ -39,13 +39,7 @@ func MarketGroupAddOne(c *gin.Context){
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return
     }
-    // 处理own_id
-    own_id, err := customer.Get3SaveDataOwnId(c, marketGroup.OwnId)
-    if err != nil {
-        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
-        return
-    }
-    marketGroup.OwnId = own_id
+    
     customerId := helper.GetCurrentCustomerId(c)
     marketGroup.CreatedCustomerId = customerId
     // 插入
@@ -70,13 +64,7 @@ func MarketGroupUpdateById(c *gin.Context){
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return
     }
-    // 处理own_id
-    own_id, err := customer.Get3SaveDataOwnId(c, marketGroup.OwnId)
-    if err != nil {
-        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
-        return
-    }
-    marketGroup.OwnId = own_id
+    
     // 更新
     affected, err := engine.Where("id = ?",marketGroup.Id).Cols("name,own_id,updated_at").Update(&marketGroup)
     if err != nil {
@@ -141,14 +129,11 @@ func MarketGroupList(c *gin.Context){
     // 获取参数并处理
     var sortD string
     var sortColumns string
-    var own_id int64
     defaultPageNum:= c.GetString("defaultPageNum")
     defaultPageCount := c.GetString("defaultPageCount")
     page, _  := strconv.Atoi(c.DefaultQuery("page", defaultPageNum))
     limit, _ := strconv.Atoi(c.DefaultQuery("limit", defaultPageCount))
     name     := c.DefaultQuery("name", "")
-    own_id_i, _ := strconv.Atoi(c.DefaultQuery("own_id", ""))
-    own_id = int64(own_id_i)
     sort     := c.DefaultQuery("sort", "")
     created_at_begin := c.DefaultQuery("created_begin_timestamps", "")
     created_at_end   := c.DefaultQuery("created_end_timestamps", "")
@@ -160,14 +145,7 @@ func MarketGroupList(c *gin.Context){
     if name != "" {
         whereParam["name"] = []string{"like", name}
     }  
-    own_id, err := customer.Get3OwnId(c, own_id)
-    if err != nil{
-        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
-        return  
-    }
-    if own_id != 0 {
-        whereParam["own_id"] = own_id
-    }
+   
     whereParam["created_at"] = []string{"scope", created_at_begin, created_at_end}
     whereStr, whereVal := mysqldb.GetXOrmWhere(whereParam)
     // 进行查询
@@ -195,7 +173,6 @@ func MarketGroupList(c *gin.Context){
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return  
     }
-    ownNameOps, err := customer.Get3OwnNameOps(c)
     if err != nil{
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return  
@@ -210,7 +187,6 @@ func MarketGroupList(c *gin.Context){
         "items": marketGroups,
         "total": counts,
         "createdCustomerOps": createdCustomerOps,
-        "ownNameOps": ownNameOps,
     })
     // 返回json
     c.JSON(http.StatusOK, result)
@@ -259,18 +235,6 @@ func GetMarketGroupByIds(market_group_ids []int64) ([]MarketGroup, error){
 
 
 
-/**
- * 根据 OwnId 查询得到 MarketGroups
- */
-func GetMarketGroupByOwnId(own_id int64) ([]MarketGroup, error){
-    // 得到结果数据
-    var marketGroups []MarketGroup
-    err := engine.Where(" own_id = ? ",own_id).Find(&marketGroups) 
-    if err != nil{
-        return marketGroups, err
-    }
-    return marketGroups, nil
-}
 
 
 

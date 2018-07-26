@@ -1,13 +1,14 @@
 package customer
 
 import(
-    "github.com/gin-gonic/gin"
-    "github.com/fecshopsoft/fec-go/helper"
-    "errors"
+    //"github.com/gin-gonic/gin"
+   // "github.com/fecshopsoft/fec-go/helper"
+   // "errors"
     //"fmt"
 )
 
 // 得到当前的 customerParentId
+/*
 func GetCurrentCustomerParentId(c *gin.Context) (int64, error){
     parentId := c.GetInt64("currentCustomerParentId")
     if parentId != 0 {
@@ -21,7 +22,7 @@ func GetCurrentCustomerParentId(c *gin.Context) (int64, error){
     c.Set("currentCustomerParentId", customerOne.ParentId)
     return customerOne.ParentId, nil
 } 
-
+*/
 
 /**
  * 对于3种级别的用户，在列表中，根据传入的own_id，返回合法的own_id，进行数据的过滤
@@ -30,6 +31,7 @@ func GetCurrentCustomerParentId(c *gin.Context) (int64, error){
  * 3.common admin  child，将parent_id返回。
  * 该函数一般用于列表数据查询where条件中对own_id的过滤
  */
+ /*
 func Get3OwnId(c *gin.Context, own_id int64) (int64, error){
     var currentOwnId int64
     var err error
@@ -64,12 +66,14 @@ func Get3OwnId(c *gin.Context, own_id int64) (int64, error){
     }
     return currentOwnId, nil
 }
+*/
 
 
 /**
  * 得到当前用户的有效的own信息。
  * 主要用于页面渲染过程中，own_name部分的渲染。。
  */
+/*
 func Get3OwnNameOps(c *gin.Context) ([]helper.VueSelectOps, error){
     var ids []int64
     var groupArr []helper.VueSelectOps
@@ -108,6 +112,7 @@ func Get3OwnNameOps(c *gin.Context) ([]helper.VueSelectOps, error){
     return groupArr, nil
     
 }
+*/
 
 
 /**
@@ -115,6 +120,7 @@ func Get3OwnNameOps(c *gin.Context) ([]helper.VueSelectOps, error){
  * 如果用户的级别=2，则直接返回其本身的id
  * 如果用户的级别=3，则返回他的parent_id
  */
+ /*
 func Get3SaveDataOwnId(c *gin.Context, own_id int64) (int64, error){
     // 添加创建人
     customerId := helper.GetCurrentCustomerId(c)
@@ -141,3 +147,4 @@ func Get3SaveDataOwnId(c *gin.Context, own_id int64) (int64, error){
     }
     return 0, errors.New("GetThirdUserOwnId error: customer account type error")
 }
+*/

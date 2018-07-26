@@ -23,7 +23,6 @@ type WebsiteInfo struct {
     TraceApiUrl string `form:"trace_api_url" json:"trace_api_url" `
     SiteUid string `form:"site_uid" json:"site_uid"`
     AccessToken string `form:"access_token" json:"access_token"`
-    OwnId int64 `form:"own_id" json:"own_id"`
     Status int64 `form:"status" json:"status" binding:"required"`
     CreatedAt int64 `xorm:"created" form:"created_at" json:"created_at"`
     UpdatedAt int64 `xorm:"updated" form:"updated_at" json:"updated_at"`
@@ -61,12 +60,7 @@ func WebsiteAddOne(c *gin.Context){
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("SkuImageApiUrl [right format is: www.fecshop.com] is not a url format, "))
         return
     }
-    // 处理own_id
-    own_id, err := customer.Get3SaveDataOwnId(c, websiteInfo.OwnId)
-    if err != nil {
-        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
-        return
-    }
+   
     /*
     // 查看创建site是否达到最大数
     sites, err := GetWebsiteByOwnId(own_id)
@@ -91,16 +85,11 @@ func WebsiteAddOne(c *gin.Context){
         return
     }
     websiteInfo.AccessToken = access_token
-    websiteInfo.OwnId = own_id
     websiteInfo.TraceJsUrl = FecTraceJsUrl
     websiteInfo.TraceApiUrl = FecTraceApiUrl
     customerId := helper.GetCurrentCustomerId(c)
     websiteInfo.CreatedCustomerId = customerId
-    // 处理   PaymentEndTime WebsiteDayMaxCount, 如果不是超级用户，无权修改这个字段
-    if helper.IsSuperAdmin(c) == false {
-        websiteInfo.PaymentEndTime = 0
-        websiteInfo.WebsiteDayMaxCount = 0
-    }
+    
     // 插入
     affected, err := engine.Insert(&websiteInfo)
     if err != nil {
@@ -136,18 +125,9 @@ func WebsiteUpdateById(c *gin.Context){
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("SkuImageApiUrl [right format is: www.fecshop.com] is not a url format, "))
         return
     }
-    // 处理own_id
-    own_id, err := customer.Get3SaveDataOwnId(c, websiteInfo.OwnId)
-    if err != nil {
-        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
-        return
-    }
-    websiteInfo.OwnId = own_id
-    cols := "site_name,domain,sku_image_api_url,trace_js_url,status,own_id,updated_at"
-    // 处理   PaymentEndTime WebsiteDayMaxCount, 如果是超级用户，才可以修改这个字段
-    if helper.IsSuperAdmin(c) == true {
-        cols += ",payment_end_time,website_day_max_count"
-    }
+    
+    cols := "site_name,domain,sku_image_api_url,trace_js_url,status,updated_at"
+    
     // 更新
     affected, err := engine.Where("id = ?",websiteInfo.Id).Cols(cols).Update(&websiteInfo)
     if err != nil {
@@ -211,14 +191,12 @@ func WebsiteList(c *gin.Context){
     // 获取参数并处理
     var sortD string
     var sortColumns string
-    var own_id int64
     defaultPageNum:= c.GetString("defaultPageNum")
     defaultPageCount := c.GetString("defaultPageCount")
     page, _  := strconv.Atoi(c.DefaultQuery("page", defaultPageNum))
     limit, _ := strconv.Atoi(c.DefaultQuery("limit", defaultPageCount))
     site_name     := c.DefaultQuery("site_name", "")
-    own_id_i, _ := strconv.Atoi(c.DefaultQuery("own_id", ""))
-    own_id = int64(own_id_i)
+    
     status_i, _ := strconv.Atoi(c.DefaultQuery("status", ""))
     status := int64(status_i)
     sort     := c.DefaultQuery("sort", "")
@@ -232,16 +210,9 @@ func WebsiteList(c *gin.Context){
     if site_name != "" {
         whereParam["site_name"] = []string{"like", site_name}
     }  
-    own_id, err := customer.Get3OwnId(c, own_id)
-    if err != nil{
-        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
-        return  
-    }
+    
     if status != 0 {
         whereParam["status"] = status
-    }
-    if own_id != 0 {
-        whereParam["own_id"] = own_id
     }
     whereParam["created_at"] = []string{"scope", created_at_begin, created_at_end}
     whereStr, whereVal := mysqldb.GetXOrmWhere(whereParam)
@@ -270,11 +241,7 @@ func WebsiteList(c *gin.Context){
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return  
     }
-    ownNameOps, err := customer.Get3OwnNameOps(c)
-    if err != nil{
-        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
-        return  
-    }
+    
     createdCustomerOps, err := GetWebsiteCreatedCustomerOps(websiteInfos)
     if err != nil{
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
@@ -286,7 +253,6 @@ func WebsiteList(c *gin.Context){
         "items": websiteInfos,
         "total": counts,
         "createdCustomerOps": createdCustomerOps,
-        "ownNameOps": ownNameOps,
         "customerType": customerType,
     })
     // 返回json
@@ -344,50 +310,28 @@ func GetWebsiteBySiteUids(siteIds []string) ([]WebsiteInfo, error){
 
 
 /**
- * 根据 own_id 查询得到 WebsiteInfo
+ * 查询得到 WebsiteInfo
  */
-func GetWebsiteByOwnId(own_id int64) ([]WebsiteInfo, error){
+/*
+func GetWebsites(own_id int64) ([]WebsiteInfo, error){
     // 得到结果数据
     var websiteInfos []WebsiteInfo
-    err := engine.Where("own_id = ? ", own_id).Find(&websiteInfos) 
+    err := engine.Find(&websiteInfos) 
     if err != nil{
         return websiteInfos, err
     }
     return websiteInfos, nil
 }
-
-/**
- * 根据 market_group_ids 查询得到 WebsiteInfo
- */
-func GetActiveWebsiteByOwnId(own_id int64) ([]WebsiteInfo, error){
-    // 得到结果数据
-    var websiteInfos []WebsiteInfo
-    err := engine.Where("own_id = ? and status = ? ", own_id, enableStatus).Find(&websiteInfos) 
-    if err != nil{
-        return websiteInfos, err
-    }
-    return websiteInfos, nil
-}
+*/
 
 
 /**
  * 根据 market_group_ids 查询得到 WebsiteInfo
  */
-func GetAllActiveWebsiteId() ([]WebsiteInfo, error){
+func GetAllActiveWebsites() ([]WebsiteInfo, error){
     var websiteInfos []WebsiteInfo
-    activeCustomers, err := customer.GetAllEnableCommonCustomer()
-    if err != nil{
-        return websiteInfos, err
-    }
-    var customerIds []int64
-    for i:=0; i<len(activeCustomers); i++ {
-        activeCustomer := activeCustomers[i]
-        customerId := activeCustomer.Id
-        customerIds = append(customerIds,customerId)
-    }
-    
-    
-    err = engine.In("own_id", customerIds).Where("status = ? ", enableStatus).Find(&websiteInfos) 
+   
+    err := engine.Where("status = ? ", enableStatus).Find(&websiteInfos) 
     if err != nil{
         return websiteInfos, err
     }
@@ -398,7 +342,7 @@ func GetAllActiveWebsiteId() ([]WebsiteInfo, error){
 /**
  * 通过id查询一条记录
  */
-func GetCustomerOneById(id int64) (WebsiteInfo, error){
+func GetWebsiteOneById(id int64) (WebsiteInfo, error){
     var websiteInfo WebsiteInfo
     has, err := engine.Where("id = ?", id).Get(&websiteInfo)
     if err != nil {
@@ -426,7 +370,6 @@ func GetWebsiteByAccessToken(access_token string) (WebsiteInfo, error){
     return websiteInfo, nil
 }
 
-
 /**
  * 列表查询
  */
@@ -438,7 +381,7 @@ func WebsiteJsCode(c *gin.Context){
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult("you should pass param: site_id"))
         return  
     }
-    websiteInfo, err := GetCustomerOneById(site_id)
+    websiteInfo, err := GetWebsiteOneById(site_id)
     if err != nil{
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return  

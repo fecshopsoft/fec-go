@@ -4,17 +4,14 @@ import(
     "github.com/gin-gonic/gin"
 )
 
-// superAdmin
-var AdminSuperType int = 1 
-// superAdmin
-var AdminCommonType int = 2 
-// superAdmin
-var AdminChildType int = 3
+// admin
+var AdminType int = 1 
+// common
+var CommonType int = 2
 
 var VueUserRoles = map[int]string{
-    AdminSuperType: "admin",
-    AdminCommonType: "common_admin",
-    AdminChildType: "common_admin_child",
+    AdminType: "super_admin",
+    CommonType: "common_admin",
 }
 
 
@@ -28,9 +25,9 @@ func GetCurrentCustomerType(c *gin.Context) (int){
     return c.GetInt("currentCustomerType");
 } 
 
-func IsSuperAdmin(c *gin.Context) bool{
+func IsAdmin(c *gin.Context) bool{
     customerType := GetCurrentCustomerType(c)
-    if customerType == AdminSuperType {
+    if customerType == AdminType {
         return true
     } else {
         return false

@@ -7,13 +7,12 @@ import(
     "github.com/fecshopsoft/fec-go/util"
     "strconv"
     "log"
-    "errors"
+  //  "errors"
     "github.com/fecshopsoft/fec-go/helper"
 )
 // role_id 和resource_id 关系对应表。
 type RoleResource struct {
     Id int64 `form:"id" json:"id"`
-    OwnId int64 `form:"own_id" json:"own_id"`
     RoleId int64 `form:"role_id" json:"role_id"`
     ResourceId int64 `form:"resource_id" json:"resource_id"`
     CreatedAt int64 `xorm:"created" form:"created_at" json:"created_at"`
@@ -79,10 +78,10 @@ func RoleResourceAllAndSelect(c *gin.Context){
 }
 
 // 通过 own_id 和role_ids 得到 resource_ids
-func GetResourceIdsByRoleOwnIds(own_id int64, role_ids []int64) ([]int64, error){
+func GetResourceIdsByRoles(role_ids []int64) ([]int64, error){
     var roleResources []RoleResource
     var resource_ids []int64
-    err := engine.In("role_id", role_ids).Where("own_id = ?", own_id).Find(&roleResources) 
+    err := engine.In("role_id", role_ids).Find(&roleResources) 
     if err != nil{
         return resource_ids, err 
     }
@@ -97,26 +96,14 @@ func GetResourceIdsByRoleOwnIds(own_id int64, role_ids []int64) ([]int64, error)
 // 根据role_id own_id 得到权限资源list
 func GetCurrentRoleResourceAll(c *gin.Context) ([]RoleResource, error){
     var roleResources []RoleResource
-    // own_id, err := strconv.Atoi(c.Param("own_id"))
-    own_id, err := strconv.Atoi(c.DefaultQuery("own_id", ""))
-    if err != nil{
-        return  roleResources, err
-    }
-    if own_id == 0{
-        return  roleResources, errors.New("own_id is empty")
-    }
-    ownId, err := GetCustomerOwnId(c, int64(own_id))
-    if err != nil{
-        return  roleResources, err
-    }
+    
     // role_id, err := strconv.Atoi(c.Param("role_id"))
     role_id, err := strconv.Atoi(c.DefaultQuery("role_id", ""))
     if err != nil{
         return  roleResources, err
     }
     log.Println( role_id)
-    log.Println( ownId)
-    err = engine.Where("role_id = ? and own_id = ?", role_id, ownId).Find(&roleResources) 
+    err = engine.Where("role_id = ? ", role_id).Find(&roleResources) 
     if err != nil{
         return roleResources, err 
     }
@@ -126,7 +113,6 @@ func GetCurrentRoleResourceAll(c *gin.Context) ([]RoleResource, error){
 
 // 接收更新role resource的类型
 type UpdateResource struct{
-    OwnId int64 `form:"own_id" json:"own_id" binding:"required"`
     RoleId int64 `form:"role_id" json:"role_id" binding:"required"`
     Resources []int64 `form:"resources" json:"resources" binding:"required"`
 }
@@ -138,17 +124,15 @@ func RoleResourceUpdate(c *gin.Context){
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return
     }
-    own_id := updateResource.OwnId
     role_id := updateResource.RoleId
     resource_ids := updateResource.Resources
-    own_id, err = GetCustomerOwnId(c, own_id)
     if err != nil{
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return
     }
     // 删除 在RoleResource表中role_id 和 own_id对应的所有的资源
     var roleResource RoleResource
-    _, err = engine.Where("role_id = ? and own_id = ? ", role_id, own_id).Delete(&roleResource)
+    _, err = engine.Where("role_id = ?  ", role_id).Delete(&roleResource)
     if err != nil {
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return
@@ -158,7 +142,6 @@ func RoleResourceUpdate(c *gin.Context){
     for i:=0; i<len(resource_ids); i++ {
         var rr RoleResource
         rr.CreatedCustomerId = createdCustomerId
-        rr.OwnId = own_id
         rr.RoleId = role_id
         rr.ResourceId = resource_ids[i]
         _, err = engine.Insert(&rr)

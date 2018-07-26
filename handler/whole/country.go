@@ -75,8 +75,8 @@ func CountryList(c *gin.Context){
         }
         q = q.Must(newRangeQuery)
     }
-    //////
-    chosen_own_id, chosen_website_id, selectOwnIds, selectWebsiteIds, err := ActiveOwnIdAndWebsite(c)
+   ////// chosen_own_id,  selectOwnIds, 
+    chosen_website_id, selectWebsiteIds, err := ActiveWebsite(c)
     if err != nil{
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
         return
@@ -156,11 +156,7 @@ func CountryList(c *gin.Context){
             ts = append(ts, wholeCountry)
         }
     }
-    ownNameOptions, err := getOwnNames(c, selectOwnIds)
-    if err != nil{
-        c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
-        return
-    }
+    
     siteNameOptions, err := getSiteNames(c, selectWebsiteIds)
     if err != nil{
         c.AbortWithStatusJSON(http.StatusOK, util.BuildFailResult(err.Error()))
@@ -171,11 +167,8 @@ func CountryList(c *gin.Context){
         "success": "success",
         "total": searchResult.Hits.TotalHits,
         "items": ts,
-        "chosen_own_id": chosen_own_id,
         "chosen_website_id": chosen_website_id,
-        "selectOwnIds": selectOwnIds,
         "selectWebsiteIds": selectWebsiteIds,
-        "ownNameOptions": ownNameOptions,
         "siteIdOptions": siteNameOptions,
         
     })
