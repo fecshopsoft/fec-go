@@ -19,7 +19,7 @@ import(
 
 type CustomerToken struct {
     Id int64 `form:"id" json:"id"`
-	Type int `form:"type" json:"type"`
+    Type int `form:"type" json:"type"`
     Username string `form:"username" json:"username" binding:"required"`
 }
 

@@ -5,6 +5,13 @@
 
 2016 (c) FecShop Software LLC。
 
+FA系统: Fecshop Analysis
+
+FA系统安装
+-------------
+
+* [FA安装](fa-install.md)
+
 Trace系统介绍
 -------------
 

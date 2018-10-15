@@ -33,12 +33,11 @@ import(
     "net/http"
 )
 
-func Listen(listenIp string) { 
-    
+func Listen(listenIp string) {
     // gin.DisableConsoleColor()
     // log.Println("------333：" + time.Now().String())
     initLog()
-	// 初始化全局变量
+    // 初始化全局变量
     err := initialization.InitWebsiteInfo()
     if err != nil {
         panic(err)

@@ -26,7 +26,7 @@ func Get(key string) string {
 func GetInstance() *Config {
 	once.Do(func() {
 		myConfig = new(Config)
-        myConfig.InitConfig("/etc/fec-go/config.ini")
+        	myConfig.InitConfig("/www/fec-go/etc/config.ini")
 		//myConfig.InitConfig("resource/config")
 		//myConfig.InitConfig("C:\\work\\Workspaces\\goWorkspace20161022\\src\\mimi\\djq\\resource\\config")
 	})
