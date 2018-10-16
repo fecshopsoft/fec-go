@@ -12,7 +12,7 @@
 2.Api Url 由管理员提供，这个url是和上面的TraceJsUrl
 中的js发送数据的Api Url的域名地址是一致的。
 
-3.在网站中填写这些信息，详情参看[Fecshop网站对接](fecshop_relate.md)
+3.在网站中填写这些信息，详情参看[FA和Fecshop系统对接](fa-config-fecshop.md)
 
 4.fecshop page Trace services（`Yii::$service->page->trace`），通过配置信息和方法
 `getTraceCommonJsCode()`,生成通用追踪信息，

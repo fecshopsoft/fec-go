@@ -22,6 +22,19 @@ FA 如何添加网站
 
 默认账户是  `admin  fecshop1234` , 您修改成您自己的账户
 
+如果账户不对，您可以打开数据库的 `customer` 表，将
+username为admin的这条数据的password，替换成`cc03e747a6afbbcbf8be7668acfebee5`，
+也就是执行sql
+
+> 因为有时候进行sql更新，密码错乱导致，通过下面的sql修改一下即可。
+
+```
+update customer set password = 'cc03e747a6afbbcbf8be7668acfebee5' where username = 'admin'
+```
+
+修改之后的admin的密码为  test123
+
+
 
 
 ### 添加网站
@@ -35,6 +48,9 @@ FA 如何添加网站
 2.填写信息，如图
 
 ![xx](images/a4.png)
+
+> 图片可能和实际不一致，此处多了一个拥有者选项，这个已经去除，图片没有更新，
+包括后面的图片，或多或少都有有一点不一致，因为FA进行了改动。
 
 下面是说明：
 
@@ -63,6 +79,11 @@ fecshop.appfront.fancyecommerce.com/catalog/product/image，
 `验证token` 和网站唯一标示
 
 ![xx](images/a5.png)
+
+> 对于按钮 `js代码`，目前没有太大的用户，因为fecshop已经在代码中默认打点，
+这些js已经默认嵌入了，您不需要自己在各个页面添加js打点和php发送数据。
+
+
 
 
 
