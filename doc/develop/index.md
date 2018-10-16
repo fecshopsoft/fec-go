@@ -11,6 +11,8 @@ FA系统安装
 -------------
 
 * [FA安装](fa-install.md)
+* [FA和Fecshop系统对接](fa-config-fecshop.md)
+* [FA后台添加网站](fa-config-add-website.md)
 
 Trace系统介绍
 -------------

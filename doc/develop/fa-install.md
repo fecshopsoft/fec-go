@@ -150,3 +150,186 @@ go run fec-go-shell.go 1 removeEsAllIndex
 第二个是周期跑数据的脚本，一天跑一次，将`/root/go/src/main/fec-go-shell` 替换成您自己的
 路径，后面是log输出文件，自行创建并设置成可写。
 
+
+### 配置信息
+
+vue后台访问部分的域名为：http://trace.fecshop.com
+
+golang提供的api的域名为：http://traceapi.fecshop.com
+
+### VUE 后台展示部分
+
+
+1.vue 环境：
+
+```
+git 2.7
+python 3.6.5
+npm 5.6
+node 8.11.2
+```
+
+[git 2.7安装](http://www.fancyecommerce.com/2017/12/28/centos-%e5%ae%89%e8%a3%85-git/)
+
+[python3安装](http://www.fecshop.com/topic/809)
+
+[npm 5.6 && node8.11.2 安装](http://www.fecshop.com/topic/1397)
+
+2.具体安装参看：https://github.com/fecshopsoft/vue-element-admin
+
+2.1下载
+```
+git clone https://github.com/fecshopsoft/vue-element-admin.git
+```
+2.2如果是国内，可以使用taobao源
+
+```
+sudo npm install --registry=https://registry.npm.taobao.org
+```
+
+
+2.3npm安装：
+
+```
+sudo npm install
+```
+
+3.启动
+
+3.1开发模式启动
+
+```
+npm run dev
+```
+
+如果是本地，就可以访问：http://localhost:9527/#/
+
+3.2生产模式生成静态文件
+
+```
+npm run build:prod
+```
+
+执行完成后，会生成一个dist文件夹，这个就是vue
+编译后生成的静态html文件，可以配置nginx到这个路径，进行访问
+
+3.3更多的其他启动模式参看：https://github.com/fecshopsoft/vue-element-admin.git
+
+
+### nginx配置
+
+1.后台vue部分相应的nginx配置
+
+域名：`trace.fecshop.com`
+
+vue编译生成的文件所在的路径，下面的配置为：/www/web/online/trace_fecshop/web
+
+配置如下：
+
+```
+server {
+    listen     80  ;
+    server_name trace.fecshop.com;
+    root  /www/web/online/trace_fecshop/web;
+    server_tokens off;
+    include none.conf;
+    index index.php index.html index.htm;
+    access_log /www/web_logs/access1.log wwwlogs;
+    error_log  /www/web_logs/error.log  notice;
+    location ~ .*\.(js|css)?$ {
+        expires      12h;
+    }
+}
+```
+
+2.golang的nginx配置。
+
+因为上面golang监听的是 0.0.0.0:3000, 我的ip为：120.24.37.249
+ ，golang的api访问地址为：`http://120.24.37.249:3000`
+
+因此通过nginx反向代理，将 `http://traceapi.fecshop.com` 代理到`http://120.24.37.249:3000`
+,配置如下：
+
+```
+server {
+    listen 80;
+    server_name traceapi.fecshop.com;
+    location / {
+      proxy_redirect off;
+      proxy_set_header Host $host;
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_set_header REMOTE-HOST $remote_addr;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_pass http://120.24.37.249:3000;      # 这里ip地址设置成你的宿主主机ip+端口（或许可以localhost:端口，我没试）
+    }
+}
+```
+
+### vue admin部分的配置
+
+配置是在 ./config文件夹中,下面是配置生产模式
+
+打开文件 ./config/prod.env.js
+
+```
+module.exports = {
+        NODE_ENV: '"production"',
+        ENV_CONFIG: '"prod"',
+        BASE_API: '"http://tracejs.fecshop.com"'
+}
+```
+
+将 `BASE_API`对于的值改成您上面`golang` 对应的域名，然后通过
+`npm run build:prod`重新编辑文件到`dist`文件夹中，
+然后访问vue admin，后端api的数据将使用配置的`BASE_API`去找相应的数据。
+
+###启动golang
+
+1.首先在golang中手动执行一下下面的脚本
+
+```
+go run fec-go-shell.go
+```
+
+2.启动golang服务
+
+```
+go run fec-go.go
+```
+
+
+3.cron
+
+> 对于数据统计脚本，一般一天统计一次，因此通过cron可以更好的运行。
+
+```
+1 1 * * * /usr/bin/wget http://120.24.37.249:3000/fec/trace/cronssss > /dev/null
+01 * * * *  /root/go/src/main/fec-go-shell   >> /www/web_logs/fec-go-shell.log  2>&1
+```
+
+第一个是更新数据，将ip和端口换成你自己的即可，一分钟运行一次，这个脚本相当于刷新缓存的性质，
+定时的刷新golang中的全局变量（因为有一部分的变量是从数据库里面初始化的，当数据库的内容修改后，
+通过这个脚本进行刷新）。
+
+第二个是周期跑数据的脚本，一天跑一次，将`/root/go/src/main/fec-go-shell` 替换成您自己的
+路径，后面是log输出文件，自行创建并设置成可写。
+
+
+然后您就可以访问vue admin了
+
+### FA和Fecshop进行配置对接
+
+参看：[FA和Fecshop进行配置对接](fa-config-fecshop.md)
+
+对接完成后，可以在mongodb看到过来的数据
+
+开启golang服务后，fecshop的js发送的数据和php服务端发送的数据，都会被golang接收，
+将原始数据存储到mongodb中
+
+上面的cron，会执行数据处理脚本，通过mongodb的mapreduce，进行数据的统计分析，然后将统计后的
+数据保存到elasticsearch中。
+
+您可以在vue admin中查看数据
+
+> 注：如果文档中的描述出现错误或者有歧义，或者内容疏漏，请到 http://www.fecshop.com/topic
+中发帖反馈，多谢
