@@ -5,18 +5,35 @@
 
 2016 (c) FecShop Software LLC。
 
+
+FA系统介绍
+-------------
+
+* [FA关于](trace-about.md)
+* [FA业务场景](trace-changjing.md)
+* [FA技术选型](trace-jishu.md)
+* [FA数据收集](trace_get_data.md)
+* [FA数据统计](trace_data_tj.md)
+* [FA数据展示](trace_data_view.md)
+
+
+
+FA系统安装
+-------------
+
+* [FA安装](fa-install.md)
+* [FA和Fecshop系统对接](fa-config-fecshop.md)
+* [FA后台添加网站](fa-config-add-website.md)
+
+
 Trace系统介绍
 -------------
 
-* [Trace关于](trace-about.md)
-* [Trace业务场景](trace-changjing.md)
-* [Trace技术选型](trace-jishu.md)
-* [Trace数据收集](trace_get_data.md)
-* [Trace数据统计](trace_data_tj.md)
-* [Trace数据展示](trace_data_view.md)
+
+
 
 Trace系统安装
-------------- 
+-------------
 * [Trace系统安装环境](trace-install.md)
 * [Trace系统配置](trace-system-config.md)
 

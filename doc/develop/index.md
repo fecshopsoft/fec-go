@@ -7,6 +7,11 @@
 
 FA系统: Fecshop Analysis
 
+FA系统介绍
+-------------
+* [关于FA系统](fa-about.md)
+
+
 FA系统安装
 -------------
 

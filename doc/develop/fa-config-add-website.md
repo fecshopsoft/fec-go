@@ -1,7 +1,7 @@
-trace 如何添加网站
+FA 如何添加网站
 ====================
 
-关于Trace账户系统，参看:trace 后台账户介绍](trace-fecshop-account.md)
+关于 FA 账户系统，参看:FA 后台账户介绍](trace-fecshop-account.md)
 
 
 ### 前序

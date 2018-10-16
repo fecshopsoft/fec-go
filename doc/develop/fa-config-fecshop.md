@@ -2,11 +2,13 @@ FA和Fecshop系统对接
 =====================
 
 
-### fecshop设置对接
+
+
+### Fecshop设置对接
 
 下面的信息，`website_id` 和  `access_token`
 是从trace后台中获取，您可以参看：
-[trace 如何添加网站](trace-fecshop-config.md)
+[trace 如何添加网站](fa-config-add-website.md)
 
 1.打开fecshop的@common/config/fecshop_local_services/Page
 

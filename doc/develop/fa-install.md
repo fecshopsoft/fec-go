@@ -1,6 +1,9 @@
 FA安装
 ======
 
+> FA系统，全称Fecshop Analysis系统，属于前后端api对接的方式，前端用的vue，后端是基于golang编写的，数据库有mongodb，redis，mysql，
+下面是详细的安装
+
 ### golang部分安装
 
 1.库包安装
@@ -30,30 +33,33 @@ go get github.com/fecshopsoft/fec-go
 
 该部分代码在 ``./github.com/fecshopsoft/fec-go`
 
-### 安装 `Mysql`, `ElasticSearch`, `Mongodb`
+### 安装 Mysql, ElasticSearch, Mongodb， Nginx
 
 1.安装`mysql`
 
-1.1安装装文档：[mysql5.6安装](http://www.fancyecommerce.com/2016/04/29/linux-%E5%AE%89%E8%A3%85mysql5-6/)
+1.1安装装文档：[mysql5.6安装](http://www.fancyecommerce.com/2016/04/29/linux-安装mysql5-6/)
 
 1.2创建数据库`fa-go`
 
 1.3导入数据库,mysql数据库文件如下：
 
 ```
-example/my.sql
+./github.com/fecshopsoft/fec-go/example/my.sql
 ```
-
 
 2.安装`elasticSearch6`
 
-注意，这里是安装es6，可以参看文档[安装ElasticSearch](http://www.fancyecommerce.com/2016/11/09/%E5%AE%89%E8%A3%85elasticsearch-%EF%BC%8C%E4%BB%A5%E5%8F%8A%E5%9C%A8yii2%E4%B8%AD%E7%9A%84%E4%BD%BF%E7%94%A8/)
+注意，这里是安装es6，可以参看文档[安装ElasticSearch](http://www.fecshop.com/topic/672)
 
 3.安装`mongodb`
 
 > 下面的安装文档安装完第3步就可以了，后面是安装php mongodb扩展的部分，不需要安装
 
-安装参考文档[安装mongodb](http://www.fancyecommerce.com/2016/05/03/yii2-mongodb%E7%9A%84%E5%AE%89%E8%A3%85%E5%92%8C%E9%85%8D%E7%BD%AE-mongo/)
+安装参考文档[安装mongodb](http://www.fecshop.com/topic/1158)
+
+4.安装nginx
+
+参考文档：http://www.fancyecommerce.com/2016/05/03/linux-安装nginx/
 
 
 ### 配置
@@ -80,7 +86,7 @@ mkdir -p /www/fec-go/xlsx
 chmod 777 /www/fec-go/xlsx
 ```
 
-2.将 config/config.ini 的内容，复制到 `/www/fec-go/etc/config.ini`，
+2.将 github.com/fecshopsoft/fec-go/config/config.ini 的内容，复制到 `/www/fec-go/etc/config.ini`，
 
 按照里面的配置说明，配置 `mysql` `mongodb` `elasticsearch`, 以及监听的ip端口
 
@@ -175,7 +181,9 @@ node 8.11.2
 
 [npm 5.6 && node8.11.2 安装](http://www.fecshop.com/topic/1397)
 
-2.具体安装参看：https://github.com/fecshopsoft/vue-element-admin
+2.参考：https://github.com/fecshopsoft/vue-element-admin
+
+按照下面的步骤安装即可
 
 2.1下载
 ```
@@ -284,6 +292,8 @@ module.exports = {
 然后访问vue admin，后端api的数据将使用配置的`BASE_API`去找相应的数据。
 
 ###启动golang
+
+> golang的启动在上面已经介绍了一下，这里重复说一下，可以按照下面的步骤操作：
 
 1.首先在golang中手动执行一下下面的脚本
 
